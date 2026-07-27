@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#15131C; --surface:#1E1B27; --raised:#272233; --line:#332D42;
@@ -21,7 +21,7 @@
   --r:14px; --sp:16px;
   --joy:#F2B441; --calm:#5FC3A4; --power:#E8734F;
   --sad:#5B93DB; --mad:#DB4F65; --fear:#9B7BE0; --numb:#8E8AA0;
-  --ui:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --ui:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   --se:'Gowun Batang',ui-serif,'Apple SD Gothic Neo',serif;
   --mo:'IBM Plex Mono',ui-monospace,monospace;
 }
@@ -186,7 +186,7 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 .addbox svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
 
 /* picker */
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:12px var(--sp) 10px;scrollbar-width:none;
+.tabs{display:flex;flex-shrink:0;gap:6px;overflow-x:auto;padding:12px var(--sp) 10px;scrollbar-width:none;
   border-bottom:1px solid var(--line)}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:none;padding:6px 13px;border-radius:999px;font-size:13px;border:1px solid var(--line);color:var(--dim)}
@@ -607,7 +607,7 @@ function todaysPrompt(dateStr, offset = 0) {
 /* ============================================================
    렌더링 — 홈
    ============================================================ */
-let promptOffset = 0;
+let promptOffset = Math.floor(Math.random() * PROMPTS.length);
 
 function renderRibbon() {
   const el = $('#ribbon'); const today = new Date(); const parts = [];
@@ -743,7 +743,7 @@ function sheet(title, bodyHTML, onMount, extraHeader = '') {
 function pickEmotions(selected, done) {
   let sel = [...selected], famId = 'all', kw = '';
   const tabs = `<div class="tabs"><button class="tab" data-f="all">전체</button>` +
-    FAMILIES.map(f => `<button class="tab" data-f="${f.id}" style="--c:${f.color}">${f.name}</button>`).join('') + `</div>
+    FAMILIES.map(f => `<button class="tab" data-f="${f.id}">${f.name}</button>`).join('') + `</div>
     <div style="padding:10px 16px 0"><input id="ekw" placeholder="감정 단어 검색" class="mini" autocomplete="off"></div>`;
   const el = sheet('감정 고르기 (최대 3개)', `<div id="sel" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div><div class="words" id="ws"></div>`,
     (root, close) => {
@@ -768,9 +768,17 @@ function pickEmotions(selected, done) {
       };
       $$('.tab', root).forEach(t => t.onclick = () => {
         famId = t.dataset.f;
-        $$('.tab', root).forEach(x => x.style.cssText = x.dataset.f === famId
-          ? `background:${x.dataset.f === 'all' ? 'var(--ivory)' : FAM[x.dataset.f].color};color:#15131C;border-color:transparent`
-          : '');
+        $$('.tab', root).forEach(x => {
+          const f = x.dataset.f;
+          if (f === famId) {
+            x.style.cssText = `background:${f === 'all' ? 'var(--ivory)' : FAM[f].color};color:#15131C;border-color:transparent`;
+          } else if (f === 'all') {
+            x.style.cssText = '';
+          } else {
+            const c = FAM[f].color;
+            x.style.cssText = `border-color:${c}55;color:${c}`;
+          }
+        });
         paint();
       });
       $('#ekw', root).oninput = e => { kw = e.target.value.trim(); paint(); };
