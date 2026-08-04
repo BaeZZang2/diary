@@ -1650,15 +1650,35 @@ function disarmExit() {
   if (!exitArmed) return;
   exitArmed = false; clearTimeout(exitTimer);
   hideExitNotice();
-  pushGuard();                                 /* 다시 뒤로 가기를 받아낼 준비 */
+}
+
+/* 안내가 뜬 상태에서 한 번 더 눌렀을 때 실제로 앱을 닫는다.
+   설치한 앱·스크립트로 연 창은 close() 로 닫히고,
+   앞에 방문 기록이 있는 탭이면 그 페이지로 빠져나간다. */
+let leaving = false;
+function leaveApp() {
+  leaving = true;
+  try { window.close(); } catch (e) { }        /* 설치한 앱·스크립트로 연 창은 여기서 닫힌다 */
+  setTimeout(() => { try { history.back(); } catch (e) { } }, 80);   /* 아니면 앱 밖으로 */
+  setTimeout(() => { leaving = false; pushGuard(); }, 700);          /* 못 닫았으면 보호 복구 */
 }
 
 window.addEventListener('popstate', () => {
-  if (closeTopLayer()) { pushGuard(); return; }
-  if (exitArmed) return;                       /* 안내 중이라면 그대로 앱을 벗어난다 */
-  exitArmed = true;
-  showExitNotice();
-  exitTimer = setTimeout(() => { exitArmed = false; hideExitNotice(); pushGuard(); }, EXIT_WINDOW);
+  if (leaving) return;                         /* 나가는 중 */
+
+  if (closeTopLayer()) { disarmExit(); pushGuard(); return; }
+
+  if (!exitArmed) {                            /* 첫 번째 → 안내를 띄운다 */
+    exitArmed = true;
+    showExitNotice();
+    exitTimer = setTimeout(() => { exitArmed = false; hideExitNotice(); }, EXIT_WINDOW);
+    /* 여분의 기록을 다시 남겨야 두 번째 누름도 받아낼 수 있다.
+       (방문 기록이 없는 탭에서는 이게 없으면 아무 일도 일어나지 않는다) */
+    pushGuard();
+    return;
+  }
+  disarmExit();                                /* 두 번째 → 실제로 닫는다 */
+  leaveApp();
 });
 
 /* ============================================================
@@ -1683,7 +1703,22 @@ $('#btnClearQ').onclick = () => { $('#q').value = ''; S.query = ''; S.tag = ''; 
   if (S.settings.pin) lockScreen(start); else start();
   pushGuard();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    /* 새 버전이 준비되면 그 자리에서 갈아끼운다.
+       (쓰던 화면이 열려 있으면 날아가지 않게 안내만 하고 기다린다) */
+    const hadWorker = !!navigator.serviceWorker.controller;
+    let swapped = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadWorker || swapped) return;      /* 첫 설치 때는 새로고침하지 않는다 */
+      swapped = true;
+      if ($$('.screen,.sheet,.lbox,.lock').length) toast('새 버전이 준비됐어요. 다시 열면 적용돼요');
+      else location.reload();
+    });
     navigator.serviceWorker.register('sw.js').catch(() => { });
+    /* 앱을 다시 켤 때마다 새 버전이 있는지 확인한다 */
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      navigator.serviceWorker.getRegistration().then(r => r && r.update()).catch(() => { });
+    });
   }
 })();
 
