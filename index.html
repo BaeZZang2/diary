@@ -348,6 +348,25 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 .ccard .cev{font-size:14.5px;line-height:1.65;white-space:pre-wrap;margin-bottom:9px}
 .ccard .cne{font-size:13px;color:var(--dim);margin-top:9px}
 .ccard .ctags{display:flex;flex-wrap:wrap;gap:6px}
+/* ---------- 뒤로 가기 · 종료 안내 ---------- */
+.exitpop{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));
+  transform:translate(-50%,0);z-index:400;width:calc(100% - 32px);max-width:340px;
+  display:flex;align-items:center;gap:12px;padding:14px 16px 15px;
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  box-shadow:var(--shadow);overflow:hidden;cursor:pointer;
+  animation:exitin .22s cubic-bezier(.2,.8,.3,1)}
+.exitpop.out{animation:exitout .18s ease forwards}
+.exitpop .eico{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:var(--raised);color:var(--dim)}
+.exitpop .eico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.exitpop b{display:block;font-size:14px;font-weight:600;line-height:1.35}
+.exitpop span{display:block;margin-top:3px;font-size:12px;color:var(--faint);line-height:1.45}
+.exitpop .ebar{position:absolute;left:0;bottom:0;height:2px;width:100%;background:var(--ivory);
+  opacity:.45;transform-origin:left;animation:edrain 2s linear forwards}
+@keyframes exitin{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes exitout{to{opacity:0;transform:translate(-50%,10px)}}
+@keyframes edrain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -1586,6 +1605,63 @@ function lockScreen(onOk) {
 }
 
 /* ============================================================
+   뒤로 가기 (안드로이드 하드웨어 버튼 · 브라우저 뒤로 가기)
+   1) 열려 있는 화면/시트/사진 보기가 있으면 그것부터 닫는다.
+   2) 홈에서 누르면 종료 안내를 띄우고, 2초 안에 한 번 더 누르면 앱을 나간다.
+   ============================================================ */
+const EXIT_WINDOW = 2000;                     /* 한 번 더 누를 수 있는 시간 */
+const CLOSERS = '.screenbar [data-x], .ph [data-close], .lbar [data-x]';
+let exitArmed = false, exitTimer = null, exitPop = null;
+
+/* 뒤로 가기를 받아내기 위한 여분의 방문 기록 */
+function pushGuard() { try { history.pushState({ md: 'guard' }, ''); } catch (e) { } }
+
+/* 가장 위에 열려 있는 층을 닫는다 (잠금 화면은 건드리지 않는다) */
+function closeTopLayer() {
+  const layers = $$('.screen,.sheet,.lbox');
+  const top = layers[layers.length - 1];
+  if (!top) return false;
+  const btn = top.querySelector(CLOSERS);
+  if (btn) btn.click(); else top.remove();     /* 닫기 버튼의 확인 절차를 그대로 따른다 */
+  return true;
+}
+
+function hideExitNotice() {
+  if (!exitPop) return;
+  const el = exitPop; exitPop = null;
+  el.classList.add('out'); setTimeout(() => el.remove(), 180);
+}
+
+function showExitNotice() {
+  hideExitNotice();
+  const el = document.createElement('div');
+  el.className = 'exitpop';
+  el.innerHTML = `
+    <span class="eico"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>
+    <div><b>한 번 더 누르면 마음결을 닫아요</b>
+      <span>지금까지 남긴 기록은 그대로 저장돼 있어요</span></div>
+    <i class="ebar"></i>`;
+  el.onclick = disarmExit;                     /* 안내를 눌러 취소할 수도 있게 */
+  document.body.appendChild(el);
+  exitPop = el;
+}
+
+function disarmExit() {
+  if (!exitArmed) return;
+  exitArmed = false; clearTimeout(exitTimer);
+  hideExitNotice();
+  pushGuard();                                 /* 다시 뒤로 가기를 받아낼 준비 */
+}
+
+window.addEventListener('popstate', () => {
+  if (closeTopLayer()) { pushGuard(); return; }
+  if (exitArmed) return;                       /* 안내 중이라면 그대로 앱을 벗어난다 */
+  exitArmed = true;
+  showExitNotice();
+  exitTimer = setTimeout(() => { exitArmed = false; hideExitNotice(); pushGuard(); }, EXIT_WINDOW);
+});
+
+/* ============================================================
    부팅
    ============================================================ */
 $('#fabNew').onclick = () => openEditor(null);
@@ -1605,6 +1681,7 @@ $('#btnClearQ').onclick = () => { $('#q').value = ''; S.query = ''; S.tag = ''; 
   applyTheme(S.settings.theme);
   const start = () => renderHome();
   if (S.settings.pin) lockScreen(start); else start();
+  pushGuard();
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { });
   }
