@@ -648,7 +648,7 @@ const KV = (() => {
 const K = { idx: 'md:index', set: 'md:settings', entry: id => 'md:entry:' + id, thumb: ym => 'md:thumb:' + ym };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v7 · 2026-08-05';
+const APP_VERSION = 'v8 · 2026-08-05';
 
 /* 뒤로 가기가 왜 안 먹는지 알아보기 위한 기록.
    앱이 닫혀도 남도록 localStorage 에 바로 적는다. 설정 화면에서 볼 수 있다. */
@@ -1638,18 +1638,24 @@ const CLOSERS = '.screenbar [data-x], .ph [data-close], .lbar [data-x]';
 let exitArmed = false, exitTimer = null, exitPop = null, leaving = false;
 
 /* 뒤로 가기를 받아내기 위한 여분의 방문 기록.
-   크롬은 사용자가 화면을 한 번도 건드리지 않은 채 쌓인 방문 기록을
-   뒤로 가기에서 건너뛴다. 그래서 앱을 켜자마자가 아니라,
-   화면을 처음 만졌을 때 기록을 쌓아둔다. */
+   - 주소가 같으면 설치형 앱에서 "시작 화면 그대로"로 보고 뒤로 가기가
+     앱을 그냥 닫아버린다. 그래서 #back 을 붙여 주소를 다르게 만든다.
+   - 크롬은 사용자가 손대기 전에 쌓인 기록도 건너뛰므로,
+     앱을 켜자마자가 아니라 화면을 만졌을 때 쌓는다. */
+const GUARD_HASH = '#back';
 let guarded = false;
 function pushGuard(why) {
   if (guarded) return;                          /* 두 겹으로 쌓이지 않게 */
-  try { history.pushState({ md: 'guard' }, ''); guarded = true; blog('기록 쌓음 · ' + why); }
-  catch (e) { blog('기록 실패 · ' + e.name); }
+  try {
+    history.pushState({ md: 'guard' }, '', GUARD_HASH);
+    guarded = true;
+    blog('기록 쌓음 · ' + why + ' · ' + (location.hash || '주소 그대로'));
+  } catch (e) { blog('기록 실패 · ' + e.name); }
 }
 
-/* 손가락이 닿을 때마다 보호가 풀려 있으면 다시 채워 넣는다 */
-['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach(t =>
+/* 손가락이 떨어질 때마다 보호가 풀려 있으면 다시 채워 넣는다.
+   (누르는 순간(pointerdown)에 쌓은 기록은 크롬이 건너뛰는 일이 있어 제외) */
+['pointerup', 'touchend', 'click', 'keydown'].forEach(t =>
   document.addEventListener(t, () => { if (!leaving) pushGuard(t); }, { capture: true, passive: true }));
 
 /* 앱이 실제로 닫히거나 다른 곳으로 넘어갈 때도 남겨둔다 */
@@ -1740,7 +1746,12 @@ $('#btnClearQ').onclick = () => { $('#q').value = ''; S.query = ''; S.tag = ''; 
 
 (async function boot() {
   await loadAll();
-  blog('앱 시작 · ' + (matchMedia('(display-mode: standalone)').matches ? '설치앱' : '브라우저'));
+  blog('앱 시작 · ' + (matchMedia('(display-mode: standalone)').matches ? '설치앱' : '브라우저')
+    + (location.hash ? ' · ' + location.hash : ''));
+  /* 지난번에 남은 #back 을 지워, 처음 기록이 항상 주소 없이 시작하도록 */
+  if (location.hash) {
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { }
+  }
   applyTheme(S.settings.theme);
   const start = () => renderHome();
   if (S.settings.pin) lockScreen(start); else start();
