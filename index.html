@@ -857,7 +857,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v16 · 2026-08-05';
+const APP_VERSION = 'v17 · 2026-08-05';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1354,8 +1354,9 @@ function openRoutineOptions(rid, date, opts = {}) {
       <button class="btn ${c.s === 'rest' ? 'btn-p' : 'btn-g'}" data-s="rest" style="flex:1">오늘은 쉼</button>
       <button class="btn btn-o" data-s="" style="flex:1">지우기</button>
     </div>
-    <div style="font-size:11.5px;color:var(--faint);margin-top:9px">
-      쉼으로 두면 오늘 달성률 계산에서 빠져요.</div>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:9px;line-height:1.7">
+      쉼으로 두면 오늘 달성률 계산에서 빠져요.<br>
+      고른 상태는 바로 저장돼요. 창은 메모를 저장하거나 닫을 때까지 열려 있어요.</div>
     <div class="field">
       <div class="label">한 줄 메모</div>
       <div class="box"><input id="rMemo" maxlength="60" placeholder="오늘 이 루틴은 어땠나요?" value="${esc(c.memo || '')}"></div>
@@ -1363,15 +1364,25 @@ function openRoutineOptions(rid, date, opts = {}) {
     <button class="btn btn-p" id="rMemoSave" style="width:100%;margin-top:14px">메모 저장</button>
     <button class="btn btn-o" id="rGoEdit" style="width:100%;margin-top:8px">루틴 고치기</button>`,
     (root, close) => {
+      /* 상태를 골라도 창은 닫지 않는다. 메모를 마저 적을 수 있게.
+         창은 '메모 저장'·X·뒤로 가기로만 닫힌다. */
+      const cur = { s: c.s || '', memo: c.memo || '' };
+      const paintState = () => $$('[data-s]', root).forEach(b => {
+        const on = b.dataset.s && b.dataset.s === cur.s;
+        b.className = 'btn ' + (on ? 'btn-p' : (b.dataset.s ? 'btn-g' : 'btn-o'));
+      });
+
       $$('[data-s]', root).forEach(b => b.onclick = async () => {
-        const s = b.dataset.s;
-        const memo = $('#rMemo', root).value.trim();
-        await setCheck(date, rid, (s || memo) ? { s, memo, at: Date.now() } : null);
-        close(); renderRoutine(); opts.after && opts.after();
+        cur.s = b.dataset.s;
+        cur.memo = $('#rMemo', root).value.trim();
+        await setCheck(date, rid, (cur.s || cur.memo) ? { s: cur.s, memo: cur.memo, at: Date.now() } : null);
+        paintState();
+        renderRoutine(); opts.after && opts.after();   /* 뒤에 깔린 목록은 바로 따라 바뀐다 */
       });
       $('#rMemoSave', root).onclick = async () => {
         const memo = $('#rMemo', root).value.trim();
-        await setCheck(date, rid, (c.s || memo) ? { s: c.s || '', memo, at: Date.now() } : null);
+        cur.memo = memo;
+        await setCheck(date, rid, (cur.s || memo) ? { s: cur.s, memo, at: Date.now() } : null);
         close(); renderRoutine(); opts.after && opts.after();
         toast(memo ? '메모를 저장했어요' : '메모를 지웠어요');
       };
