@@ -32,7 +32,7 @@
 }
 :root[data-theme="bright"]{
   --bg:#FFFFFF; --surface:#F6F7F9; --raised:#EDEFF3; --line:#DEE3EA;
-  --tx:#171A21; --dim:#5B6473; --faint:#949CAA;
+  --tx:#171A21; --dim:#5B6473; --faint:#767E8C;
   --ivory:#1D2129; --ink:#FFFFFF;
   --topbg:rgba(255,255,255,.88); --promptgrad:linear-gradient(160deg,#F2F5FA,#FAFBFD);
   --shadow:0 10px 30px rgba(23,26,33,.16); --shadow2:0 8px 24px rgba(23,26,33,.14);
@@ -41,7 +41,7 @@
 }
 :root[data-theme="beige"]{
   --bg:#F7F1E6; --surface:#FDF9F1; --raised:#EFE5D4; --line:#DFD1B9;
-  --tx:#3B3226; --dim:#7A6B57; --faint:#A6957D;
+  --tx:#3B3226; --dim:#7A6B57; --faint:#8A7A63;
   --ivory:#3B3226; --ink:#FDF9F1;
   --topbg:rgba(247,241,230,.9); --promptgrad:linear-gradient(160deg,#F1E6D2,#FBF6EC);
   --shadow:0 10px 30px rgba(59,50,38,.18); --shadow2:0 8px 24px rgba(59,50,38,.15);
@@ -50,7 +50,7 @@
 }
 :root[data-theme="pink"]{
   --bg:#FFF4F6; --surface:#FFFAFB; --raised:#FBE5EB; --line:#F2CFD9;
-  --tx:#3F2830; --dim:#8A6270; --faint:#B78E9B;
+  --tx:#3F2830; --dim:#8A6270; --faint:#9A7280;
   --ivory:#3F2830; --ink:#FFFAFB;
   --topbg:rgba(255,244,246,.9); --promptgrad:linear-gradient(160deg,#FCE4EB,#FFF6F8);
   --shadow:0 10px 30px rgba(63,40,48,.16); --shadow2:0 8px 24px rgba(63,40,48,.14);
@@ -65,6 +65,33 @@
   --shadow:0 10px 34px rgba(0,0,0,.5); --shadow2:0 8px 26px rgba(0,0,0,.45);
   --joy:#E8B54A; --calm:#5FD3AE; --power:#EC7B52; --sad:#5F9BD8;
   --mad:#E05A6E; --fear:#A489E4; --numb:#8FA096;
+}
+:root[data-theme="sand"]{
+  --bg:#1A1614; --surface:#241F1B; --raised:#2F2823; --line:#3C332C;
+  --tx:#F1EAE1; --dim:#AE9F90; --faint:#7E7164;
+  --ivory:#F2E9DD; --ink:#1A1614;
+  --topbg:rgba(26,22,20,.86); --promptgrad:linear-gradient(160deg,#2C2520,#201B18);
+  --shadow:0 10px 34px rgba(0,0,0,.55); --shadow2:0 8px 26px rgba(0,0,0,.5);
+  --joy:#E8B14A; --calm:#63C7A6; --power:#E5794F; --sad:#6E9BD6;
+  --mad:#DC5C6E; --fear:#A488DF; --numb:#93877A;
+}
+:root[data-theme="indigo"]{
+  --bg:#0F1622; --surface:#16202E; --raised:#1E2A3B; --line:#2A394D;
+  --tx:#E7EEF7; --dim:#9AAAC0; --faint:#6C7C93;
+  --ivory:#E9F0F8; --ink:#0F1622;
+  --topbg:rgba(15,22,34,.86); --promptgrad:linear-gradient(160deg,#1B2739,#131C29);
+  --shadow:0 10px 34px rgba(0,0,0,.55); --shadow2:0 8px 26px rgba(0,0,0,.5);
+  --joy:#EFB752; --calm:#57C9BE; --power:#EC7F5C; --sad:#6FA8E8;
+  --mad:#E45E77; --fear:#9E8CEA; --numb:#8894A6;
+}
+:root[data-theme="mist"]{
+  --bg:#F3F4F6; --surface:#FFFFFF; --raised:#E7E9EC; --line:#D3D7DC;
+  --tx:#15171A; --dim:#525860; --faint:#79808A;
+  --ivory:#15171A; --ink:#FFFFFF;
+  --topbg:rgba(243,244,246,.9); --promptgrad:linear-gradient(160deg,#EAECEF,#FAFBFC);
+  --shadow:0 10px 30px rgba(21,23,26,.14); --shadow2:0 8px 24px rgba(21,23,26,.12);
+  --joy:#9C6A0C; --calm:#20785F; --power:#B0461F; --sad:#265CA3;
+  --mad:#AC2439; --fear:#5D3EA8; --numb:#5F666E;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);font-family:var(--ui);
@@ -551,6 +578,9 @@ const THEMES = [
   { id: 'beige',  name: '베이지',     sw: ['#F7F1E6', '#B84F26', '#347F64'] },
   { id: 'pink',   name: '베이비핑크', sw: ['#FFF4F6', '#B92F4E', '#7247B4'] },
   { id: 'green',  name: '딥그린',     sw: ['#0E1A15', '#5FD3AE', '#E8B54A'] },
+  { id: 'sand',   name: '모래',       sw: ['#1A1614', '#E8B14A', '#63C7A6'] },
+  { id: 'indigo', name: '쪽빛',       sw: ['#0F1622', '#6FA8E8', '#57C9BE'] },
+  { id: 'mist',   name: '안개',       sw: ['#F3F4F6', '#525860', '#20785F'] },
 ];
 
 /* 루틴 시간대 — 하루를 네 칸으로만 나눈다 (분 단위 계획표는 만들지 않는다) */
@@ -827,7 +857,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v15 · 2026-08-05';
+const APP_VERSION = 'v16 · 2026-08-05';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
