@@ -449,14 +449,36 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 .step button:disabled{opacity:.3}
 .step b{min-width:48px;text-align:center;font-family:var(--mo);font-size:14px;font-weight:500}
 
-/* ---------- 히트맵 ---------- */
-.hmapwrap{max-width:300px;margin:0 auto}
-.hmap{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
-.hmap i{aspect-ratio:1;border-radius:5px;background:var(--raised);display:block}
-.hdow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px;
-  font-size:10px;color:var(--faint);text-align:center}
-.hleg{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--faint)}
-.hleg i{width:11px;height:11px;border-radius:3px;display:block;background:var(--raised)}
+/* ---------- 달력 ---------- */
+.calnav{display:flex;align-items:center;gap:8px;margin-top:14px}
+.calnav b{font-family:var(--se);font-size:17px;font-weight:700;margin-right:auto}
+.calnav button{width:33px;height:33px;border-radius:10px;background:var(--raised);color:var(--dim);
+  display:grid;place-items:center;flex:none}
+.calnav button:disabled{opacity:.3}
+.calnav button svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.calnav .tdy{width:auto;padding:0 12px;font-size:12px;font-family:var(--ui)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}
+.cal .dw{text-align:center;font-size:10px;color:var(--faint);padding-bottom:2px}
+.cday{position:relative;aspect-ratio:1;border-radius:9px;background:var(--raised);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mo);font-size:12.5px;
+  color:var(--faint);transition:transform .12s}
+.cday:active{transform:scale(.94)}
+.cday.blank{background:none;pointer-events:none}
+.cday.later{opacity:.3;pointer-events:none}
+.cday.lit{color:var(--tx)}
+.cday.today{outline:1.5px solid var(--tx);outline-offset:-1.5px;font-weight:700;color:var(--tx)}
+.cday .bar{position:absolute;left:0;right:0;bottom:0;height:3.5px;display:flex}
+.cday .bar i{flex:1}
+.calleg{display:flex;flex-wrap:wrap;align-items:center;gap:7px 13px;margin-top:12px;
+  font-size:11px;color:var(--faint)}
+.calleg span{display:flex;align-items:center;gap:5px}
+.calleg i{width:11px;height:11px;border-radius:3px;display:block}
+.calleg i.b{height:4px;width:15px;border-radius:2px;background:var(--calm)}
+
+/* ---------- 하루 돌아보기 ---------- */
+.dayhead{margin:18px 0 4px;display:flex;align-items:center;gap:10px}
+.dayhead .dl{font-family:var(--se);font-size:19px;font-weight:700;margin-right:auto}
+.dayhead .dp{font-family:var(--mo);font-size:13px;padding:3px 10px;border-radius:999px}
 
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 </style>
@@ -805,7 +827,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v14 · 2026-08-05';
+const APP_VERSION = 'v15 · 2026-08-05';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1315,12 +1337,13 @@ function openRoutineOptions(rid, date, opts = {}) {
         const s = b.dataset.s;
         const memo = $('#rMemo', root).value.trim();
         await setCheck(date, rid, (s || memo) ? { s, memo, at: Date.now() } : null);
-        close(); renderRoutine();
+        close(); renderRoutine(); opts.after && opts.after();
       });
       $('#rMemoSave', root).onclick = async () => {
         const memo = $('#rMemo', root).value.trim();
         await setCheck(date, rid, (c.s || memo) ? { s: c.s || '', memo, at: Date.now() } : null);
-        close(); renderRoutine(); toast(memo ? '메모를 저장했어요' : '메모를 지웠어요');
+        close(); renderRoutine(); opts.after && opts.after();
+        toast(memo ? '메모를 저장했어요' : '메모를 지웠어요');
       };
       $('#rGoEdit', root).onclick = () => { close(); openRoutineEdit(rid); };
       /* 체크하자마자 뜬 창이면 바로 적을 수 있게 커서를 놓아준다 */
@@ -2190,7 +2213,6 @@ function openLightbox(photos, start = 0) {
    ============================================================ */
 function openStats() {
   const now = new Date(), ym = ymd(now).slice(0, 7);
-  const month = S.index.filter(m => m.date.startsWith(ym));
   const famCount = {}, wordCount = {}, tagFam = {};
   for (const m of S.index) {
     for (const w of m.emos || []) {
@@ -2218,55 +2240,27 @@ function openStats() {
   }
 
   /* ---- 루틴 쪽 계산 ---- */
-  const rToday = dayProgress(ymd(now));
   const r30 = routineRangeStats(30);
   const rStreak = routineStreak();
   const rRows = Object.values(r30.per).sort((a, b) => (b.done / b.plan) - (a.done / a.plan));
   const rInsights = routineEmotionInsights();
   const hasRoutine = S.routines.some(r => r.active !== false);
 
-  /* 최근 8주 히트맵 — 일요일 시작으로 줄을 맞춘다 */
-  const cells = [];
-  const end = new Date(now); end.setDate(end.getDate() + (6 - end.getDay()));
-  for (let i = 55; i >= 0; i--) {
-    const d = new Date(end); d.setDate(d.getDate() - i);
-    const key = ymd(d);
-    if (key > ymd(now)) { cells.push(`<i style="opacity:.25"></i>`); continue; }
-    const p = dayProgress(key);
-    if (p.rate < 0) { cells.push(`<i title="${key}"></i>`); continue; }
-    const L = lightOf(p.rate);
-    cells.push(`<i title="${key} · ${Math.round(p.rate * 100)}%" style="background:${L.color};opacity:${.3 + p.rate * .7}"></i>`);
-  }
-
   const scr = document.createElement('div'); scr.className = 'screen';
   scr.innerHTML = `<div class="inner">
     <div class="screenbar">
       <button class="iconbtn" data-x><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
       <div class="ttl">돌아보기</div></div>
+    <div id="stCal"></div>
+
+    <div class="eyebrow" style="padding:0">전체</div>
     <div class="statgrid">
       <div class="stat"><b>${S.index.length}</b><span>전체 기록</span></div>
-      <div class="stat"><b>${month.length}</b><span>이번 달</span></div>
       <div class="stat"><b>${streak}</b><span>연속 기록일</span></div>
+      <div class="stat"><b>${hasRoutine ? rStreak : '—'}</b><span>연속 달성일</span></div>
     </div>
 
     ${hasRoutine ? `
-    <div class="eyebrow" style="padding:0">루틴</div>
-    <div class="statgrid">
-      <div class="stat"><b style="color:${lightOf(rToday.rate).color}">${rToday.rate < 0 ? '—' : Math.round(rToday.rate * 100) + '%'}</b><span>오늘 달성률</span></div>
-      <div class="stat"><b>${r30.rate < 0 ? '—' : Math.round(r30.rate * 100) + '%'}</b><span>최근 30일</span></div>
-      <div class="stat"><b>${rStreak}</b><span>연속 달성일</span></div>
-    </div>
-
-    <div class="eyebrow" style="padding:0">최근 8주</div>
-    <div class="hmapwrap">
-      <div class="hmap">${cells.join('')}</div>
-      <div class="hdow">${DOW.map(d => `<span>${d}</span>`).join('')}</div>
-    </div>
-    <div class="hleg"><i></i>예정 없음
-      <i style="background:${famColor('mad')};opacity:.6"></i>낮음
-      <i style="background:${famColor('joy')};opacity:.8"></i>보통
-      <i style="background:${famColor('calm')}"></i>지킴</div>
-
     <div class="eyebrow" style="padding:0">루틴별 달성률 · 30일</div>
     ${rRows.length ? rRows.map(x => {
       const rate = x.done / x.plan;
@@ -2303,6 +2297,162 @@ function openStats() {
   $('#layers').appendChild(scr);
   scr.querySelector('[data-x]').onclick = () => scr.remove();
   $$('[data-emo]', scr).forEach(b => b.onclick = () => openEmotionCards(b.dataset.emo));
+
+  /* 달력은 달을 넘길 때마다 다시 그린다 */
+  let view = ym;
+  const paintCal = () => {
+    $('#stCal', scr).innerHTML = calendarHTML(view);
+    const host = $('#stCal', scr);
+    host.querySelector('[data-prev]').onclick = () => { view = shiftMonth(view, -1); paintCal(); };
+    const nx = host.querySelector('[data-next]');
+    nx.onclick = () => { view = shiftMonth(view, 1); paintCal(); };
+    host.querySelector('[data-today]').onclick = () => { view = ymd(new Date()).slice(0, 7); paintCal(); };
+    $$('[data-day]', host).forEach(b => b.onclick = () => openDayReview(b.dataset.day, paintCal));
+  };
+  paintCal();
+}
+
+const shiftMonth = (ym, n) => {
+  const d = new Date(+ym.slice(0, 4), +ym.slice(5, 7) - 1 + n, 1);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+};
+
+/* 한 달을 통째로 그린다.
+   칸 색은 그날 루틴 달성률, 아래 띠는 그날 일기에 담긴 감정 계열. */
+function calendarHTML(ym) {
+  const today = ymd(new Date());
+  const Y = +ym.slice(0, 4), M = +ym.slice(5, 7);
+  const lead = new Date(Y, M - 1, 1).getDay();
+  const last = new Date(Y, M, 0).getDate();
+
+  const byDate = {};
+  for (const m of S.index) (byDate[m.date] = byDate[m.date] || []).push(m);
+
+  let cells = '';
+  for (let i = 0; i < lead; i++) cells += `<span class="cday blank"></span>`;
+  let entryDays = 0, entryCount = 0, plan = 0, done = 0, full = 0, planned = 0;
+
+  for (let d = 1; d <= last; d++) {
+    const key = `${ym}-${pad(d)}`;
+    const metas = byDate[key] || [];
+    if (metas.length) { entryDays++; entryCount += metas.length; }
+
+    if (key > today) { cells += `<span class="cday later">${d}</span>`; continue; }
+
+    const p = dayProgress(key);
+    if (p.total > 0) {
+      planned++; plan += p.target; done += p.done;
+      if (p.target > 0 ? p.done >= p.target : true) full++;
+    }
+    let style = '';
+    if (p.rate >= 0) {
+      const a = Math.round((.2 + p.rate * .6) * 255).toString(16).padStart(2, '0');
+      style = `background:${lightOf(p.rate).color}${a}`;
+    }
+    const fams = [...new Set(metas.flatMap(m => m.fams || []))];
+    const bar = fams.length
+      ? `<span class="bar">${fams.map(f => `<i style="background:${famColor(f)}"></i>`).join('')}</span>` : '';
+    const cls = ['cday', metas.length || p.rate >= 0 ? 'lit' : '', key === today ? 'today' : ''].filter(Boolean).join(' ');
+    const tip = [key, p.total ? `루틴 ${p.done}/${p.target}` : '', metas.length ? `기록 ${metas.length}개` : '']
+      .filter(Boolean).join(' · ');
+    cells += `<button class="${cls}" data-day="${key}" title="${esc(tip)}" style="${style}">${d}${bar}</button>`;
+  }
+
+  const rate = plan ? done / plan : -1;
+  return `
+    <div class="calnav">
+      <b>${Y}년 ${M}월</b>
+      <button class="tdy" data-today>이번 달</button>
+      <button data-prev aria-label="지난 달"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button data-next aria-label="다음 달" ${ym >= today.slice(0, 7) ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>
+    <div class="cal">
+      ${DOW.map(d => `<span class="dw">${d}</span>`).join('')}
+      ${cells}
+    </div>
+    <div class="calleg">
+      <span><i style="background:${famColor('mad')}99"></i>낮음</span>
+      <span><i style="background:${famColor('joy')}99"></i>보통</span>
+      <span><i style="background:${famColor('calm')}cc"></i>지킴</span>
+      <span><i class="b"></i>그날의 감정</span>
+    </div>
+    <div class="statgrid">
+      <div class="stat"><b>${entryDays}</b><span>기록한 날${entryCount > entryDays ? ` · ${entryCount}개` : ''}</span></div>
+      <div class="stat"><b${rate >= 0 ? ` style="color:${lightOf(rate).color}"` : ''}>${rate < 0 ? '—' : Math.round(rate * 100) + '%'}</b><span>루틴 달성률</span></div>
+      <div class="stat"><b>${planned ? full : '—'}</b><span>모두 지킨 날</span></div>
+    </div>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:10px">
+      날짜를 누르면 그날의 루틴과 기록을 볼 수 있어요.</div>`;
+}
+
+/* ---------- 하루 돌아보기 ---------- */
+async function openDayReview(date, onChange) {
+  const scr = document.createElement('div'); scr.className = 'screen';
+  scr.innerHTML = `<div class="inner">
+    <div class="screenbar">
+      <button class="iconbtn" data-x><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="ttl">하루 돌아보기</div></div>
+    <div id="dvBody"></div>
+  </div>`;
+  $('#layers').appendChild(scr);
+  scr.querySelector('[data-x]').onclick = () => { scr.remove(); onChange && onChange(); };
+
+  const paint = () => {
+    const p = dayProgress(date);
+    const L = lightOf(p.rate);
+    const metas = S.index.filter(m => m.date === date);
+    let h = `<div class="dayhead"><span class="dl">${dateLabel(date)}</span>
+      ${p.total ? `<span class="dp" style="background:${L.color}22;color:${L.color}">${Math.round(p.rate * 100)}%</span>` : ''}</div>`;
+
+    if (p.total) {
+      h += `<div class="eyebrow" style="padding:0">루틴 ${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}</div>`;
+      for (const r of sortRoutines(p.list)) {
+        const c = p.ck[r.id] || {}, st = c.s || '';
+        const sub = [st === 'rest' ? '오늘은 쉼' : '', c.memo || ''].filter(Boolean).join(' · ');
+        const mark = st === 'rest' ? `<path d="M6 12h12"/>` : `<path d="M20 6L9 17l-5-5"/>`;
+        h += `<div class="ritem ${st}" data-r="${r.id}">
+          <button class="ck" data-opt aria-label="체크"><svg viewBox="0 0 24 24">${mark}</svg></button>
+          <button class="slot" data-opt>${esc(slotName(r.slot))}</button>
+          <span class="em">${esc(r.emoji || '✅')}</span>
+          <button class="nm" data-opt><span class="t">${esc(r.name)}</span>${sub ? `<span class="memo">${esc(sub)}</span>` : ''}</button>
+          <button class="opt" data-opt aria-label="더 보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+        </div>`;
+      }
+      h += `<div style="font-size:11.5px;color:var(--faint);margin-top:4px">
+        줄을 누르면 그날의 체크와 메모를 고칠 수 있어요.</div>`;
+    }
+
+    h += `<div class="eyebrow" style="padding:0">기록 ${metas.length ? metas.length + '개' : ''}</div>`;
+    if (metas.length) {
+      h += metas.map(m => {
+        const th = (S.thumbs[date.slice(0, 7)] || {})[m.id];
+        return `<button class="memory" style="width:100%;text-align:left;margin:0 0 9px" data-go="${m.id}">
+          ${th ? `<img src="${th}" alt="">`
+            : `<div style="width:52px;height:52px;border-radius:10px;flex:none;background:${gradOf(m.fams)}"></div>`}
+          <div style="min-width:0">
+            <div class="t">${(m.emos || []).slice(0, 3).map(esc).join(' · ') || '감정 없음'}</div>
+            <div class="b">${esc(m.preview || '기록이 있어요')}</div></div>
+        </button>`;
+      }).join('');
+    } else {
+      h += `<div style="color:var(--faint);font-size:13px">이 날 남긴 기록이 없어요.</div>`;
+    }
+
+    if (!p.total && !metas.length) {
+      h = `<div class="dayhead"><span class="dl">${dateLabel(date)}</span></div>
+        <div class="empty"><b>조용한 하루였네요</b>예정된 루틴도, 남긴 기록도 없는 날이에요.</div>`;
+    }
+
+    const body = $('#dvBody', scr);
+    body.innerHTML = h;
+    $$('.ritem', body).forEach(row => {
+      const id = row.dataset.r;
+      $$('[data-opt]', row).forEach(b => b.onclick =
+        () => openRoutineOptions(id, date, { after: paint }));
+    });
+    $$('[data-go]', body).forEach(b => b.onclick = () => openDetail(b.dataset.go));
+  };
+  paint();
 }
 
 /* ============================================================
