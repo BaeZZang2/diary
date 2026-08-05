@@ -398,11 +398,19 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 .light .msg{font-size:12.5px;color:var(--dim);margin-top:10px}
 
 /* ---------- 루틴 목록 ---------- */
-.rslot{margin:20px var(--sp) 0}
-.rslot .sh{font-size:10.5px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase;
-  margin-bottom:9px;display:flex;align-items:center;gap:8px}
-.rslot .sh::after{content:'';flex:1;height:1px;background:var(--line)}
-.ritem{display:flex;align-items:center;gap:11px;padding:11px 12px;background:var(--surface);
+/* 목록 머리: 왼쪽 이름표 + 오른쪽 정렬 단추 */
+.rbar{display:flex;align-items:center;gap:8px;margin:22px var(--sp) 10px}
+.rbar .lb{font-size:10.5px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
+.rbar .sortbtn{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim);
+  border:1px solid var(--line);border-radius:999px;padding:5px 11px;white-space:nowrap}
+.rbar .sortbtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex:none}
+.rlist{margin:0 var(--sp)}
+/* 루틴 이름 앞에 붙는 시간대 칸 */
+.ritem .slot{flex:none;width:62px;font-size:10.5px;line-height:1.35;color:var(--faint);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.ritem.done .slot,.ritem.rest .slot{opacity:.6}
+
+.ritem{display:flex;align-items:center;gap:9px;padding:11px 12px;background:var(--surface);
   border:1px solid var(--line);border-radius:12px;margin-bottom:8px;transition:background .15s,border-color .15s}
 .ritem .ck{flex:none;width:27px;height:27px;border-radius:9px;border:1.5px solid var(--line);
   display:grid;place-items:center;color:transparent;transition:.18s}
@@ -417,7 +425,6 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ritem .opt{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--faint)}
 .ritem .opt svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
-.rmeta{font-size:11.5px;color:var(--faint);margin-left:auto;font-family:var(--mo)}
 
 /* ---------- 루틴 관리 ---------- */
 .rmg{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -550,6 +557,22 @@ const ROUTINE_PRESETS = [
   { emoji: '🙏', name: '고마운 일 하나 떠올리기', slot: 'any' },
   { emoji: '🌿', name: '숨 깊게 세 번 쉬기', slot: 'any' },
   { emoji: '🧹', name: '5분만 정리하기', slot: 'any' },
+];
+
+/* 루틴 목록을 늘어놓는 차례 */
+const SORTS = [
+  { id: 'slot', name: '시간대 순서', desc: '아침 · 낮 · 저녁 차례로' },
+  { id: 'manual', name: '내가 정한 순서', desc: '루틴 관리에서 옮겨 둔 그대로' },
+  { id: 'old', name: '먼저 만든 순서', desc: '오래 지켜온 것부터' },
+  { id: 'new', name: '나중에 만든 순서', desc: '새로 담은 것부터' },
+  { id: 'name', name: '이름 순서', desc: '가나다 · ABC 차례로' },
+];
+
+/* 체크했을 때 메모 창을 띄울지 — 루틴마다 따로 정할 수 있다 */
+const MEMO_MODES = [
+  { id: 'auto', name: '설정 따름' },
+  { id: 'on', name: '항상 띄우기' },
+  { id: 'off', name: '띄우지 않기' },
 ];
 
 /* 루틴 이름 옆에 붙일 만한 그림 */
@@ -782,7 +805,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v13 · 2026-08-05';
+const APP_VERSION = 'v14 · 2026-08-05';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -792,7 +815,7 @@ const S = {
   index: [], thumbs: {}, routines: [], checks: {}, slots: [],
   settings: {
     pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '',
-    memoOnCheck: true, light: Object.assign({}, LIGHT_DEFAULT)
+    memoOnCheck: true, rsort: 'slot', light: Object.assign({}, LIGHT_DEFAULT)
   },
   query: '', tag: '', tab: 'diary', ready: false
 };
@@ -860,7 +883,7 @@ async function shrink(file, max, quality) {
 async function loadAll() {
   S.index = (await KV.get(K.idx)) || [];
   S.settings = Object.assign(
-    { pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '', memoOnCheck: true },
+    { pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '', memoOnCheck: true, rsort: 'slot' },
     (await KV.get(K.set)) || {});
   S.settings.light = Object.assign({}, LIGHT_DEFAULT, S.settings.light || {});
   const ks = await KV.keys('md:thumb:');
@@ -1170,32 +1193,28 @@ function renderRoutine() {
       <div class="msg">${dateLabel(today)} · ${L.msg}${p.total ? ` (${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''})` : ''}</div>
     </div>`;
 
-  /* 시간대가 지워졌거나 알 수 없는 루틴은 '아무 때나' 로 모아 보여준다 (사라지지 않게) */
-  const known = new Set(allSlots().map(s => s.id));
-  for (const s of allSlots()) {
-    const items = p.list.filter(r => {
-      const sl = r.slot || 'any';
-      return sl === s.id || (s.id === 'any' && !known.has(sl));
-    });
-    if (!items.length) continue;
-    const sDone = items.filter(r => (p.ck[r.id] || {}).s === 'done').length;
-    html += `<div class="rslot"><div class="sh">${s.icon} ${s.name}<span class="rmeta">${sDone}/${items.length}</span></div>`;
-    for (const r of items) {
+  if (p.list.length) {
+    const sort = SORTS.find(s => s.id === (S.settings.rsort || 'slot')) || SORTS[0];
+    html += `<div class="rbar"><span class="lb">오늘의 루틴 ${p.done}/${p.target}</span>
+      <button class="sortbtn" data-sort>
+        <svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M17 20V4M17 4l3 3"/></svg>
+        ${esc(sort.name)}</button></div>
+      <div class="rlist">`;
+    for (const r of sortRoutines(p.list)) {
       const c = p.ck[r.id] || {}, st = c.s || '';
       const sub = [st === 'rest' ? '오늘은 쉼' : '', c.memo || ''].filter(Boolean).join(' · ');
       /* 쉼은 체크가 아니라 '오늘은 넘어감' 이므로 표시도 다르게 */
       const mark = st === 'rest' ? `<path d="M6 12h12"/>` : `<path d="M20 6L9 17l-5-5"/>`;
       html += `<div class="ritem ${st}" data-r="${r.id}">
         <button class="ck" data-ck aria-label="체크"><svg viewBox="0 0 24 24">${mark}</svg></button>
+        <button class="slot" data-ck>${esc(slotName(r.slot))}</button>
         <span class="em">${esc(r.emoji || '✅')}</span>
         <button class="nm" data-ck><span class="t">${esc(r.name)}</span>${sub ? `<span class="memo">${esc(sub)}</span>` : ''}</button>
         <button class="opt" data-opt aria-label="더 보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
       </div>`;
     }
     html += `</div>`;
-  }
-
-  if (!p.list.length) {
+  } else {
     html += `<div class="empty"><b>오늘은 예정된 루틴이 없어요</b>반복 요일에 오늘이 없는 루틴들이에요. 푹 쉬어도 좋습니다.</div>`;
   }
 
@@ -1212,7 +1231,52 @@ function renderRoutine() {
   });
   host.querySelector('[data-manage]').onclick = openRoutineManage;
   host.querySelector('[data-preset2]').onclick = openPresetPicker;
+  const sb = host.querySelector('[data-sort]');
+  if (sb) sb.onclick = openSortPicker;
   renderRoutineRibbon(); updateTabBadge();
+}
+
+/* 목록을 늘어놓는 차례.
+   시간대가 지워졌거나 알 수 없는 루틴은 맨 뒤로 보내되 목록에서 빠지지는 않는다. */
+function sortRoutines(list) {
+  const mode = S.settings.rsort || 'slot';
+  const ids = allSlots().map(s => s.id);
+  const slotIdx = r => { const i = ids.indexOf(r.slot || 'any'); return i < 0 ? ids.length : i; };
+  const ord = r => (r.order || 0);
+  const born = r => String(r.createdAt || r.startDate || '');
+  const arr = [...list];
+  switch (mode) {
+    case 'manual': arr.sort((a, b) => ord(a) - ord(b)); break;
+    case 'old': arr.sort((a, b) => born(a).localeCompare(born(b)) || ord(a) - ord(b)); break;
+    /* 한꺼번에 담은 루틴은 만든 시각이 모두 같다. 그때는 담은 차례를 뒤집어야 '나중' 답다 */
+    case 'new': arr.sort((a, b) => born(b).localeCompare(born(a)) || ord(b) - ord(a)); break;
+    case 'name': arr.sort((a, b) => a.name.localeCompare(b.name, 'ko')); break;
+    default: arr.sort((a, b) => slotIdx(a) - slotIdx(b) || ord(a) - ord(b));
+  }
+  return arr;
+}
+
+function openSortPicker() {
+  const cur = S.settings.rsort || 'slot';
+  sheet('루틴 늘어놓는 차례', SORTS.map(s => `
+    <div class="rowitem"><div class="rl"><b>${esc(s.name)}</b><span>${esc(s.desc)}</span></div>
+      <button class="btn ${s.id === cur ? 'btn-p' : 'btn-g'}" data-so="${s.id}">${s.id === cur ? '보는 중' : '이걸로'}</button></div>`).join(''),
+    (root, close) => {
+      $$('[data-so]', root).forEach(b => b.onclick = async () => {
+        S.settings.rsort = b.dataset.so;
+        await saveSettings();
+        close(); renderRoutine();
+        toast(`${SORTS.find(s => s.id === b.dataset.so).name} 로 늘어놓을게요`);
+      });
+    });
+}
+
+/* 이 루틴을 체크했을 때 메모 창을 띄울지 — 루틴 설정이 전체 설정보다 앞선다 */
+function wantsMemo(r) {
+  const mode = (r && r.memoMode) || 'auto';
+  if (mode === 'on') return true;
+  if (mode === 'off') return false;
+  return S.settings.memoOnCheck !== false;
 }
 
 async function toggleCheck(rid) {
@@ -1224,8 +1288,9 @@ async function toggleCheck(rid) {
     : Object.assign({}, cur, { s: 'done', at: Date.now() });
   await setCheck(today, rid, next && (next.s || next.memo) ? next : null);
   renderRoutine();
-  /* 방금 완료로 표시했으면 메모 창을 바로 띄운다 (설정에서 끌 수 있다) */
-  if (turningOn && S.settings.memoOnCheck !== false) openRoutineOptions(rid, today, { focusMemo: true });
+  /* 방금 완료로 표시했으면 메모 창을 바로 띄운다.
+     루틴마다 따로 정해 둔 값이 있으면 그것이 전체 설정보다 앞선다. */
+  if (turningOn && wantsMemo(S.routines.find(x => x.id === rid))) openRoutineOptions(rid, today, { focusMemo: true });
 }
 
 function openRoutineOptions(rid, date, opts = {}) {
@@ -1268,7 +1333,8 @@ function openRoutineEdit(id) {
   const src = id ? S.routines.find(r => r.id === id) : null;
   const r = src
     ? Object.assign({}, src, { days: [...(src.days || [])] })
-    : { id: uid(), name: '', emoji: '✅', days: [0, 1, 2, 3, 4, 5, 6], slot: 'morning', active: true };
+    : { id: uid(), name: '', emoji: '✅', days: [0, 1, 2, 3, 4, 5, 6], slot: 'morning', active: true, memoMode: 'auto' };
+  if (!MEMO_MODES.some(m => m.id === r.memoMode)) r.memoMode = 'auto';
 
   const scr = document.createElement('div'); scr.className = 'screen';
   scr.innerHTML = `<div class="inner">
@@ -1305,6 +1371,15 @@ function openRoutineEdit(id) {
       <div class="words" id="rSlot"></div>
     </div>
 
+    <div class="field">
+      <div class="label">체크하면 메모 창</div>
+      <div class="words" id="rMemoMode">${MEMO_MODES.map(m =>
+        `<button class="word" data-mm="${m.id}">${esc(m.name)}</button>`).join('')}</div>
+      <div style="font-size:11.5px;color:var(--faint);margin-top:8px;line-height:1.7">
+        이 루틴만 따로 정해요. ‘설정 따름’ 이면 지금 전체 설정인
+        <b style="color:var(--dim)">${S.settings.memoOnCheck === false ? '띄우지 않기' : '띄우기'}</b> 를 따라가요.</div>
+    </div>
+
     ${id ? `<div style="margin-top:30px;display:flex;flex-direction:column;gap:9px">
       <button class="btn btn-o" data-arch style="width:100%">${r.active === false ? '다시 사용하기' : '보관하기 (기록은 그대로)'}</button>
       <button class="btn btn-o" data-del style="width:100%;color:var(--mad);border-color:#DB4F6544">이 루틴 삭제</button>
@@ -1322,6 +1397,11 @@ function openRoutineEdit(id) {
     });
     $$('[data-d]', scr).forEach(b => {
       const on = r.days.includes(+b.dataset.d);
+      b.classList.toggle('on', on);
+      b.style.cssText = on ? 'background:var(--ivory);border-color:var(--ivory)' : '';
+    });
+    $$('[data-mm]', scr).forEach(b => {
+      const on = b.dataset.mm === r.memoMode;
       b.classList.toggle('on', on);
       b.style.cssText = on ? 'background:var(--ivory);border-color:var(--ivory)' : '';
     });
@@ -1348,6 +1428,7 @@ function openRoutineEdit(id) {
   paintSlots();
 
   $$('[data-e]', scr).forEach(b => b.onclick = () => { r.emoji = b.dataset.e; paint(); });
+  $$('[data-mm]', scr).forEach(b => b.onclick = () => { r.memoMode = b.dataset.mm; paint(); });
   $$('[data-d]', scr).forEach(b => b.onclick = () => {
     const d = +b.dataset.d;
     r.days = r.days.includes(d) ? r.days.filter(x => x !== d) : [...r.days, d].sort();
@@ -1458,6 +1539,8 @@ function openRoutineManage() {
       <div class="ttl">루틴 관리</div>
       <button class="btn btn-p" data-new>추가</button>
     </div>
+    <div style="font-size:11.5px;color:var(--faint);margin:16px 0 2px;line-height:1.7">
+      여기서 옮긴 차례는 목록을 <b style="color:var(--dim)">‘내가 정한 순서’</b> 로 볼 때 그대로 보여요.</div>
     <div id="rmList"></div>
     <button class="btn btn-o" data-preset style="width:100%;margin-top:22px">보기에서 골라 담기</button>
   </div>`;
