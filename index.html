@@ -782,7 +782,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v12 · 2026-08-05';
+const APP_VERSION = 'v13 · 2026-08-05';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -792,7 +792,7 @@ const S = {
   index: [], thumbs: {}, routines: [], checks: {}, slots: [],
   settings: {
     pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '',
-    light: Object.assign({}, LIGHT_DEFAULT)
+    memoOnCheck: true, light: Object.assign({}, LIGHT_DEFAULT)
   },
   query: '', tag: '', tab: 'diary', ready: false
 };
@@ -859,7 +859,8 @@ async function shrink(file, max, quality) {
 /* ---------- 데이터 I/O ---------- */
 async function loadAll() {
   S.index = (await KV.get(K.idx)) || [];
-  S.settings = Object.assign({ pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '' },
+  S.settings = Object.assign(
+    { pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '', memoOnCheck: true },
     (await KV.get(K.set)) || {});
   S.settings.light = Object.assign({}, LIGHT_DEFAULT, S.settings.light || {});
   const ks = await KV.keys('md:thumb:');
@@ -1217,14 +1218,17 @@ function renderRoutine() {
 async function toggleCheck(rid) {
   const today = ymd(new Date());
   const cur = dayChecks(today)[rid] || {};
+  const turningOn = cur.s !== 'done';
   const next = cur.s === 'done'
     ? (cur.memo ? { s: '', memo: cur.memo } : null)
     : Object.assign({}, cur, { s: 'done', at: Date.now() });
   await setCheck(today, rid, next && (next.s || next.memo) ? next : null);
   renderRoutine();
+  /* 방금 완료로 표시했으면 메모 창을 바로 띄운다 (설정에서 끌 수 있다) */
+  if (turningOn && S.settings.memoOnCheck !== false) openRoutineOptions(rid, today, { focusMemo: true });
 }
 
-function openRoutineOptions(rid, date) {
+function openRoutineOptions(rid, date, opts = {}) {
   const r = S.routines.find(x => x.id === rid); if (!r) return;
   const c = dayChecks(date)[rid] || {};
   sheet(`${r.emoji || '✅'} ${r.name}`, `
@@ -1254,6 +1258,8 @@ function openRoutineOptions(rid, date) {
         close(); renderRoutine(); toast(memo ? '메모를 저장했어요' : '메모를 지웠어요');
       };
       $('#rGoEdit', root).onclick = () => { close(); openRoutineEdit(rid); };
+      /* 체크하자마자 뜬 창이면 바로 적을 수 있게 커서를 놓아준다 */
+      if (opts.focusMemo) { const i = $('#rMemo', root); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
     });
 }
 
@@ -2440,6 +2446,9 @@ function openSettings() {
     <div class="rowitem"><div class="rl"><b>신호등 기준</b>
       <span>지금은 ${S.settings.light.yellow}% 부터 노란불, ${S.settings.light.green}% 부터 초록불</span></div>
       <button class="btn btn-g" data-light>바꾸기</button></div>
+    <div class="rowitem"><div class="rl"><b>체크하면 메모 창 띄우기</b>
+      <span>완료를 누르는 순간 한 줄 메모 창이 바로 열려요</span></div>
+      <button class="btn btn-g" data-memo>${S.settings.memoOnCheck === false ? '꺼짐' : '켜짐'}</button></div>
     <div class="rowitem"><div class="rl"><b>남은 루틴 알려주기</b>
       <span>앱을 열었을 때 하루 한 번만 알려줘요</span></div>
       <button class="btn btn-g" data-remind>${S.settings.remind === false ? '꺼짐' : '켜짐'}</button></div>
@@ -2476,10 +2485,19 @@ function openSettings() {
     row.querySelector('span').textContent =
       `지금은 ${S.settings.light.yellow}% 부터 노란불, ${S.settings.light.green}% 부터 초록불`;
   });
-  scr.querySelector('[data-remind]').onclick = async e => {
+  /* 버튼은 미리 붙잡아 둔다 — await 뒤에는 e.currentTarget 이 이미 비어 있다 */
+  const memoBtn = scr.querySelector('[data-memo]');
+  memoBtn.onclick = async () => {
+    S.settings.memoOnCheck = S.settings.memoOnCheck === false;
+    await saveSettings();
+    memoBtn.textContent = S.settings.memoOnCheck === false ? '꺼짐' : '켜짐';
+    toast(S.settings.memoOnCheck === false ? '체크만 하고 넘어갈게요' : '체크하면 메모 창을 띄울게요');
+  };
+  const remindBtn = scr.querySelector('[data-remind]');
+  remindBtn.onclick = async () => {
     S.settings.remind = S.settings.remind === false;
     await saveSettings();
-    e.currentTarget.textContent = S.settings.remind === false ? '꺼짐' : '켜짐';
+    remindBtn.textContent = S.settings.remind === false ? '꺼짐' : '켜짐';
     toast(S.settings.remind === false ? '알려주지 않을게요' : '앱을 열 때 알려드릴게요');
   };
   scr.querySelector('[data-exp]').onclick = exportAll;
