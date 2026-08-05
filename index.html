@@ -105,7 +105,7 @@ header.top{position:sticky;top:0;z-index:40;background:var(--topbg);
 .search svg{width:16px;height:16px;stroke:var(--faint);fill:none;stroke-width:1.8}
 
 /* content */
-main{padding:0 0 110px}
+main{padding:0 0 172px}
 .section{padding:0 var(--sp)}
 .eyebrow{font-size:10.5px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase;
   margin:22px 0 10px;display:flex;align-items:center;gap:8px}
@@ -158,7 +158,7 @@ main{padding:0 0 110px}
 .empty b{display:block;font-family:var(--se);font-size:17px;color:var(--dim);margin-bottom:6px}
 
 /* FAB */
-.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));
   z-index:45;background:var(--ivory);color:var(--ink);height:52px;border-radius:26px;padding:0 22px;
   display:flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px;
   box-shadow:var(--shadow)}
@@ -258,7 +258,8 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 .barrow{display:flex;align-items:center;gap:10px;margin-top:9px}
 .barrow .nm{width:46px;font-size:12.5px;color:var(--dim);flex:none}
 .barrow .tr{flex:1;height:8px;background:var(--raised);border-radius:4px;overflow:hidden}
-.barrow .fl{height:100%;border-radius:4px}
+/* span 은 인라인이라 display 를 주지 않으면 width·height 가 통째로 무시된다 */
+.barrow .fl{display:block;height:100%;border-radius:4px}
 .barrow .ct{width:26px;text-align:right;font-family:var(--mo);font-size:11.5px;color:var(--faint)}
 
 /* misc */
@@ -266,7 +267,7 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 .rowitem .rl{margin-right:auto}
 .rowitem .rl b{display:block;font-size:14.5px;font-weight:500}
 .rowitem .rl span{font-size:12px;color:var(--faint)}
-.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--raised);
+.toast{position:fixed;left:50%;bottom:calc(146px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--raised);
   border:1px solid var(--line);border-radius:11px;padding:10px 18px;font-size:13.5px;z-index:200;
   box-shadow:var(--shadow2);animation:fade .2s}
 .lock{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;
@@ -349,7 +350,7 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 .ccard .cne{font-size:13px;color:var(--dim);margin-top:9px}
 .ccard .ctags{display:flex;flex-wrap:wrap;gap:6px}
 /* ---------- 뒤로 가기 · 종료 안내 ---------- */
-.exitpop{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));
+.exitpop{position:fixed;left:50%;bottom:calc(146px + env(safe-area-inset-bottom));
   transform:translate(-50%,0);z-index:400;width:calc(100% - 32px);max-width:340px;
   display:flex;align-items:center;gap:12px;padding:14px 16px 15px;
   background:var(--surface);border:1px solid var(--line);border-radius:16px;
@@ -367,6 +368,77 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 @keyframes exitin{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes exitout{to{opacity:0;transform:translate(-50%,10px)}}
 @keyframes edrain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+/* ---------- 하단 탭 ---------- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--topbg);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom)}
+.tabbar .in{max-width:560px;margin:0 auto;display:flex}
+.tabbar button{position:relative;flex:1;height:58px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;color:var(--faint);font-size:11px;
+  letter-spacing:.04em;transition:color .15s}
+.tabbar button.on{color:var(--tx)}
+.tabbar svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.tabbar .bdg{position:absolute;top:8px;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;
+  border-radius:8px;background:var(--mad);color:#fff;font-family:var(--mo);font-size:10px;
+  display:grid;place-items:center;font-style:normal}
+
+/* ---------- 루틴 신호등 ---------- */
+.light{margin:16px var(--sp) 0;background:var(--promptgrad);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 18px}
+.light .lh{display:flex;align-items:center;gap:11px}
+.light .lamp{flex:none;display:flex;gap:5px}
+.light .lamp i{width:13px;height:13px;border-radius:50%;background:var(--raised);
+  border:1px solid var(--line);transition:.25s}
+.light .lab{font-size:10.5px;letter-spacing:.16em;color:var(--faint)}
+.light .pct{font-family:var(--mo);font-size:25px;font-weight:500;margin-left:auto;line-height:1}
+.light .pct small{font-size:12px;color:var(--faint);margin-left:2px}
+.light .tr{height:8px;border-radius:4px;background:var(--raised);overflow:hidden;margin-top:13px}
+.light .tr .fl{display:block;height:100%;border-radius:4px;transition:width .3s}
+.light .msg{font-size:12.5px;color:var(--dim);margin-top:10px}
+
+/* ---------- 루틴 목록 ---------- */
+.rslot{margin:20px var(--sp) 0}
+.rslot .sh{font-size:10.5px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase;
+  margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.rslot .sh::after{content:'';flex:1;height:1px;background:var(--line)}
+.ritem{display:flex;align-items:center;gap:11px;padding:11px 12px;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;margin-bottom:8px;transition:background .15s,border-color .15s}
+.ritem .ck{flex:none;width:27px;height:27px;border-radius:9px;border:1.5px solid var(--line);
+  display:grid;place-items:center;color:transparent;transition:.18s}
+.ritem .ck svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.8}
+.ritem.done .ck{background:var(--calm);border-color:var(--calm);color:var(--ink)}
+.ritem.rest .ck{background:var(--fear);border-color:var(--fear);color:var(--ink)}
+.ritem .em{flex:none;width:22px;text-align:center;font-size:17px;line-height:1}
+.ritem .nm{flex:1;min-width:0;font-size:14.5px;text-align:left}
+.ritem.done .nm,.ritem.rest .nm{color:var(--dim)}
+.ritem.done .nm .t{text-decoration:line-through;text-decoration-color:var(--faint)}
+.ritem .memo{display:block;font-size:11.5px;color:var(--faint);margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ritem .opt{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--faint)}
+.ritem .opt svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.rmeta{font-size:11.5px;color:var(--faint);margin-left:auto;font-family:var(--mo)}
+
+/* ---------- 루틴 관리 ---------- */
+.rmg{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}
+.rmg .em{flex:none;width:26px;text-align:center;font-size:17px}
+.rmg .bd{flex:1;min-width:0}
+.rmg .bd b{display:block;font-size:14.5px;font-weight:500}
+.rmg .bd span{font-size:11.5px;color:var(--faint)}
+.rmg.off .bd b,.rmg.off .em{opacity:.45}
+.rmg .mv{flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--faint)}
+.rmg .mv svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2}
+.rmg .mv[disabled]{opacity:.25}
+
+/* ---------- 히트맵 ---------- */
+.hmapwrap{max-width:300px;margin:0 auto}
+.hmap{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.hmap i{aspect-ratio:1;border-radius:5px;background:var(--raised);display:block}
+.hdow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px;
+  font-size:10px;color:var(--faint);text-align:center}
+.hleg{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--faint)}
+.hleg i{width:11px;height:11px;border-radius:3px;display:block;background:var(--raised)}
+
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -391,14 +463,26 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
   </header>
 
   <main>
-    <div id="promptSlot"></div>
-    <div id="memorySlot"></div>
-    <div class="eyebrow section" id="railHead">자주 쓴 태그</div>
-    <div class="rail" id="tagRail"></div>
-    <div id="feed"></div>
+    <div id="viewDiary">
+      <div id="promptSlot"></div>
+      <div id="memorySlot"></div>
+      <div class="eyebrow section" id="railHead">자주 쓴 태그</div>
+      <div class="rail" id="tagRail"></div>
+      <div id="feed"></div>
+    </div>
+    <div id="viewRoutine" class="hide"></div>
   </main>
 
-  <button class="fab" id="fabNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>오늘 기록하기</button>
+  <button class="fab" id="fabNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span id="fabLabel">오늘 기록하기</span></button>
+
+  <nav class="tabbar" id="tabbar"><div class="in">
+    <button data-tab="diary" class="on">
+      <svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 015.5 4H18a2 2 0 012 2v14a1 1 0 01-1 1H6.5A2.5 2.5 0 014 18.5z"/><path d="M8 8h8M8 12h6"/></svg>
+      기록</button>
+    <button data-tab="routine">
+      <svg viewBox="0 0 24 24"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M8 2v4M16 2v4"/></svg>
+      루틴<i class="bdg hide" id="tabBadge">0</i></button>
+  </div></nav>
 </div>
 <div id="layers"></div>
 <script>
@@ -427,6 +511,39 @@ const THEMES = [
   { id: 'pink',   name: '베이비핑크', sw: ['#FFF4F6', '#B92F4E', '#7247B4'] },
   { id: 'green',  name: '딥그린',     sw: ['#0E1A15', '#5FD3AE', '#E8B54A'] },
 ];
+
+/* 루틴 시간대 — 하루를 네 칸으로만 나눈다 (분 단위 계획표는 만들지 않는다) */
+const SLOTS = [
+  { id: 'morning', name: '아침', icon: '🌅' },
+  { id: 'day', name: '낮', icon: '☀️' },
+  { id: 'evening', name: '저녁', icon: '🌙' },
+  { id: 'any', name: '아무 때나', icon: '🕊️' },
+];
+
+/* 처음 켰을 때 고르기용 루틴 보기 — 몸·마음·관계를 골고루 */
+const ROUTINE_PRESETS = [
+  { emoji: '💧', name: '물 한 잔 마시기', slot: 'morning' },
+  { emoji: '🪟', name: '창문 열고 환기하기', slot: 'morning' },
+  { emoji: '🛏️', name: '이불 정리하기', slot: 'morning' },
+  { emoji: '💊', name: '영양제 챙겨 먹기', slot: 'morning' },
+  { emoji: '🤸', name: '스트레칭 5분', slot: 'morning' },
+  { emoji: '🚶', name: '20분 걷기', slot: 'day' },
+  { emoji: '🍚', name: '거르지 않고 밥 먹기', slot: 'day' },
+  { emoji: '☎️', name: '가족에게 연락하기', slot: 'day' },
+  { emoji: '📖', name: '책 열 쪽 읽기', slot: 'evening' },
+  { emoji: '🧘', name: '명상 5분', slot: 'evening' },
+  { emoji: '📵', name: '자기 전 휴대폰 내려놓기', slot: 'evening' },
+  { emoji: '🛁', name: '따뜻한 물로 씻기', slot: 'evening' },
+  { emoji: '✍️', name: '오늘 한 줄 남기기', slot: 'evening' },
+  { emoji: '🙏', name: '고마운 일 하나 떠올리기', slot: 'any' },
+  { emoji: '🌿', name: '숨 깊게 세 번 쉬기', slot: 'any' },
+  { emoji: '🧹', name: '5분만 정리하기', slot: 'any' },
+];
+
+/* 루틴 이름 옆에 붙일 만한 그림 */
+const ROUTINE_EMOJIS = ['✅', '💧', '🚶', '🏃', '🧘', '🤸', '📖', '✍️', '🎧', '🎨',
+  '💊', '🍎', '🍚', '😴', '🛏️', '🪟', '🧹', '🛁', '📵', '☎️',
+  '🌿', '🙏', '💪', '☕', '🐾', '💐', '🎯', '🔥'];
 
 const EMOTIONS = {
   joy: ['행복한','기쁜','즐거운','신나는','설레는','들뜬','유쾌한','흐뭇한','감격스러운','벅찬',
@@ -645,13 +762,21 @@ const KV = (() => {
   };
 })();
 
-const K = { idx: 'md:index', set: 'md:settings', entry: id => 'md:entry:' + id, thumb: ym => 'md:thumb:' + ym };
+const K = {
+  idx: 'md:index', set: 'md:settings', entry: id => 'md:entry:' + id, thumb: ym => 'md:thumb:' + ym,
+  rt: 'md:routines',                      /* 루틴 정의 한 덩어리 */
+  check: ym => 'md:check:' + ym,          /* 체크 기록은 달마다 나눠 담는다 (사진 썸네일과 같은 방식) */
+};
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v10 · 2026-08-05';
+const APP_VERSION = 'v11 · 2026-08-05';
 
 /* ---------- 상태 ---------- */
-const S = { index: [], thumbs: {}, settings: { pin: '', promptLog: {}, theme: 'night' }, query: '', tag: '', ready: false };
+const S = {
+  index: [], thumbs: {}, routines: [], checks: {},
+  settings: { pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '' },
+  query: '', tag: '', tab: 'diary', ready: false
+};
 
 /* ---------- 유틸 ---------- */
 function toast(msg) {
@@ -715,9 +840,13 @@ async function shrink(file, max, quality) {
 /* ---------- 데이터 I/O ---------- */
 async function loadAll() {
   S.index = (await KV.get(K.idx)) || [];
-  S.settings = Object.assign({ pin: '', promptLog: {}, theme: 'night' }, (await KV.get(K.set)) || {});
+  S.settings = Object.assign({ pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '' },
+    (await KV.get(K.set)) || {});
   const ks = await KV.keys('md:thumb:');
   for (const k of ks) { const v = await KV.get(k); if (v) S.thumbs[k.replace('md:thumb:', '')] = v; }
+  S.routines = (await KV.get(K.rt)) || [];
+  const cks = await KV.keys('md:check:');
+  for (const k of cks) { const v = await KV.get(k); if (v) S.checks[k.replace('md:check:', '')] = v; }
   S.ready = true;
 }
 async function saveIndex() {
@@ -798,6 +927,7 @@ function renderRibbon() {
     parts.push(`<i title="${key}" style="height:${h}px${bg ? ';background:' + bg : ''}"></i>`);
   }
   el.innerHTML = parts.join('');
+  $('.ribbon-lab span').textContent = '최근 30일의 감정';
   $('#ribbonNote').textContent = `${active}일 기록`;
 }
 
@@ -896,6 +1026,518 @@ function renderFeed() {
 }
 
 function renderHome() { renderRibbon(); renderPrompt(); renderMemory(); renderTagRail(); renderFeed(); }
+
+/* ============================================================
+   루틴 — 매일 지킬 것을 적어두고 체크한다
+   저장: 정의는 md:routines 한 덩어리, 체크는 md:check:YYYY-MM 로 달마다
+   ============================================================ */
+const saveRoutines = () => KV.set(K.rt, S.routines);
+const slotName = id => (SLOTS.find(s => s.id === id) || SLOTS[3]).name;
+
+function dayChecks(date) { return (S.checks[date.slice(0, 7)] || {})[date] || {}; }
+
+async function setCheck(date, rid, val) {
+  const ym = date.slice(0, 7);
+  const bucket = S.checks[ym] || (S.checks[ym] = {});
+  const day = bucket[date] || (bucket[date] = {});
+  if (val) day[rid] = val; else delete day[rid];
+  if (!Object.keys(day).length) delete bucket[date];
+  await KV.set(K.check(ym), bucket);
+}
+
+/* 그날 예정된 루틴.
+   보관한 루틴도 보관 전 날짜에는 그대로 세어야 지난 통계가 흔들리지 않는다. */
+function routinesOn(date) {
+  const dow = new Date(date + 'T00:00:00').getDay();
+  return S.routines
+    .filter(r => (r.days || []).includes(dow)
+      && (!r.startDate || r.startDate <= date)
+      && (r.active !== false || (r.archivedDate && date < r.archivedDate)))
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+}
+
+/* 쉼으로 표시한 루틴은 분모에서 빠진다 (쉬기로 한 것도 지킨 것이다) */
+function dayProgress(date) {
+  const list = routinesOn(date), ck = dayChecks(date);
+  let done = 0, rest = 0;
+  for (const r of list) {
+    const s = (ck[r.id] || {}).s;
+    if (s === 'done') done++; else if (s === 'rest') rest++;
+  }
+  const target = list.length - rest;
+  const rate = target > 0 ? done / target : (list.length ? 1 : -1);
+  return { list, ck, done, rest, target, total: list.length, rate };
+}
+
+function lightOf(rate) {
+  if (rate < 0) return { i: -1, color: 'var(--faint)', msg: '오늘은 예정된 루틴이 없어요' };
+  if (rate >= .8) return { i: 2, color: famColor('calm'), msg: '오늘 흐름이 좋아요' };
+  if (rate >= .4) return { i: 1, color: famColor('joy'), msg: '절반쯤 왔어요. 남은 건 천천히' };
+  return { i: 0, color: famColor('mad'), msg: '하나만 해봐도 충분해요' };
+}
+
+function updateTabBadge() {
+  const p = dayProgress(ymd(new Date()));
+  const left = Math.max(0, p.target - p.done);
+  const b = $('#tabBadge');
+  b.textContent = left;
+  b.classList.toggle('hide', left === 0);
+}
+
+/* 최근 30일 달성 띠 — 감정 띠와 같은 자리, 같은 모양 */
+function renderRoutineRibbon() {
+  const el = $('#ribbon'), today = new Date(), parts = [];
+  let kept = 0, counted = 0;
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const key = ymd(d), p = dayProgress(key);
+    if (p.rate < 0) { parts.push(`<i title="${key}" style="height:3px"></i>`); continue; }
+    counted++; if (p.rate >= .8) kept++;
+    const L = lightOf(p.rate);
+    const h = 7 + Math.round(p.rate * 15);
+    parts.push(`<i title="${key} · ${Math.round(p.rate * 100)}%" style="height:${h}px;background:${L.color}"></i>`);
+  }
+  el.innerHTML = parts.join('');
+  $('.ribbon-lab span').textContent = '최근 30일의 루틴';
+  $('#ribbonNote').textContent = counted ? `${kept}일 지킴` : '기록 없음';
+}
+
+function renderRoutine() {
+  const host = $('#viewRoutine');
+  const today = ymd(new Date());
+  const p = dayProgress(today);
+
+  if (!S.routines.filter(r => r.active !== false).length) {
+    host.innerHTML = `
+      <div class="empty"><b>아직 루틴이 없어요</b>매일 지키고 싶은 것 하나부터 적어보세요.</div>
+      <div class="section" style="display:flex;flex-direction:column;gap:9px">
+        <button class="btn btn-p" data-preset style="width:100%">보기에서 골라 담기</button>
+        <button class="btn btn-o" data-new style="width:100%">직접 만들기</button>
+      </div>`;
+    host.querySelector('[data-preset]').onclick = openPresetPicker;
+    host.querySelector('[data-new]').onclick = () => openRoutineEdit(null);
+    renderRoutineRibbon(); updateTabBadge();
+    return;
+  }
+
+  const L = lightOf(p.rate);
+  const pctTxt = p.rate < 0 ? '—' : Math.round(p.rate * 100);
+  let html = `
+    <div class="light">
+      <div class="lh">
+        <span class="lamp">${[0, 1, 2].map(i => {
+          const c = [famColor('mad'), famColor('joy'), famColor('calm')][i];
+          return `<i style="${L.i === i ? `background:${c};border-color:${c};box-shadow:0 0 11px ${c}88` : ''}"></i>`;
+        }).join('')}</span>
+        <span class="lab">루틴 신호등</span>
+        <span class="pct" style="color:${L.color}">${pctTxt}${p.rate < 0 ? '' : '<small>%</small>'}</span>
+      </div>
+      <div class="tr"><span class="fl" style="width:${p.rate < 0 ? 0 : p.rate * 100}%;background:${L.color}"></span></div>
+      <div class="msg">${dateLabel(today)} · ${L.msg}${p.total ? ` (${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''})` : ''}</div>
+    </div>`;
+
+  for (const s of SLOTS) {
+    const items = p.list.filter(r => (r.slot || 'any') === s.id);
+    if (!items.length) continue;
+    const sDone = items.filter(r => (p.ck[r.id] || {}).s === 'done').length;
+    html += `<div class="rslot"><div class="sh">${s.icon} ${s.name}<span class="rmeta">${sDone}/${items.length}</span></div>`;
+    for (const r of items) {
+      const c = p.ck[r.id] || {}, st = c.s || '';
+      const sub = [st === 'rest' ? '오늘은 쉼' : '', c.memo || ''].filter(Boolean).join(' · ');
+      /* 쉼은 체크가 아니라 '오늘은 넘어감' 이므로 표시도 다르게 */
+      const mark = st === 'rest' ? `<path d="M6 12h12"/>` : `<path d="M20 6L9 17l-5-5"/>`;
+      html += `<div class="ritem ${st}" data-r="${r.id}">
+        <button class="ck" data-ck aria-label="체크"><svg viewBox="0 0 24 24">${mark}</svg></button>
+        <span class="em">${esc(r.emoji || '✅')}</span>
+        <button class="nm" data-ck><span class="t">${esc(r.name)}</span>${sub ? `<span class="memo">${esc(sub)}</span>` : ''}</button>
+        <button class="opt" data-opt aria-label="더 보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  if (!p.list.length) {
+    html += `<div class="empty"><b>오늘은 예정된 루틴이 없어요</b>반복 요일에 오늘이 없는 루틴들이에요. 푹 쉬어도 좋습니다.</div>`;
+  }
+
+  html += `<div class="section" style="margin-top:26px;display:flex;flex-direction:column;gap:9px">
+      <button class="btn btn-o" data-manage style="width:100%">루틴 관리</button>
+      <button class="btn btn-g" data-preset2 style="width:100%">보기에서 더 담기</button>
+    </div>`;
+
+  host.innerHTML = html;
+  $$('.ritem', host).forEach(row => {
+    const id = row.dataset.r;
+    $$('[data-ck]', row).forEach(b => b.onclick = () => toggleCheck(id));
+    row.querySelector('[data-opt]').onclick = () => openRoutineOptions(id, today);
+  });
+  host.querySelector('[data-manage]').onclick = openRoutineManage;
+  host.querySelector('[data-preset2]').onclick = openPresetPicker;
+  renderRoutineRibbon(); updateTabBadge();
+}
+
+async function toggleCheck(rid) {
+  const today = ymd(new Date());
+  const cur = dayChecks(today)[rid] || {};
+  const next = cur.s === 'done'
+    ? (cur.memo ? { s: '', memo: cur.memo } : null)
+    : Object.assign({}, cur, { s: 'done', at: Date.now() });
+  await setCheck(today, rid, next && (next.s || next.memo) ? next : null);
+  renderRoutine();
+}
+
+function openRoutineOptions(rid, date) {
+  const r = S.routines.find(x => x.id === rid); if (!r) return;
+  const c = dayChecks(date)[rid] || {};
+  sheet(`${r.emoji || '✅'} ${r.name}`, `
+    <div style="display:flex;gap:8px">
+      <button class="btn ${c.s === 'done' ? 'btn-p' : 'btn-g'}" data-s="done" style="flex:1">완료</button>
+      <button class="btn ${c.s === 'rest' ? 'btn-p' : 'btn-g'}" data-s="rest" style="flex:1">오늘은 쉼</button>
+      <button class="btn btn-o" data-s="" style="flex:1">지우기</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:9px">
+      쉼으로 두면 오늘 달성률 계산에서 빠져요.</div>
+    <div class="field">
+      <div class="label">한 줄 메모</div>
+      <div class="box"><input id="rMemo" maxlength="60" placeholder="오늘 이 루틴은 어땠나요?" value="${esc(c.memo || '')}"></div>
+    </div>
+    <button class="btn btn-p" id="rMemoSave" style="width:100%;margin-top:14px">메모 저장</button>
+    <button class="btn btn-o" id="rGoEdit" style="width:100%;margin-top:8px">루틴 고치기</button>`,
+    (root, close) => {
+      $$('[data-s]', root).forEach(b => b.onclick = async () => {
+        const s = b.dataset.s;
+        const memo = $('#rMemo', root).value.trim();
+        await setCheck(date, rid, (s || memo) ? { s, memo, at: Date.now() } : null);
+        close(); renderRoutine();
+      });
+      $('#rMemoSave', root).onclick = async () => {
+        const memo = $('#rMemo', root).value.trim();
+        await setCheck(date, rid, (c.s || memo) ? { s: c.s || '', memo, at: Date.now() } : null);
+        close(); renderRoutine(); toast(memo ? '메모를 저장했어요' : '메모를 지웠어요');
+      };
+      $('#rGoEdit', root).onclick = () => { close(); openRoutineEdit(rid); };
+    });
+}
+
+/* ---------- 루틴 만들기 · 고치기 ---------- */
+function openRoutineEdit(id) {
+  const src = id ? S.routines.find(r => r.id === id) : null;
+  const r = src
+    ? Object.assign({}, src, { days: [...(src.days || [])] })
+    : { id: uid(), name: '', emoji: '✅', days: [0, 1, 2, 3, 4, 5, 6], slot: 'morning', active: true };
+
+  const scr = document.createElement('div'); scr.className = 'screen';
+  scr.innerHTML = `<div class="inner">
+    <div class="screenbar">
+      <button class="iconbtn" data-x><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      <div class="ttl">${id ? '루틴 고치기' : '새 루틴'}</div>
+      <button class="btn btn-p" data-save>저장</button>
+    </div>
+
+    <div class="field">
+      <div class="label">이름</div>
+      <div class="box"><input id="rName" maxlength="40" placeholder="예: 20분 걷기" value="${esc(r.name)}"></div>
+    </div>
+
+    <div class="field">
+      <div class="label">그림</div>
+      <div class="words" id="rEmo">${ROUTINE_EMOJIS.map(e =>
+        `<button class="word" data-e="${e}" style="font-size:17px;padding:5px 10px">${e}</button>`).join('')}</div>
+    </div>
+
+    <div class="field">
+      <div class="label">반복 요일</div>
+      <div class="words" id="rDays">${DOW.map((d, i) =>
+        `<button class="word" data-d="${i}">${d}</button>`).join('')}</div>
+      <div style="display:flex;gap:8px;margin-top:9px">
+        <button class="btn btn-g" data-preset-days="all">매일</button>
+        <button class="btn btn-g" data-preset-days="week">평일</button>
+        <button class="btn btn-g" data-preset-days="end">주말</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="label">시간대</div>
+      <div class="words" id="rSlot">${SLOTS.map(s =>
+        `<button class="word" data-sl="${s.id}">${s.icon} ${s.name}</button>`).join('')}</div>
+    </div>
+
+    ${id ? `<div style="margin-top:30px;display:flex;flex-direction:column;gap:9px">
+      <button class="btn btn-o" data-arch style="width:100%">${r.active === false ? '다시 사용하기' : '보관하기 (기록은 그대로)'}</button>
+      <button class="btn btn-o" data-del style="width:100%;color:var(--mad);border-color:#DB4F6544">이 루틴 삭제</button>
+    </div>` : ''}
+  </div>`;
+  $('#layers').appendChild(scr);
+  const close = () => scr.remove();
+  scr.querySelector('[data-x]').onclick = close;
+
+  const paint = () => {
+    $$('[data-e]', scr).forEach(b => {
+      const on = b.dataset.e === r.emoji;
+      b.classList.toggle('on', on);
+      b.style.cssText = `font-size:17px;padding:5px 10px${on ? ';background:var(--ivory);border-color:var(--ivory)' : ''}`;
+    });
+    $$('[data-d]', scr).forEach(b => {
+      const on = r.days.includes(+b.dataset.d);
+      b.classList.toggle('on', on);
+      b.style.cssText = on ? 'background:var(--ivory);border-color:var(--ivory)' : '';
+    });
+    $$('[data-sl]', scr).forEach(b => {
+      const on = b.dataset.sl === r.slot;
+      b.classList.toggle('on', on);
+      b.style.cssText = on ? 'background:var(--ivory);border-color:var(--ivory)' : '';
+    });
+  };
+  paint();
+
+  $$('[data-e]', scr).forEach(b => b.onclick = () => { r.emoji = b.dataset.e; paint(); });
+  $$('[data-d]', scr).forEach(b => b.onclick = () => {
+    const d = +b.dataset.d;
+    r.days = r.days.includes(d) ? r.days.filter(x => x !== d) : [...r.days, d].sort();
+    paint();
+  });
+  $$('[data-sl]', scr).forEach(b => b.onclick = () => { r.slot = b.dataset.sl; paint(); });
+  $$('[data-preset-days]', scr).forEach(b => b.onclick = () => {
+    r.days = { all: [0, 1, 2, 3, 4, 5, 6], week: [1, 2, 3, 4, 5], end: [0, 6] }[b.dataset.presetDays];
+    paint();
+  });
+
+  scr.querySelector('[data-save]').onclick = async () => {
+    const name = $('#rName', scr).value.trim();
+    if (!name) { toast('이름을 적어주세요'); return; }
+    if (!r.days.length) { toast('반복할 요일을 하나 이상 골라주세요'); return; }
+    r.name = name;
+    if (src) Object.assign(src, r);
+    else {
+      r.startDate = ymd(new Date());
+      r.createdAt = new Date().toISOString();
+      r.order = S.routines.length ? Math.max(...S.routines.map(x => x.order || 0)) + 1 : 0;
+      S.routines.push(r);
+    }
+    await saveRoutines();
+    close(); renderRoutine(); toast(id ? '루틴을 고쳤어요' : '루틴을 담았어요');
+  };
+
+  if (id) {
+    scr.querySelector('[data-arch]').onclick = async () => {
+      if (src.active === false) { src.active = true; src.archivedDate = ''; }
+      else { src.active = false; src.archivedDate = ymd(new Date()); }
+      await saveRoutines();
+      close(); renderRoutine();
+      toast(src.active === false ? '보관했어요' : '다시 사용해요');
+    };
+    scr.querySelector('[data-del]').onclick = async () => {
+      if (!confirm('이 루틴과 지금까지의 체크 기록을 함께 지울까요?')) return;
+      S.routines = S.routines.filter(x => x.id !== id);
+      await saveRoutines();
+      for (const [ym, bucket] of Object.entries(S.checks)) {
+        let hit = false;
+        for (const date of Object.keys(bucket)) {
+          if (bucket[date][id]) { delete bucket[date][id]; hit = true; }
+          if (!Object.keys(bucket[date]).length) delete bucket[date];
+        }
+        if (hit) await KV.set(K.check(ym), bucket);
+      }
+      close(); renderRoutine(); toast('루틴을 지웠어요');
+    };
+  }
+}
+
+/* ---------- 루틴 관리 ---------- */
+function openRoutineManage() {
+  const scr = document.createElement('div'); scr.className = 'screen';
+  scr.innerHTML = `<div class="inner">
+    <div class="screenbar">
+      <button class="iconbtn" data-x><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="ttl">루틴 관리</div>
+      <button class="btn btn-p" data-new>추가</button>
+    </div>
+    <div id="rmList"></div>
+    <button class="btn btn-o" data-preset style="width:100%;margin-top:22px">보기에서 골라 담기</button>
+  </div>`;
+  $('#layers').appendChild(scr);
+  scr.querySelector('[data-x]').onclick = () => { scr.remove(); renderRoutine(); };
+  scr.querySelector('[data-new]').onclick = () => openRoutineEdit(null);
+  scr.querySelector('[data-preset]').onclick = openPresetPicker;
+
+  const paint = () => {
+    const list = [...S.routines].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const host = $('#rmList', scr);
+    if (!list.length) {
+      host.innerHTML = `<div class="empty"><b>아직 루틴이 없어요</b>위 추가 버튼으로 만들어 보세요.</div>`;
+      return;
+    }
+    host.innerHTML = list.map((r, i) => {
+      const days = r.days.length === 7 ? '매일'
+        : r.days.length === 5 && !r.days.includes(0) && !r.days.includes(6) ? '평일'
+          : r.days.length === 2 && r.days.includes(0) && r.days.includes(6) ? '주말'
+            : r.days.map(d => DOW[d]).join('·');
+      return `<div class="rmg ${r.active === false ? 'off' : ''}">
+        <span class="em">${esc(r.emoji || '✅')}</span>
+        <button class="bd" style="text-align:left" data-edit="${r.id}">
+          <b>${esc(r.name)}</b>
+          <span>${slotName(r.slot)} · ${esc(days)}${r.active === false ? ' · 보관됨' : ''}</span>
+        </button>
+        <button class="mv" data-up="${r.id}" ${i === 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg></button>
+        <button class="mv" data-down="${r.id}" ${i === list.length - 1 ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>`;
+    }).join('');
+
+    $$('[data-edit]', host).forEach(b => b.onclick = () => { scr.remove(); openRoutineEdit(b.dataset.edit); });
+    const move = async (id, dir) => {
+      const arr = [...S.routines].sort((a, b) => (a.order || 0) - (b.order || 0));
+      const i = arr.findIndex(x => x.id === id), j = i + dir;
+      if (i < 0 || j < 0 || j >= arr.length) return;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      arr.forEach((x, n) => x.order = n);
+      S.routines = arr;
+      await saveRoutines(); paint();
+    };
+    $$('[data-up]', host).forEach(b => b.onclick = () => move(b.dataset.up, -1));
+    $$('[data-down]', host).forEach(b => b.onclick = () => move(b.dataset.down, 1));
+  };
+  paint();
+}
+
+/* ---------- 보기에서 골라 담기 ---------- */
+function openPresetPicker() {
+  const picked = new Set();
+  const body = SLOTS.map(s => {
+    const items = ROUTINE_PRESETS.filter(p => p.slot === s.id);
+    if (!items.length) return '';
+    return `<div style="margin-bottom:16px"><div class="label">${s.icon} ${s.name}</div>
+      <div class="words">${items.map(p =>
+        `<button class="word" data-p="${esc(p.name)}">${p.emoji} ${esc(p.name)}</button>`).join('')}</div></div>`;
+  }).join('') + `<button class="btn btn-p" id="pkAdd" style="width:100%;margin-top:6px">고른 것 담기</button>`;
+
+  sheet('루틴 보기', body, (root, close) => {
+    $$('[data-p]', root).forEach(b => b.onclick = () => {
+      const n = b.dataset.p;
+      if (picked.has(n)) picked.delete(n); else picked.add(n);
+      b.classList.toggle('on', picked.has(n));
+      b.style.cssText = picked.has(n) ? 'background:var(--ivory);border-color:var(--ivory)' : '';
+      $('#pkAdd', root).textContent = picked.size ? `${picked.size}개 담기` : '고른 것 담기';
+    });
+    $('#pkAdd', root).onclick = async () => {
+      if (!picked.size) { toast('담을 루틴을 골라주세요'); return; }
+      const today = ymd(new Date());
+      let order = S.routines.length ? Math.max(...S.routines.map(x => x.order || 0)) + 1 : 0;
+      let n = 0;
+      for (const p of ROUTINE_PRESETS) {
+        if (!picked.has(p.name)) continue;
+        if (S.routines.some(r => r.name === p.name && r.active !== false)) continue;
+        S.routines.push({
+          id: uid(), name: p.name, emoji: p.emoji, slot: p.slot,
+          days: [0, 1, 2, 3, 4, 5, 6], active: true,
+          startDate: today, createdAt: new Date().toISOString(), order: order++
+        });
+        n++;
+      }
+      await saveRoutines();
+      close();
+      /* 관리 화면이 열려 있으면 그것도 닫아 새 목록으로 다시 그린다 */
+      const mg = $$('.screen').find(s => s.querySelector('#rmList'));
+      if (mg) mg.remove();
+      renderRoutine();
+      toast(n ? `${n}개를 담았어요` : '이미 담겨 있는 루틴이에요');
+    };
+  });
+}
+
+/* ---------- 루틴 통계 ---------- */
+function routineRangeStats(days) {
+  const today = new Date(), per = {};
+  let plan = 0, done = 0;
+  for (let i = 0; i < days; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const key = ymd(d), ck = dayChecks(key);
+    for (const r of routinesOn(key)) {
+      const s = (ck[r.id] || {}).s;
+      if (s === 'rest') continue;                     /* 쉼은 세지 않는다 */
+      const box = per[r.id] || (per[r.id] = { r, plan: 0, done: 0 });
+      box.plan++; plan++;
+      if (s === 'done') { box.done++; done++; }
+    }
+  }
+  return { per, plan, done, rate: plan ? done / plan : -1 };
+}
+
+/* 예정된 루틴을 모두 지킨 날의 연속. 예정이 없는 날은 끊지 않고 건너뛴다.
+   오늘이 아직 안 끝났으면 오늘은 끊지 않고 어제부터 센다. */
+function routineStreak() {
+  let streak = 0, first = true;
+  const cur = new Date();
+  for (let i = 0; i < 400; i++) {
+    const p = dayProgress(ymd(cur));
+    if (p.total > 0) {
+      const ok = p.target > 0 ? p.done >= p.target : true;
+      if (ok) streak++;
+      else if (!first) break;
+    }
+    cur.setDate(cur.getDate() - 1); first = false;
+  }
+  return streak;
+}
+
+/* 루틴을 지킨 날과 못 지킨 날의 감정을 견줘 본다.
+   기쁨·평온·힘 계열을 '올라간 감정'으로 묶고, 그 비율 차이를 본다. */
+function routineEmotionInsights(days = 180) {
+  const POS = new Set(['joy', 'calm', 'power']);
+  const byDate = {};
+  for (const m of S.index) (byDate[m.date] = byDate[m.date] || []).push(m);
+  const today = new Date(), out = [];
+  for (const r of S.routines) {
+    if (r.active === false) continue;
+    const g = { done: { pos: 0, all: 0, days: 0 }, miss: { pos: 0, all: 0, days: 0 } };
+    for (let i = 0; i < days; i++) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      const key = ymd(d);
+      const metas = byDate[key];
+      if (!metas || !routinesOn(key).some(x => x.id === r.id)) continue;
+      const s = (dayChecks(key)[r.id] || {}).s;
+      if (s === 'rest') continue;
+      const box = s === 'done' ? g.done : g.miss;
+      box.days++;
+      for (const m of metas) for (const w of m.emos || []) { box.all++; if (POS.has(famOf(w))) box.pos++; }
+    }
+    if (g.done.days < 3 || g.miss.days < 3 || !g.done.all || !g.miss.all) continue;
+    const a = g.done.pos / g.done.all, b = g.miss.pos / g.miss.all;
+    if (Math.abs(a - b) < .1) continue;
+    out.push({ r, a, b, dd: g.done.days, md: g.miss.days });
+  }
+  return out.sort((x, y) => Math.abs(y.a - y.b) - Math.abs(x.a - x.b)).slice(0, 5);
+}
+
+/* 앱을 열었을 때 남은 루틴을 한 번만 알려준다 (웹앱이라 정해진 시각 알림은 못 보낸다) */
+function maybeRemind() {
+  if (S.settings.remind === false) return;
+  const today = ymd(new Date());
+  if (S.settings.remindLog === today) return;
+  const p = dayProgress(today);
+  const left = p.target - p.done;
+  if (left <= 0) return;
+  S.settings.remindLog = today; saveSettings();
+  setTimeout(() => toast(`오늘 남은 루틴이 ${left}개 있어요`), 1000);
+}
+
+/* ---------- 탭 ---------- */
+function setTab(t) {
+  S.tab = t;
+  $('#viewDiary').classList.toggle('hide', t !== 'diary');
+  $('#viewRoutine').classList.toggle('hide', t !== 'routine');
+  $$('#tabbar button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  $('#btnSearch').classList.toggle('hide', t !== 'diary');
+  if (t !== 'diary') {
+    const w = $('#searchWrap');
+    if (!w.classList.contains('hide')) {
+      w.classList.add('hide'); $('#btnSearch').classList.remove('on');
+      S.query = ''; $('#q').value = ''; renderFeed();
+    }
+  }
+  $('#fabLabel').textContent = t === 'diary' ? '오늘 기록하기' : '루틴 추가';
+  if (t === 'diary') renderHome(); else renderRoutine();
+  window.scrollTo({ top: 0 });
+}
 
 /* ============================================================
    시트 (감정/욕구 선택)
@@ -1345,6 +1987,27 @@ function openStats() {
     else break;
   }
 
+  /* ---- 루틴 쪽 계산 ---- */
+  const rToday = dayProgress(ymd(now));
+  const r30 = routineRangeStats(30);
+  const rStreak = routineStreak();
+  const rRows = Object.values(r30.per).sort((a, b) => (b.done / b.plan) - (a.done / a.plan));
+  const rInsights = routineEmotionInsights();
+  const hasRoutine = S.routines.some(r => r.active !== false);
+
+  /* 최근 8주 히트맵 — 일요일 시작으로 줄을 맞춘다 */
+  const cells = [];
+  const end = new Date(now); end.setDate(end.getDate() + (6 - end.getDay()));
+  for (let i = 55; i >= 0; i--) {
+    const d = new Date(end); d.setDate(d.getDate() - i);
+    const key = ymd(d);
+    if (key > ymd(now)) { cells.push(`<i style="opacity:.25"></i>`); continue; }
+    const p = dayProgress(key);
+    if (p.rate < 0) { cells.push(`<i title="${key}"></i>`); continue; }
+    const L = lightOf(p.rate);
+    cells.push(`<i title="${key} · ${Math.round(p.rate * 100)}%" style="background:${L.color};opacity:${.3 + p.rate * .7}"></i>`);
+  }
+
   const scr = document.createElement('div'); scr.className = 'screen';
   scr.innerHTML = `<div class="inner">
     <div class="screenbar">
@@ -1355,6 +2018,43 @@ function openStats() {
       <div class="stat"><b>${month.length}</b><span>이번 달</span></div>
       <div class="stat"><b>${streak}</b><span>연속 기록일</span></div>
     </div>
+
+    ${hasRoutine ? `
+    <div class="eyebrow" style="padding:0">루틴</div>
+    <div class="statgrid">
+      <div class="stat"><b style="color:${lightOf(rToday.rate).color}">${rToday.rate < 0 ? '—' : Math.round(rToday.rate * 100) + '%'}</b><span>오늘 달성률</span></div>
+      <div class="stat"><b>${r30.rate < 0 ? '—' : Math.round(r30.rate * 100) + '%'}</b><span>최근 30일</span></div>
+      <div class="stat"><b>${rStreak}</b><span>연속 달성일</span></div>
+    </div>
+
+    <div class="eyebrow" style="padding:0">최근 8주</div>
+    <div class="hmapwrap">
+      <div class="hmap">${cells.join('')}</div>
+      <div class="hdow">${DOW.map(d => `<span>${d}</span>`).join('')}</div>
+    </div>
+    <div class="hleg"><i></i>예정 없음
+      <i style="background:${famColor('mad')};opacity:.6"></i>낮음
+      <i style="background:${famColor('joy')};opacity:.8"></i>보통
+      <i style="background:${famColor('calm')}"></i>지킴</div>
+
+    <div class="eyebrow" style="padding:0">루틴별 달성률 · 30일</div>
+    ${rRows.length ? rRows.map(x => {
+      const rate = x.done / x.plan;
+      return `<div class="barrow"><span class="nm" style="width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.r.emoji || '')} ${esc(x.r.name)}</span>
+        <span class="tr"><span class="fl" style="width:${rate * 100}%;background:${lightOf(rate).color}"></span></span>
+        <span class="ct">${Math.round(rate * 100)}%</span></div>`;
+    }).join('')
+      : '<div style="color:var(--faint);font-size:13px">아직 예정된 루틴이 없었어요.</div>'}
+
+    <div class="eyebrow" style="padding:0">루틴이 부른 감정</div>
+    <div style="font-size:11.5px;color:var(--faint);margin:-4px 0 9px">
+      일기를 쓴 날만 세어, 루틴을 지킨 날과 그러지 못한 날의 기쁨·평온·힘 계열 비율을 견줘 봤어요.</div>
+    ${rInsights.length ? rInsights.map(x => `<div class="rowitem"><div class="rl">
+        <b>${esc(x.r.emoji || '')} ${esc(x.r.name)}</b>
+        <span>지킨 날 ${x.dd}일 · 못 지킨 날 ${x.md}일</span></div>
+        <span class="etag" style="background:${(x.a > x.b ? famColor('calm') : famColor('mad'))}22;color:${x.a > x.b ? famColor('calm') : famColor('mad')}">${Math.round(x.a * 100)}% ↔ ${Math.round(x.b * 100)}%</span></div>`).join('')
+      : '<div style="color:var(--faint);font-size:13px">지킨 날과 못 지킨 날이 각각 3일 이상 쌓이고, 그날의 일기가 있으면 여기 나타나요.</div>'}
+    ` : ''}
     <div class="eyebrow" style="padding:0">감정의 분포</div>
     ${FAMILIES.map(f => `<div class="barrow"><span class="nm">${f.name}</span>
       <span class="tr"><span class="fl" style="width:${(famCount[f.id] || 0) / maxF * 100}%;background:${famColor(f.id)}"></span></span>
@@ -1506,7 +2206,10 @@ async function openPromptAnswers(cat, q) {
    ============================================================ */
 async function exportAll() {
   toast('내보내는 중…');
-  const out = { app: 'maeumgyeol', version: 1, exportedAt: new Date().toISOString(), entries: [] };
+  const out = {
+    app: 'maeumgyeol', version: 2, exportedAt: new Date().toISOString(),
+    entries: [], routines: S.routines, checks: S.checks
+  };
   for (const m of S.index) { const e = await getEntry(m.id); if (e) out.entries.push(e); }
   const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -1517,15 +2220,49 @@ async function exportAll() {
 async function importAll(file) {
   const text = await file.text();
   let data; try { data = JSON.parse(text); } catch (e) { toast('파일을 읽을 수 없어요'); return; }
-  if (!data.entries || !Array.isArray(data.entries)) { toast('백업 파일 형식이 아니에요'); return; }
+  const hasEntries = Array.isArray(data.entries), hasRoutines = Array.isArray(data.routines);
+  if (!hasEntries && !hasRoutines) { toast('백업 파일 형식이 아니에요'); return; }
   let n = 0;
-  for (const e of data.entries) {
+  for (const e of (hasEntries ? data.entries : [])) {
     if (S.index.some(m => m.id === e.id)) continue;
     const cover = e.photos.find(p => p.id === e.cover) || e.photos[0];
     await saveEntry(e, cover ? (cover.thumb || cover.data) : '');
     n++;
   }
-  renderHome(); toast(`${n}개를 불러왔어요`);
+
+  /* 루틴 — 같은 id 는 건너뛰고 뒤에 이어 붙인다 */
+  let rn = 0;
+  if (hasRoutines) {
+    let order = S.routines.length ? Math.max(...S.routines.map(x => x.order || 0)) + 1 : 0;
+    for (const r of data.routines) {
+      if (!r || !r.id || S.routines.some(x => x.id === r.id)) continue;
+      S.routines.push(Object.assign({}, r, { order: order++ }));
+      rn++;
+    }
+    if (rn) await saveRoutines();
+  }
+
+  /* 체크 기록 — 이미 있는 칸은 덮어쓰지 않는다 */
+  let cn = 0;
+  if (data.checks && typeof data.checks === 'object') {
+    for (const [ym, bucket] of Object.entries(data.checks)) {
+      if (!bucket || typeof bucket !== 'object') continue;
+      const cur = S.checks[ym] || (S.checks[ym] = {});
+      let hit = false;
+      for (const [date, day] of Object.entries(bucket)) {
+        if (!day || typeof day !== 'object') continue;
+        const t = cur[date] || (cur[date] = {});
+        for (const [rid, v] of Object.entries(day)) if (!t[rid]) { t[rid] = v; cn++; hit = true; }
+        if (!Object.keys(t).length) delete cur[date];
+      }
+      if (hit) await KV.set(K.check(ym), cur);
+    }
+  }
+
+  renderHome();
+  if (S.tab === 'routine') renderRoutine(); else updateTabBadge();
+  const parts = [n ? `기록 ${n}개` : '', rn ? `루틴 ${rn}개` : '', cn ? `체크 ${cn}개` : ''].filter(Boolean);
+  toast(parts.length ? `${parts.join(' · ')}를 불러왔어요` : '새로 불러올 것이 없었어요');
 }
 
 function openSettings() {
@@ -1542,11 +2279,18 @@ function openSettings() {
         <span class="nm">${esc(t.name)}</span>
       </button>`).join('')}</div>
     <div class="eyebrow" style="padding:0">내 데이터</div>
-    <div class="rowitem"><div class="rl"><b>백업 파일 내보내기</b><span>사진까지 포함한 JSON 한 개</span></div>
+    <div class="rowitem"><div class="rl"><b>백업 파일 내보내기</b><span>사진 · 루틴 · 체크까지 담은 JSON 한 개</span></div>
       <button class="btn btn-g" data-exp>내보내기</button></div>
     <div class="rowitem"><div class="rl"><b>백업 불러오기</b><span>기존 기록은 유지돼요</span></div>
       <button class="btn btn-g" data-imp>불러오기</button></div>
     <input type="file" accept="application/json,.json" class="hide" data-impf>
+    <div class="eyebrow" style="padding:0">루틴</div>
+    <div class="rowitem"><div class="rl"><b>남은 루틴 알려주기</b>
+      <span>앱을 열었을 때 하루 한 번만 알려줘요</span></div>
+      <button class="btn btn-g" data-remind>${S.settings.remind === false ? '꺼짐' : '켜짐'}</button></div>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:8px;line-height:1.7">
+      웹앱이라 정해진 시각에 울리는 알림은 보낼 수 없어요. 대신 앱을 열었을 때 남은 개수를 알려드려요.</div>
+
     <div class="eyebrow" style="padding:0">잠금</div>
     <div class="rowitem"><div class="rl"><b>${S.settings.pin ? '비밀번호 끄기' : '4자리 비밀번호 켜기'}</b>
       <span>앱을 열 때 숫자 4자리를 물어봐요</span></div>
@@ -1572,6 +2316,12 @@ function openSettings() {
     renderHome();
     toast(`${THEMES.find(t => t.id === S.settings.theme).name} 테마로 바꿨어요`);
   });
+  scr.querySelector('[data-remind]').onclick = async e => {
+    S.settings.remind = S.settings.remind === false;
+    await saveSettings();
+    e.currentTarget.textContent = S.settings.remind === false ? '꺼짐' : '켜짐';
+    toast(S.settings.remind === false ? '알려주지 않을게요' : '앱을 열 때 알려드릴게요');
+  };
   scr.querySelector('[data-exp]').onclick = exportAll;
   scr.querySelector('[data-imp]').onclick = () => scr.querySelector('[data-impf]').click();
   scr.querySelector('[data-impf]').onchange = e => { if (e.target.files[0]) importAll(e.target.files[0]); };
@@ -1687,6 +2437,9 @@ window.addEventListener('popstate', () => {
 
   if (closeTopLayer()) { disarmExit(); pushGuard(); return; }
 
+  /* 루틴 탭에서 눌렀으면 먼저 기록 탭으로 돌아온다 (바로 종료되지 않게) */
+  if (S.tab !== 'diary') { setTab('diary'); disarmExit(); pushGuard(); return; }
+
   if (!exitArmed) {                            /* 첫 번째 → 안내를 띄운다 */
     exitArmed = true;
     showExitNotice();
@@ -1703,7 +2456,8 @@ window.addEventListener('popstate', () => {
 /* ============================================================
    부팅
    ============================================================ */
-$('#fabNew').onclick = () => openEditor(null);
+$('#fabNew').onclick = () => { if (S.tab === 'diary') openEditor(null); else openRoutineEdit(null); };
+$$('#tabbar button').forEach(b => b.onclick = () => { if (S.tab !== b.dataset.tab) setTab(b.dataset.tab); });
 $('#btnStats').onclick = openStats;
 $('#btnSet').onclick = openSettings;
 $('#btnSearch').onclick = () => {
@@ -1723,7 +2477,7 @@ $('#btnClearQ').onclick = () => { $('#q').value = ''; S.query = ''; S.tag = ''; 
   }
   try { localStorage.removeItem('md:backlog'); } catch (e) { }   /* 예전 진단 기록 정리 */
   applyTheme(S.settings.theme);
-  const start = () => renderHome();
+  const start = () => { renderHome(); updateTabBadge(); maybeRemind(); };
   if (S.settings.pin) lockScreen(start); else start();
   /* 뒤로 가기 보호는 화면을 처음 만졌을 때 걸린다 (pushGuard 참고) */
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
