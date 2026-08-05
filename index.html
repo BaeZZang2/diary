@@ -430,6 +430,18 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 .rmg .mv svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2}
 .rmg .mv[disabled]{opacity:.25}
 
+/* ---------- 신호등 기준 고르기 ---------- */
+.lchips{display:flex;gap:8px;margin-bottom:6px}
+.lchip{flex:1;border:1px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center;
+  font-size:11.5px;color:var(--faint)}
+.lchip i{display:block;width:13px;height:13px;border-radius:50%;margin:0 auto 8px}
+.lchip b{display:block;font-family:var(--mo);font-size:12.5px;font-weight:500;margin-top:5px;color:var(--tx)}
+.step{display:flex;align-items:center;gap:5px;flex:none}
+.step button{width:31px;height:31px;border-radius:9px;background:var(--raised);color:var(--dim);
+  font-size:17px;line-height:1;display:grid;place-items:center}
+.step button:disabled{opacity:.3}
+.step b{min-width:48px;text-align:center;font-family:var(--mo);font-size:14px;font-weight:500}
+
 /* ---------- 히트맵 ---------- */
 .hmapwrap{max-width:300px;margin:0 auto}
 .hmap{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
@@ -766,15 +778,22 @@ const K = {
   idx: 'md:index', set: 'md:settings', entry: id => 'md:entry:' + id, thumb: ym => 'md:thumb:' + ym,
   rt: 'md:routines',                      /* 루틴 정의 한 덩어리 */
   check: ym => 'md:check:' + ym,          /* 체크 기록은 달마다 나눠 담는다 (사진 썸네일과 같은 방식) */
+  slot: 'md:slots',                       /* 직접 만든 시간대 */
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v11 · 2026-08-05';
+const APP_VERSION = 'v12 · 2026-08-05';
 
 /* ---------- 상태 ---------- */
+/* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
+const LIGHT_DEFAULT = { yellow: 40, green: 80 };
+
 const S = {
-  index: [], thumbs: {}, routines: [], checks: {},
-  settings: { pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '' },
+  index: [], thumbs: {}, routines: [], checks: {}, slots: [],
+  settings: {
+    pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '',
+    light: Object.assign({}, LIGHT_DEFAULT)
+  },
   query: '', tag: '', tab: 'diary', ready: false
 };
 
@@ -842,9 +861,11 @@ async function loadAll() {
   S.index = (await KV.get(K.idx)) || [];
   S.settings = Object.assign({ pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '' },
     (await KV.get(K.set)) || {});
+  S.settings.light = Object.assign({}, LIGHT_DEFAULT, S.settings.light || {});
   const ks = await KV.keys('md:thumb:');
   for (const k of ks) { const v = await KV.get(k); if (v) S.thumbs[k.replace('md:thumb:', '')] = v; }
   S.routines = (await KV.get(K.rt)) || [];
+  S.slots = (await KV.get(K.slot)) || [];
   const cks = await KV.keys('md:check:');
   for (const k of cks) { const v = await KV.get(k); if (v) S.checks[k.replace('md:check:', '')] = v; }
   S.ready = true;
@@ -1032,7 +1053,17 @@ function renderHome() { renderRibbon(); renderPrompt(); renderMemory(); renderTa
    저장: 정의는 md:routines 한 덩어리, 체크는 md:check:YYYY-MM 로 달마다
    ============================================================ */
 const saveRoutines = () => KV.set(K.rt, S.routines);
-const slotName = id => (SLOTS.find(s => s.id === id) || SLOTS[3]).name;
+const saveSlots = () => KV.set(K.slot, S.slots);
+
+/* 기본 시간대 + 직접 만든 시간대.
+   직접 만든 것은 저녁 뒤, '아무 때나' 앞에 만든 순서대로 들어간다 */
+function allSlots() {
+  const i = SLOTS.findIndex(s => s.id === 'any');
+  return [...SLOTS.slice(0, i), ...S.slots, ...SLOTS.slice(i)];
+}
+const findSlot = id => allSlots().find(s => s.id === id);
+const anySlot = () => SLOTS.find(s => s.id === 'any');
+const slotName = id => (findSlot(id) || anySlot()).name;
 
 function dayChecks(date) { return (S.checks[date.slice(0, 7)] || {})[date] || {}; }
 
@@ -1070,9 +1101,11 @@ function dayProgress(date) {
 }
 
 function lightOf(rate) {
+  const t = S.settings.light || LIGHT_DEFAULT;
+  const pct = rate * 100;
   if (rate < 0) return { i: -1, color: 'var(--faint)', msg: '오늘은 예정된 루틴이 없어요' };
-  if (rate >= .8) return { i: 2, color: famColor('calm'), msg: '오늘 흐름이 좋아요' };
-  if (rate >= .4) return { i: 1, color: famColor('joy'), msg: '절반쯤 왔어요. 남은 건 천천히' };
+  if (pct >= t.green) return { i: 2, color: famColor('calm'), msg: '오늘 흐름이 좋아요' };
+  if (pct >= t.yellow) return { i: 1, color: famColor('joy'), msg: '절반쯤 왔어요. 남은 건 천천히' };
   return { i: 0, color: famColor('mad'), msg: '하나만 해봐도 충분해요' };
 }
 
@@ -1136,8 +1169,13 @@ function renderRoutine() {
       <div class="msg">${dateLabel(today)} · ${L.msg}${p.total ? ` (${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''})` : ''}</div>
     </div>`;
 
-  for (const s of SLOTS) {
-    const items = p.list.filter(r => (r.slot || 'any') === s.id);
+  /* 시간대가 지워졌거나 알 수 없는 루틴은 '아무 때나' 로 모아 보여준다 (사라지지 않게) */
+  const known = new Set(allSlots().map(s => s.id));
+  for (const s of allSlots()) {
+    const items = p.list.filter(r => {
+      const sl = r.slot || 'any';
+      return sl === s.id || (s.id === 'any' && !known.has(sl));
+    });
     if (!items.length) continue;
     const sDone = items.filter(r => (p.ck[r.id] || {}).s === 'done').length;
     html += `<div class="rslot"><div class="sh">${s.icon} ${s.name}<span class="rmeta">${sDone}/${items.length}</span></div>`;
@@ -1258,8 +1296,7 @@ function openRoutineEdit(id) {
 
     <div class="field">
       <div class="label">시간대</div>
-      <div class="words" id="rSlot">${SLOTS.map(s =>
-        `<button class="word" data-sl="${s.id}">${s.icon} ${s.name}</button>`).join('')}</div>
+      <div class="words" id="rSlot"></div>
     </div>
 
     ${id ? `<div style="margin-top:30px;display:flex;flex-direction:column;gap:9px">
@@ -1282,13 +1319,27 @@ function openRoutineEdit(id) {
       b.classList.toggle('on', on);
       b.style.cssText = on ? 'background:var(--ivory);border-color:var(--ivory)' : '';
     });
-    $$('[data-sl]', scr).forEach(b => {
+  };
+
+  /* 시간대는 도중에 늘거나 줄 수 있어 목록째 다시 그린다 */
+  function paintSlots() {
+    if (!findSlot(r.slot)) r.slot = 'any';        /* 쓰던 시간대가 지워졌으면 되돌린다 */
+    const host = $('#rSlot', scr);
+    host.innerHTML = allSlots().map(s =>
+      `<button class="word" data-sl="${s.id}">${s.icon} ${esc(s.name)}</button>`).join('')
+      + `<button class="word" data-sl-new style="border-style:dashed">＋ 직접 입력</button>`;
+    $$('[data-sl]', host).forEach(b => {
       const on = b.dataset.sl === r.slot;
       b.classList.toggle('on', on);
       b.style.cssText = on ? 'background:var(--ivory);border-color:var(--ivory)' : '';
+      b.onclick = () => { r.slot = b.dataset.sl; paintSlots(); };
     });
-  };
+    host.querySelector('[data-sl-new]').onclick = () =>
+      openSlotMaker(newId => { if (newId) r.slot = newId; paintSlots(); });
+  }
+
   paint();
+  paintSlots();
 
   $$('[data-e]', scr).forEach(b => b.onclick = () => { r.emoji = b.dataset.e; paint(); });
   $$('[data-d]', scr).forEach(b => b.onclick = () => {
@@ -1296,7 +1347,6 @@ function openRoutineEdit(id) {
     r.days = r.days.includes(d) ? r.days.filter(x => x !== d) : [...r.days, d].sort();
     paint();
   });
-  $$('[data-sl]', scr).forEach(b => b.onclick = () => { r.slot = b.dataset.sl; paint(); });
   $$('[data-preset-days]', scr).forEach(b => b.onclick = () => {
     r.days = { all: [0, 1, 2, 3, 4, 5, 6], week: [1, 2, 3, 4, 5], end: [0, 6] }[b.dataset.presetDays];
     paint();
@@ -1341,6 +1391,56 @@ function openRoutineEdit(id) {
       close(); renderRoutine(); toast('루틴을 지웠어요');
     };
   }
+}
+
+/* ---------- 시간대 직접 만들기 ---------- */
+function openSlotMaker(cb) {
+  sheet('시간대 직접 만들기', `
+    <div class="label">새 시간대 이름</div>
+    <div class="box"><input id="slName" maxlength="12" placeholder="예: 새벽 · 출근길 · 자기 전" autocomplete="off"></div>
+    <button class="btn btn-p" id="slAdd" style="width:100%;margin-top:11px">만들기</button>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:10px;line-height:1.7">
+      직접 만든 시간대는 저녁 다음, ‘아무 때나’ 앞에 만든 순서대로 놓여요.</div>
+    <div id="slList" style="margin-top:20px"></div>`,
+    (root, close) => {
+      const paint = () => {
+        const host = $('#slList', root);
+        if (!S.slots.length) { host.innerHTML = ''; return; }
+        host.innerHTML = `<div class="label">직접 만든 시간대</div>` + S.slots.map(s => {
+          const used = S.routines.filter(r => r.slot === s.id).length;
+          return `<div class="rowitem"><div class="rl"><b>${esc(s.icon)} ${esc(s.name)}</b>
+            <span>${used ? `루틴 ${used}개가 쓰고 있어요` : '쓰는 루틴이 없어요'}</span></div>
+            <button class="btn btn-o" data-del="${s.id}" style="color:var(--mad);border-color:#DB4F6544">지우기</button></div>`;
+        }).join('');
+        $$('[data-del]', host).forEach(b => b.onclick = async () => {
+          const s = S.slots.find(x => x.id === b.dataset.del); if (!s) return;
+          const used = S.routines.filter(r => r.slot === s.id);
+          const ok = confirm(used.length
+            ? `‘${s.name}’ 을 지우면 이 시간대의 루틴 ${used.length}개는 ‘아무 때나’ 로 옮겨져요. 계속할까요?`
+            : `‘${s.name}’ 을 지울까요?`);
+          if (!ok) return;
+          used.forEach(r => r.slot = 'any');
+          S.slots = S.slots.filter(x => x.id !== s.id);
+          await saveSlots();
+          if (used.length) await saveRoutines();
+          paint(); cb('');
+          if (S.tab === 'routine') renderRoutine();   /* 뒤에 깔린 목록의 묶음도 다시 짠다 */
+          toast('시간대를 지웠어요');
+        });
+      };
+      paint();
+
+      const add = async () => {
+        const name = $('#slName', root).value.trim();
+        if (!name) { toast('이름을 적어주세요'); return; }
+        if (allSlots().some(s => s.name === name)) { toast('이미 있는 시간대예요'); return; }
+        const s = { id: 'sl' + uid(), name, icon: '🕘' };
+        S.slots.push(s); await saveSlots();
+        close(); cb(s.id); toast(`‘${name}’ 시간대를 만들었어요`);
+      };
+      $('#slAdd', root).onclick = add;
+      $('#slName', root).onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } };
+    });
 }
 
 /* ---------- 루틴 관리 ---------- */
@@ -1506,6 +1606,47 @@ function routineEmotionInsights(days = 180) {
     out.push({ r, a, b, dd: g.done.days, md: g.miss.days });
   }
   return out.sort((x, y) => Math.abs(y.a - y.b) - Math.abs(x.a - x.b)).slice(0, 5);
+}
+
+/* ---------- 신호등 기준 고르기 ---------- */
+function openLightSetting(onChange) {
+  const t = Object.assign({}, LIGHT_DEFAULT, S.settings.light || {});
+  sheet('신호등 기준', `
+    <div class="lchips" id="lcPrev"></div>
+    <div style="font-size:11.5px;color:var(--faint);margin-bottom:4px;line-height:1.7">
+      오늘 달성률이 어느 색으로 보일지 정해요. 쉼으로 둔 루틴은 계산에서 빠집니다.</div>
+    <div class="rowitem"><div class="rl"><b>초록불 기준</b><span>이 값 이상이면 초록불</span></div>
+      <div class="step"><button data-g="-5">−</button><b id="lcG"></b><button data-g="5">＋</button></div></div>
+    <div class="rowitem"><div class="rl"><b>노란불 기준</b><span>이 값 이상이면 노란불</span></div>
+      <div class="step"><button data-y="-5">−</button><b id="lcY"></b><button data-y="5">＋</button></div></div>
+    <button class="btn btn-o" id="lcReset" style="width:100%;margin-top:18px">기본값으로 되돌리기 (40% · 80%)</button>`,
+    (root, close) => {
+      const paint = async () => {
+        /* 노란불이 초록불을 넘어서지 않게 서로 5%씩 자리를 남겨둔다 */
+        t.green = Math.max(10, Math.min(100, t.green));
+        t.yellow = Math.max(5, Math.min(t.green - 5, t.yellow));
+        $('#lcG', root).textContent = t.green + '%';
+        $('#lcY', root).textContent = t.yellow + '%';
+        $('#lcPrev', root).innerHTML = [
+          ['mad', '빨강', `0–${t.yellow - 1}%`],
+          ['joy', '노랑', `${t.yellow}–${t.green - 1}%`],
+          ['calm', '초록', `${t.green}–100%`],
+        ].map(([f, nm, rg]) =>
+          `<div class="lchip"><i style="background:${famColor(f)}"></i>${nm}<b>${rg}</b></div>`).join('');
+        $$('[data-g]', root).forEach(b => b.disabled =
+          (+b.dataset.g > 0 && t.green >= 100) || (+b.dataset.g < 0 && t.green <= t.yellow + 5));
+        $$('[data-y]', root).forEach(b => b.disabled =
+          (+b.dataset.y > 0 && t.yellow >= t.green - 5) || (+b.dataset.y < 0 && t.yellow <= 5));
+        S.settings.light = { yellow: t.yellow, green: t.green };
+        await saveSettings();
+        if (S.tab === 'routine') renderRoutine();   /* 뒤에 깔린 신호등도 바로 바뀐다 */
+        onChange && onChange();
+      };
+      paint();
+      $$('[data-g]', root).forEach(b => b.onclick = () => { t.green += +b.dataset.g; paint(); });
+      $$('[data-y]', root).forEach(b => b.onclick = () => { t.yellow += +b.dataset.y; paint(); });
+      $('#lcReset', root).onclick = () => { t.green = LIGHT_DEFAULT.green; t.yellow = LIGHT_DEFAULT.yellow; paint(); };
+    });
 }
 
 /* 앱을 열었을 때 남은 루틴을 한 번만 알려준다 (웹앱이라 정해진 시각 알림은 못 보낸다) */
@@ -2208,7 +2349,7 @@ async function exportAll() {
   toast('내보내는 중…');
   const out = {
     app: 'maeumgyeol', version: 2, exportedAt: new Date().toISOString(),
-    entries: [], routines: S.routines, checks: S.checks
+    entries: [], routines: S.routines, checks: S.checks, slots: S.slots
   };
   for (const m of S.index) { const e = await getEntry(m.id); if (e) out.entries.push(e); }
   const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
@@ -2228,6 +2369,17 @@ async function importAll(file) {
     const cover = e.photos.find(p => p.id === e.cover) || e.photos[0];
     await saveEntry(e, cover ? (cover.thumb || cover.data) : '');
     n++;
+  }
+
+  /* 직접 만든 시간대 — 루틴보다 먼저 넣어야 불러온 루틴이 제자리를 찾는다 */
+  if (Array.isArray(data.slots)) {
+    let sn = 0;
+    for (const s of data.slots) {
+      if (!s || !s.id || S.slots.some(x => x.id === s.id || x.name === s.name)) continue;
+      S.slots.push({ id: s.id, name: s.name, icon: s.icon || '🕘' });
+      sn++;
+    }
+    if (sn) await saveSlots();
   }
 
   /* 루틴 — 같은 id 는 건너뛰고 뒤에 이어 붙인다 */
@@ -2285,6 +2437,9 @@ function openSettings() {
       <button class="btn btn-g" data-imp>불러오기</button></div>
     <input type="file" accept="application/json,.json" class="hide" data-impf>
     <div class="eyebrow" style="padding:0">루틴</div>
+    <div class="rowitem"><div class="rl"><b>신호등 기준</b>
+      <span>지금은 ${S.settings.light.yellow}% 부터 노란불, ${S.settings.light.green}% 부터 초록불</span></div>
+      <button class="btn btn-g" data-light>바꾸기</button></div>
     <div class="rowitem"><div class="rl"><b>남은 루틴 알려주기</b>
       <span>앱을 열었을 때 하루 한 번만 알려줘요</span></div>
       <button class="btn btn-g" data-remind>${S.settings.remind === false ? '꺼짐' : '켜짐'}</button></div>
@@ -2315,6 +2470,11 @@ function openSettings() {
     $$('[data-th]', scr).forEach(x => x.classList.toggle('on', x === b));
     renderHome();
     toast(`${THEMES.find(t => t.id === S.settings.theme).name} 테마로 바꿨어요`);
+  });
+  scr.querySelector('[data-light]').onclick = () => openLightSetting(() => {
+    const row = scr.querySelector('[data-light]').closest('.rowitem');
+    row.querySelector('span').textContent =
+      `지금은 ${S.settings.light.yellow}% 부터 노란불, ${S.settings.light.green}% 부터 초록불`;
   });
   scr.querySelector('[data-remind]').onclick = async e => {
     S.settings.remind = S.settings.remind === false;
