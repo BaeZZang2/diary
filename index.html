@@ -2040,7 +2040,7 @@ function openStats() {
     <div class="eyebrow" style="padding:0">루틴별 달성률 · 30일</div>
     ${rRows.length ? rRows.map(x => {
       const rate = x.done / x.plan;
-      return `<div class="barrow"><span class="nm" style="width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.r.emoji || '')} ${esc(x.r.name)}</span>
+      return `<div class="barrow"><span class="nm" style="width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.r.emoji || '')} ${esc(x.r.name)}</span>
         <span class="tr"><span class="fl" style="width:${rate * 100}%;background:${lightOf(rate).color}"></span></span>
         <span class="ct">${Math.round(rate * 100)}%</span></div>`;
     }).join('')
