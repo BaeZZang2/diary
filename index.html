@@ -857,7 +857,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v17 · 2026-08-05';
+const APP_VERSION = 'v18 · 2026-08-05';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1359,7 +1359,7 @@ function openRoutineOptions(rid, date, opts = {}) {
       고른 상태는 바로 저장돼요. 창은 메모를 저장하거나 닫을 때까지 열려 있어요.</div>
     <div class="field">
       <div class="label">한 줄 메모</div>
-      <div class="box"><input id="rMemo" maxlength="60" placeholder="오늘 이 루틴은 어땠나요?" value="${esc(c.memo || '')}"></div>
+      <div class="box"><input id="rMemo" maxlength="60" placeholder="오늘 이 루틴은 어땠나요?" value="${esc(c.memo || '')}" autocomplete="off"></div>
     </div>
     <button class="btn btn-p" id="rMemoSave" style="width:100%;margin-top:14px">메모 저장</button>
     <button class="btn btn-o" id="rGoEdit" style="width:100%;margin-top:8px">루틴 고치기</button>`,
@@ -1410,7 +1410,7 @@ function openRoutineEdit(id) {
 
     <div class="field">
       <div class="label">이름</div>
-      <div class="box"><input id="rName" maxlength="40" placeholder="예: 20분 걷기" value="${esc(r.name)}"></div>
+      <div class="box"><input id="rName" maxlength="40" placeholder="예: 20분 걷기" value="${esc(r.name)}" autocomplete="off"></div>
     </div>
 
     <div class="field">
@@ -2051,7 +2051,7 @@ async function openEditor(id, opts = {}) {
     g.innerHTML = entry.gratitude.map((v, i) => `
       <div class="gline" data-g="${i}">
         <span class="gn">${i + 1}</span>
-        <input value="${esc(v)}" placeholder="${i === 0 ? '예: 따뜻한 커피 한 잔' : '오늘 고마웠던 것'}">
+        <input value="${esc(v)}" placeholder="${i === 0 ? '예: 따뜻한 커피 한 잔' : '오늘 고마웠던 것'}" autocomplete="off">
         ${entry.gratitude.length > 1 ? `<button class="gx" data-gx aria-label="줄 지우기">
           <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>` : ''}
       </div>`).join('');
