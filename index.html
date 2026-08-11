@@ -431,6 +431,24 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
 .light .msg{font-size:12.5px;color:var(--dim);margin-top:10px}
 
 /* ---------- 루틴 목록 ---------- */
+/* ---------- 루틴 탭의 주간 날짜 바 ---------- */
+.wkbar{display:flex;align-items:center;gap:4px;margin:14px var(--sp) 0}
+.wkbar .nav{flex:none;width:26px;height:46px;border-radius:9px;display:grid;place-items:center;color:var(--faint)}
+.wkbar .nav svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.wkdays{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.wkday{border-radius:12px;padding:7px 0 7px;display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--faint);font-size:10px;letter-spacing:.02em;transition:background .15s}
+.wkday b{font-family:var(--mo);font-size:14px;font-weight:500;color:var(--dim);line-height:1.2}
+.wkday .pip{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.wkday.later{opacity:.5}
+.wkday.today b{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
+.wkday.sel{background:var(--ivory);color:var(--ink)}
+.wkday.sel b{color:var(--ink)}
+.daynote{width:100%;margin:10px 0 0;border:1px dashed var(--line);border-radius:12px;padding:10px 12px;
+  color:var(--dim);font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:8px}
+.daynote b{font-weight:600;color:var(--tx)}
+.daynote:active{background:var(--surface)}
+
 /* 목록 머리: 왼쪽 이름표 + 오른쪽 정렬 단추 */
 .rbar{display:flex;align-items:center;gap:8px;margin:22px var(--sp) 10px}
 .rbar .lb{font-size:10.5px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
@@ -878,7 +896,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v21 · 2026-08-11';
+const APP_VERSION = 'v22 · 2026-08-11';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -890,7 +908,7 @@ const S = {
     pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '',
     memoOnCheck: true, rsort: 'slot', light: Object.assign({}, LIGHT_DEFAULT)
   },
-  query: '', tag: '', tab: 'diary', ready: false
+  query: '', tag: '', tab: 'diary', rday: '', ready: false
 };
 
 /* ---------- 유틸 ---------- */
@@ -924,6 +942,10 @@ function applyTheme(id) {
   if (meta) meta.setAttribute('content',
     getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#15131C');
 }
+const dateShort = s => {
+  const d = new Date(s + 'T00:00:00');
+  return `${d.getMonth() + 1}월 ${d.getDate()}일(${DOW[d.getDay()]})`;
+};
 function dateLabel(s) {
   const d = new Date(s + 'T00:00:00');
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${DOW[d.getDay()]}요일`;
@@ -1261,15 +1283,22 @@ function renderRoutineRibbon() {
 function renderRoutine() {
   const host = $('#viewRoutine');
   const today = ymd(new Date());
-  const p = dayProgress(today);
+  const date = S.rday || today;                 /* 보고 있는 날 (오늘이 아닐 수 있다) */
+  const isToday = date === today, future = date > today;
+  const p = dayProgress(date);
+  const weekBar = weekBarHTML(date, today);
 
-  if (!S.routines.filter(r => r.active !== false).length) {
-    host.innerHTML = `
-      <div class="empty"><b>아직 루틴이 없어요</b>매일 지키고 싶은 것 하나부터 적어보세요.</div>
+  if (!S.routines.filter(r => r.active !== false).length && !p.todos.length) {
+    host.innerHTML = weekBar + `
+      <div class="empty"><b>${isToday ? '아직 루틴이 없어요' : '이 날은 아직 비어 있어요'}</b>
+        ${isToday ? '매일 지키고 싶은 것 하나부터 적어보세요.' : '할 일을 미리 담아둘 수 있어요.'}</div>
       <div class="section" style="display:flex;flex-direction:column;gap:9px">
-        <button class="btn btn-p" data-preset style="width:100%">보기에서 골라 담기</button>
-        <button class="btn btn-o" data-new style="width:100%">직접 만들기</button>
+        <button class="btn btn-p" data-addtodo style="width:100%">${esc(dateLabel(date))}에 할 일 담기</button>
+        <button class="btn btn-o" data-preset style="width:100%">보기에서 골라 담기</button>
+        <button class="btn btn-o" data-new style="width:100%">루틴 직접 만들기</button>
       </div>`;
+    bindWeekBar(host);
+    host.querySelector('[data-addtodo]').onclick = () => openTodoAdder(date);
     host.querySelector('[data-preset]').onclick = openPresetPicker;
     host.querySelector('[data-new]').onclick = () => openRoutineEdit(null);
     renderRoutineRibbon(); updateTabBadge();
@@ -1278,7 +1307,13 @@ function renderRoutine() {
 
   const L = lightOf(p.rate);
   const pctTxt = p.rate < 0 ? '—' : Math.round(p.rate * 100);
-  let html = `
+  /* 아직 오지 않은 날은 달성률이 0으로 찍혀 빨간불이 되니, 신호등을 접어 둔다 */
+  let html = weekBar + (future ? `
+    <div class="light">
+      <div class="lh"><span class="lab">미리 보기</span></div>
+      <div class="msg" style="margin-top:8px">${dateLabel(date)} · 아직 오지 않은 날이에요.
+        ${p.total ? `예정된 루틴과 할 일 ${p.target}개` : '예정된 것이 없어요'}${p.todos.length ? ` (할 일 ${p.todos.length})` : ''}</div>
+    </div>` : `
     <div class="light">
       <div class="lh">
         <span class="lamp">${[0, 1, 2].map(i => {
@@ -1289,13 +1324,12 @@ function renderRoutine() {
         <span class="pct" style="color:${L.color}">${pctTxt}${p.rate < 0 ? '' : '<small>%</small>'}</span>
       </div>
       <div class="tr"><span class="fl" style="width:${p.rate < 0 ? 0 : p.rate * 100}%;background:${L.color}"></span></div>
-      <div class="msg">${dateLabel(today)} · ${L.msg}${p.total ? ` (${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''})` : ''}</div>
-    </div>`;
+      <div class="msg">${dateLabel(date)} · ${L.msg}${p.total ? ` (${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''})` : ''}</div>
+    </div>`);
 
   if (p.total) {
     const sort = SORTS.find(s => s.id === (S.settings.rsort || 'slot')) || SORTS[0];
-    html += `<div class="rbar"><span class="lb">오늘 ${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''}</span>
-
+    html += `<div class="rbar"><span class="lb">${isToday ? '오늘' : dateShort(date)} ${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''}</span>
       <button class="sortbtn" data-sort>
         <svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M17 20V4M17 4l3 3"/></svg>
         ${esc(sort.name)}</button></div>
@@ -1305,12 +1339,12 @@ function renderRoutine() {
     for (const t of p.todos) html += todoRowHTML(t);
     html += `</div>`;
   } else {
-    html += `<div class="empty"><b>오늘은 예정된 루틴이 없어요</b>반복 요일에 오늘이 없는 루틴들이에요. 푹 쉬어도 좋습니다.</div>`;
+    html += `<div class="empty"><b>${isToday ? '오늘은' : '이 날은'} 예정된 루틴이 없어요</b>반복 요일에 없는 날이에요. 할 일만 담아둘 수도 있어요.</div>`;
   }
 
   html += `<div class="section" style="margin-top:${p.total ? 14 : 0}px">
       <button class="addtodo" data-addtodo>
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>오늘 할 일 더하기</button>
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>${isToday ? '오늘' : dateShort(date)} 할 일 더하기</button>
     </div>
     <div class="section" style="margin-top:22px;display:flex;flex-direction:column;gap:9px">
       <button class="btn btn-o" data-manage style="width:100%">루틴 관리</button>
@@ -1318,22 +1352,62 @@ function renderRoutine() {
     </div>`;
 
   host.innerHTML = html;
+  bindWeekBar(host);
   $$('.ritem', host).forEach(row => {
     const rid = row.dataset.r, tid = row.dataset.t;
     if (rid) {
-      $$('[data-ck]', row).forEach(b => b.onclick = () => toggleCheck(rid));
-      row.querySelector('[data-opt]').onclick = () => openRoutineOptions(rid, today);
+      $$('[data-ck]', row).forEach(b => b.onclick = () => toggleCheck(rid, date));
+      row.querySelector('[data-opt]').onclick = () => openRoutineOptions(rid, date);
     } else {
-      $$('[data-ck]', row).forEach(b => b.onclick = () => toggleTodo(tid, today));
-      row.querySelector('[data-opt]').onclick = () => openTodoOptions(tid, today);
+      $$('[data-ck]', row).forEach(b => b.onclick = () => toggleTodo(tid, date));
+      row.querySelector('[data-opt]').onclick = () => openTodoOptions(tid, date);
     }
   });
-  host.querySelector('[data-addtodo]').onclick = () => openTodoAdder(today);
+  host.querySelector('[data-addtodo]').onclick = () => openTodoAdder(date);
   host.querySelector('[data-manage]').onclick = openRoutineManage;
   host.querySelector('[data-preset2]').onclick = openPresetPicker;
   const sb = host.querySelector('[data-sort]');
   if (sb) sb.onclick = openSortPicker;
   renderRoutineRibbon(); updateTabBadge();
+}
+
+/* ---------- 주간 날짜 바 — 다른 날을 열어 할 일을 미리 담을 수 있다 ---------- */
+function weekBarHTML(date, today) {
+  const d0 = new Date(date + 'T00:00:00');
+  d0.setDate(d0.getDate() - d0.getDay());        /* 그 주 일요일로 */
+  let cells = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(d0); d.setDate(d.getDate() + i);
+    const key = ymd(d);
+    const q = dayProgress(key);
+    const later = key > today;
+    let pip = 'background:var(--line)';
+    if (!later && q.rate >= 0) pip = `background:${lightOf(q.rate).color}`;
+    else if (q.todos.length) pip = `background:${famColor('power')}`;
+    const cls = ['wkday', key === date ? 'sel' : '', key === today ? 'today' : '', later ? 'later' : ''].filter(Boolean).join(' ');
+    cells += `<button class="${cls}" data-wd="${key}">
+      ${DOW[i]}<b>${d.getDate()}</b><i class="pip" style="${pip}"></i></button>`;
+  }
+  const note = date === today ? '' :
+    `<button class="daynote" data-wtoday><b>${dateLabel(date)}</b> 보는 중 · 오늘로 돌아가기</button>`;
+  return `<div class="wkbar">
+      <button class="nav" data-wprev aria-label="지난 주"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="wkdays">${cells}</div>
+      <button class="nav" data-wnext aria-label="다음 주"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>${note ? `<div class="section">${note}</div>` : ''}`;
+}
+
+function bindWeekBar(host) {
+  const go = key => { S.rday = key; renderRoutine(); window.scrollTo({ top: 0 }); };
+  const shift = n => {
+    const d = new Date((S.rday || ymd(new Date())) + 'T00:00:00');
+    d.setDate(d.getDate() + n); go(ymd(d));
+  };
+  $$('[data-wd]', host).forEach(b => b.onclick = () => go(b.dataset.wd));
+  host.querySelector('[data-wprev]').onclick = () => shift(-7);
+  host.querySelector('[data-wnext]').onclick = () => shift(7);
+  const back = host.querySelector('[data-wtoday]');
+  if (back) back.onclick = () => go(ymd(new Date()));
 }
 
 /* ---------- 목록 한 줄 그리기 (루틴 탭과 하루 돌아보기가 함께 쓴다) ---------- */
@@ -1509,18 +1583,18 @@ function wantsMemo(r) {
   return S.settings.memoOnCheck !== false;
 }
 
-async function toggleCheck(rid) {
-  const today = ymd(new Date());
-  const cur = dayChecks(today)[rid] || {};
+async function toggleCheck(rid, date) {
+  date = date || ymd(new Date());
+  const cur = dayChecks(date)[rid] || {};
   const turningOn = cur.s !== 'done';
   const next = cur.s === 'done'
     ? (cur.memo ? { s: '', memo: cur.memo } : null)
     : Object.assign({}, cur, { s: 'done', at: Date.now() });
-  await setCheck(today, rid, next && (next.s || next.memo) ? next : null);
+  await setCheck(date, rid, next && (next.s || next.memo) ? next : null);
   renderRoutine();
   /* 방금 완료로 표시했으면 메모 창을 바로 띄운다.
      루틴마다 따로 정해 둔 값이 있으면 그것이 전체 설정보다 앞선다. */
-  if (turningOn && wantsMemo(S.routines.find(x => x.id === rid))) openRoutineOptions(rid, today, { focusMemo: true });
+  if (turningOn && wantsMemo(S.routines.find(x => x.id === rid))) openRoutineOptions(rid, date, { focusMemo: true });
 }
 
 function openRoutineOptions(rid, date, opts = {}) {
@@ -2015,6 +2089,7 @@ function setTab(t) {
     }
   }
   $('#fabLabel').textContent = t === 'diary' ? '오늘 기록하기' : '루틴 추가';
+  if (t === 'routine') S.rday = ymd(new Date());   /* 탭에 들어올 때는 늘 오늘부터 */
   if (t === 'diary') renderHome(); else renderRoutine();
   window.scrollTo({ top: 0 });
 }
@@ -3099,6 +3174,11 @@ window.addEventListener('popstate', () => {
 
   if (closeTopLayer()) { disarmExit(); pushGuard(); return; }
 
+  /* 다른 날을 보던 중이면 먼저 오늘로 돌아온다 */
+  if (S.tab === 'routine' && S.rday && S.rday !== ymd(new Date())) {
+    S.rday = ymd(new Date()); renderRoutine();
+    disarmExit(); pushGuard(); return;
+  }
   /* 루틴 탭에서 눌렀으면 먼저 기록 탭으로 돌아온다 (바로 종료되지 않게) */
   if (S.tab !== 'diary') { setTab('diary'); disarmExit(); pushGuard(); return; }
 
