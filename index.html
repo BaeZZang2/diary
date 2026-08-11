@@ -863,7 +863,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v19 · 2026-08-05';
+const APP_VERSION = 'v20 · 2026-08-06';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1169,7 +1169,10 @@ function routinesOn(date) {
     .sort((a, b) => (a.order || 0) - (b.order || 0));
 }
 
-/* 쉼으로 표시한 루틴은 분모에서 빠진다 (쉬기로 한 것도 지킨 것이다) */
+/* 쉼으로 표시한 루틴은 '완료'의 절반만큼 달성률에 더해진다.
+   (쉬기로 한 것도 절반은 지킨 것이다. 분모는 그날 예정된 루틴 전체) */
+const REST_WEIGHT = .5;
+
 function dayProgress(date) {
   const list = routinesOn(date), ck = dayChecks(date);
   let done = 0, rest = 0;
@@ -1177,9 +1180,11 @@ function dayProgress(date) {
     const s = (ck[r.id] || {}).s;
     if (s === 'done') done++; else if (s === 'rest') rest++;
   }
-  const target = list.length - rest;
-  const rate = target > 0 ? done / target : (list.length ? 1 : -1);
-  return { list, ck, done, rest, target, total: list.length, rate };
+  const target = list.length;                    /* 분모 */
+  const credit = done + rest * REST_WEIGHT;      /* 완료 1, 쉼 0.5 */
+  const left = target - done - rest;             /* 아직 손대지 않은 것 */
+  const rate = target > 0 ? credit / target : -1;
+  return { list, ck, done, rest, left, credit, target, total: list.length, rate };
 }
 
 function lightOf(rate) {
@@ -1193,7 +1198,7 @@ function lightOf(rate) {
 
 function updateTabBadge() {
   const p = dayProgress(ymd(new Date()));
-  const left = Math.max(0, p.target - p.done);
+  const left = Math.max(0, p.left);
   const b = $('#tabBadge');
   b.textContent = left;
   b.classList.toggle('hide', left === 0);
@@ -1253,7 +1258,7 @@ function renderRoutine() {
 
   if (p.list.length) {
     const sort = SORTS.find(s => s.id === (S.settings.rsort || 'slot')) || SORTS[0];
-    html += `<div class="rbar"><span class="lb">오늘의 루틴 ${p.done}/${p.target}</span>
+    html += `<div class="rbar"><span class="lb">오늘의 루틴 ${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}</span>
       <button class="sortbtn" data-sort>
         <svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M17 20V4M17 4l3 3"/></svg>
         ${esc(sort.name)}</button></div>
@@ -1361,7 +1366,7 @@ function openRoutineOptions(rid, date, opts = {}) {
       <button class="btn btn-o" data-s="" style="flex:1">지우기</button>
     </div>
     <div style="font-size:11.5px;color:var(--faint);margin-top:9px;line-height:1.7">
-      쉼으로 두면 오늘 달성률 계산에서 빠져요.<br>
+      쉼으로 두면 완료의 절반만큼 오늘 달성률에 더해져요.<br>
       고른 상태는 바로 저장돼요. 창은 메모를 저장하거나 닫을 때까지 열려 있어요.</div>
     <div class="field">
       <div class="label">한 줄 메모</div>
@@ -1718,10 +1723,11 @@ function routineRangeStats(days) {
     const key = ymd(d), ck = dayChecks(key);
     for (const r of routinesOn(key)) {
       const s = (ck[r.id] || {}).s;
-      if (s === 'rest') continue;                     /* 쉼은 세지 않는다 */
       const box = per[r.id] || (per[r.id] = { r, plan: 0, done: 0 });
       box.plan++; plan++;
-      if (s === 'done') { box.done++; done++; }
+      /* 완료는 1, 쉼은 그 절반으로 센다 */
+      const w = s === 'done' ? 1 : s === 'rest' ? REST_WEIGHT : 0;
+      if (w) { box.done += w; done += w; }
     }
   }
   return { per, plan, done, rate: plan ? done / plan : -1 };
@@ -1735,7 +1741,7 @@ function routineStreak() {
   for (let i = 0; i < 400; i++) {
     const p = dayProgress(ymd(cur));
     if (p.total > 0) {
-      const ok = p.target > 0 ? p.done >= p.target : true;
+      const ok = p.left === 0;                    /* 완료·쉼으로 다 정리한 날 */
       if (ok) streak++;
       else if (!first) break;
     }
@@ -1779,7 +1785,7 @@ function openLightSetting(onChange) {
   sheet('신호등 기준', `
     <div class="lchips" id="lcPrev"></div>
     <div style="font-size:11.5px;color:var(--faint);margin-bottom:4px;line-height:1.7">
-      오늘 달성률이 어느 색으로 보일지 정해요. 쉼으로 둔 루틴은 계산에서 빠집니다.</div>
+      오늘 달성률이 어느 색으로 보일지 정해요. 쉼으로 둔 루틴은 완료의 절반으로 셉니다.</div>
     <div class="rowitem"><div class="rl"><b>초록불 기준</b><span>이 값 이상이면 초록불</span></div>
       <div class="step"><button data-g="-5">−</button><b id="lcG"></b><button data-g="5">＋</button></div></div>
     <div class="rowitem"><div class="rl"><b>노란불 기준</b><span>이 값 이상이면 노란불</span></div>
@@ -1820,7 +1826,7 @@ function maybeRemind() {
   const today = ymd(new Date());
   if (S.settings.remindLog === today) return;
   const p = dayProgress(today);
-  const left = p.target - p.done;
+  const left = p.left;
   if (left <= 0) return;
   S.settings.remindLog = today; saveSettings();
   setTimeout(() => toast(`오늘 남은 루틴이 ${left}개 있어요`), 1000);
@@ -2402,8 +2408,8 @@ function calendarHTML(ym) {
 
     const p = dayProgress(key);
     if (p.total > 0) {
-      planned++; plan += p.target; done += p.done;
-      if (p.target > 0 ? p.done >= p.target : true) full++;
+      planned++; plan += p.target; done += p.credit;   /* 쉼은 절반으로 */
+      if (p.left === 0) full++;
     }
     let style = '';
     if (p.rate >= 0) {
@@ -2414,7 +2420,7 @@ function calendarHTML(ym) {
     const bar = fams.length
       ? `<span class="bar">${fams.map(f => `<i style="background:${famColor(f)}"></i>`).join('')}</span>` : '';
     const cls = ['cday', metas.length || p.rate >= 0 ? 'lit' : '', key === today ? 'today' : ''].filter(Boolean).join(' ');
-    const tip = [key, p.total ? `루틴 ${p.done}/${p.target}` : '', metas.length ? `기록 ${metas.length}개` : '']
+    const tip = [key, p.total ? `루틴 ${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}` : '', metas.length ? `기록 ${metas.length}개` : '']
       .filter(Boolean).join(' · ');
     cells += `<button class="${cls}" data-day="${key}" title="${esc(tip)}" style="${style}">${d}${bar}</button>`;
   }
