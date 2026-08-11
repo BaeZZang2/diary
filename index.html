@@ -458,6 +458,20 @@ textarea.body{min-height:130px;resize:vertical;font-size:15.5px;line-height:1.75
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ritem .opt{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--faint)}
 .ritem .opt svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+/* 할 일 — 그날 하루만 사는 항목이라 시간대 칸을 다른 색으로 물들여 구분한다 */
+.ritem.todo{border-style:dashed}
+.ritem.todo .slot{color:var(--power);font-weight:600;letter-spacing:.02em}
+.ritem.doing .ck{background:var(--joy);border-color:var(--joy);color:var(--ink)}
+.ritem.doing .ck svg{fill:currentColor;stroke:none}
+.ritem.doing .nm{color:var(--dim)}
+.addtodo{width:100%;margin-top:2px;border:1px dashed var(--line);border-radius:12px;padding:12px;
+  color:var(--dim);font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:7px}
+.addtodo:active{background:var(--surface)}
+.addtodo svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2}
+.tdrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.tdrow .tn{flex:1;min-width:0;font-size:14px}
+.tdrow .tx{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:var(--faint)}
+.tdrow .tx svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
 
 /* ---------- 루틴 관리 ---------- */
 .rmg{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -859,18 +873,19 @@ const K = {
   idx: 'md:index', set: 'md:settings', entry: id => 'md:entry:' + id, thumb: ym => 'md:thumb:' + ym,
   rt: 'md:routines',                      /* 루틴 정의 한 덩어리 */
   check: ym => 'md:check:' + ym,          /* 체크 기록은 달마다 나눠 담는다 (사진 썸네일과 같은 방식) */
+  todo: ym => 'md:todo:' + ym,            /* 그날 하루짜리 할 일 */
   slot: 'md:slots',                       /* 직접 만든 시간대 */
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v20 · 2026-08-06';
+const APP_VERSION = 'v21 · 2026-08-11';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
 const LIGHT_DEFAULT = { yellow: 40, green: 80 };
 
 const S = {
-  index: [], thumbs: {}, routines: [], checks: {}, slots: [],
+  index: [], thumbs: {}, routines: [], checks: {}, todos: {}, slots: [],
   settings: {
     pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '',
     memoOnCheck: true, rsort: 'slot', light: Object.assign({}, LIGHT_DEFAULT)
@@ -950,6 +965,8 @@ async function loadAll() {
   S.slots = (await KV.get(K.slot)) || [];
   const cks = await KV.keys('md:check:');
   for (const k of cks) { const v = await KV.get(k); if (v) S.checks[k.replace('md:check:', '')] = v; }
+  const tds = await KV.keys('md:todo:');
+  for (const k of tds) { const v = await KV.get(k); if (v) S.todos[k.replace('md:todo:', '')] = v; }
   S.ready = true;
 }
 async function saveIndex() {
@@ -1169,10 +1186,23 @@ function routinesOn(date) {
     .sort((a, b) => (a.order || 0) - (b.order || 0));
 }
 
-/* 쉼으로 표시한 루틴은 '완료'의 절반만큼 달성률에 더해진다.
-   (쉬기로 한 것도 절반은 지킨 것이다. 분모는 그날 예정된 루틴 전체) */
+/* 반만 친 것으로 세는 무게.
+   루틴의 '오늘은 쉼' 과 할 일의 '진행 중' 이 여기에 해당한다. */
 const REST_WEIGHT = .5;
 
+/* ---------- 할 일 — 그날 하루만 사는 일회성 항목 ---------- */
+function dayTodos(date) { return (S.todos[date.slice(0, 7)] || {})[date] || []; }
+
+async function saveTodos(date, list) {
+  const ym = date.slice(0, 7);
+  const bucket = S.todos[ym] || (S.todos[ym] = {});
+  if (list.length) bucket[date] = list; else delete bucket[date];
+  await KV.set(K.todo(ym), bucket);
+}
+
+/* 그날의 달성률.
+   분모는 그날 예정된 루틴에 그날 더한 할 일을 합친 전체.
+   완료는 1, 루틴의 '쉼' 과 할 일의 '진행 중' 은 그 절반으로 센다. */
 function dayProgress(date) {
   const list = routinesOn(date), ck = dayChecks(date);
   let done = 0, rest = 0;
@@ -1180,11 +1210,17 @@ function dayProgress(date) {
     const s = (ck[r.id] || {}).s;
     if (s === 'done') done++; else if (s === 'rest') rest++;
   }
-  const target = list.length;                    /* 분모 */
-  const credit = done + rest * REST_WEIGHT;      /* 완료 1, 쉼 0.5 */
-  const left = target - done - rest;             /* 아직 손대지 않은 것 */
+  const todos = dayTodos(date);
+  let tdone = 0, doing = 0;
+  for (const t of todos) {
+    if (t.s === 'done') tdone++; else if (t.s === 'doing') doing++;
+  }
+  const target = list.length + todos.length;                  /* 분모 */
+  const credit = done + tdone + (rest + doing) * REST_WEIGHT; /* 완료 1, 쉼·진행 중 0.5 */
+  /* 아직 끝내지 않은 것. 쉼은 정리한 것으로 보지만 진행 중은 남은 쪽에 센다 */
+  const left = (list.length - done - rest) + (todos.length - tdone);
   const rate = target > 0 ? credit / target : -1;
-  return { list, ck, done, rest, left, credit, target, total: list.length, rate };
+  return { list, ck, todos, done, rest, tdone, doing, left, credit, target, total: target, rate };
 }
 
 function lightOf(rate) {
@@ -1253,50 +1289,181 @@ function renderRoutine() {
         <span class="pct" style="color:${L.color}">${pctTxt}${p.rate < 0 ? '' : '<small>%</small>'}</span>
       </div>
       <div class="tr"><span class="fl" style="width:${p.rate < 0 ? 0 : p.rate * 100}%;background:${L.color}"></span></div>
-      <div class="msg">${dateLabel(today)} · ${L.msg}${p.total ? ` (${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''})` : ''}</div>
+      <div class="msg">${dateLabel(today)} · ${L.msg}${p.total ? ` (${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''})` : ''}</div>
     </div>`;
 
-  if (p.list.length) {
+  if (p.total) {
     const sort = SORTS.find(s => s.id === (S.settings.rsort || 'slot')) || SORTS[0];
-    html += `<div class="rbar"><span class="lb">오늘의 루틴 ${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}</span>
+    html += `<div class="rbar"><span class="lb">오늘 ${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''}</span>
+
       <button class="sortbtn" data-sort>
         <svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M17 20V4M17 4l3 3"/></svg>
         ${esc(sort.name)}</button></div>
       <div class="rlist">`;
-    for (const r of sortRoutines(p.list)) {
-      const c = p.ck[r.id] || {}, st = c.s || '';
-      const sub = [st === 'rest' ? '오늘은 쉼' : '', c.memo || ''].filter(Boolean).join(' · ');
-      /* 쉼은 체크가 아니라 '오늘은 넘어감' 이므로 표시도 다르게 */
-      const mark = st === 'rest' ? `<path d="M6 12h12"/>` : `<path d="M20 6L9 17l-5-5"/>`;
-      html += `<div class="ritem ${st}" data-r="${r.id}">
-        <button class="ck" data-ck aria-label="체크"><svg viewBox="0 0 24 24">${mark}</svg></button>
-        <button class="slot" data-ck>${esc(slotName(r.slot))}</button>
-        <span class="em">${esc(r.emoji || '✅')}</span>
-        <button class="nm" data-ck><span class="t">${esc(r.name)}</span>${sub ? `<span class="memo">${esc(sub)}</span>` : ''}</button>
-        <button class="opt" data-opt aria-label="더 보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
-      </div>`;
-    }
+    for (const r of sortRoutines(p.list)) html += routineRowHTML(r, p.ck[r.id] || {});
+    /* 할 일은 하루짜리라 늘 목록 끝에 모아 둔다 */
+    for (const t of p.todos) html += todoRowHTML(t);
     html += `</div>`;
   } else {
     html += `<div class="empty"><b>오늘은 예정된 루틴이 없어요</b>반복 요일에 오늘이 없는 루틴들이에요. 푹 쉬어도 좋습니다.</div>`;
   }
 
-  html += `<div class="section" style="margin-top:26px;display:flex;flex-direction:column;gap:9px">
+  html += `<div class="section" style="margin-top:${p.total ? 14 : 0}px">
+      <button class="addtodo" data-addtodo>
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>오늘 할 일 더하기</button>
+    </div>
+    <div class="section" style="margin-top:22px;display:flex;flex-direction:column;gap:9px">
       <button class="btn btn-o" data-manage style="width:100%">루틴 관리</button>
       <button class="btn btn-g" data-preset2 style="width:100%">보기에서 더 담기</button>
     </div>`;
 
   host.innerHTML = html;
   $$('.ritem', host).forEach(row => {
-    const id = row.dataset.r;
-    $$('[data-ck]', row).forEach(b => b.onclick = () => toggleCheck(id));
-    row.querySelector('[data-opt]').onclick = () => openRoutineOptions(id, today);
+    const rid = row.dataset.r, tid = row.dataset.t;
+    if (rid) {
+      $$('[data-ck]', row).forEach(b => b.onclick = () => toggleCheck(rid));
+      row.querySelector('[data-opt]').onclick = () => openRoutineOptions(rid, today);
+    } else {
+      $$('[data-ck]', row).forEach(b => b.onclick = () => toggleTodo(tid, today));
+      row.querySelector('[data-opt]').onclick = () => openTodoOptions(tid, today);
+    }
   });
+  host.querySelector('[data-addtodo]').onclick = () => openTodoAdder(today);
   host.querySelector('[data-manage]').onclick = openRoutineManage;
   host.querySelector('[data-preset2]').onclick = openPresetPicker;
   const sb = host.querySelector('[data-sort]');
   if (sb) sb.onclick = openSortPicker;
   renderRoutineRibbon(); updateTabBadge();
+}
+
+/* ---------- 목록 한 줄 그리기 (루틴 탭과 하루 돌아보기가 함께 쓴다) ---------- */
+function routineRowHTML(r, c) {
+  const st = c.s || '';
+  const sub = [st === 'rest' ? '오늘은 쉼' : '', c.memo || ''].filter(Boolean).join(' · ');
+  /* 쉼은 체크가 아니라 '오늘은 넘어감' 이므로 표시도 다르게 */
+  const mark = st === 'rest' ? `<path d="M6 12h12"/>` : `<path d="M20 6L9 17l-5-5"/>`;
+  return `<div class="ritem ${st}" data-r="${r.id}">
+    <button class="ck" data-ck aria-label="체크"><svg viewBox="0 0 24 24">${mark}</svg></button>
+    <button class="slot" data-ck>${esc(slotName(r.slot))}</button>
+    <span class="em">${esc(r.emoji || '✅')}</span>
+    <button class="nm" data-ck><span class="t">${esc(r.name)}</span>${sub ? `<span class="memo">${esc(sub)}</span>` : ''}</button>
+    <button class="opt" data-opt aria-label="더 보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+  </div>`;
+}
+
+function todoRowHTML(t) {
+  const st = t.s || '';
+  const sub = [st === 'doing' ? '진행 중 · 절반으로 세요' : '', t.memo || ''].filter(Boolean).join(' · ');
+  const mark = st === 'doing'
+    ? `<circle cx="12" cy="12" r="4.5"/>`            /* 진행 중은 가운데 점 */
+    : `<path d="M20 6L9 17l-5-5"/>`;
+  return `<div class="ritem todo ${st}" data-t="${t.id}">
+    <button class="ck" data-ck aria-label="체크"><svg viewBox="0 0 24 24">${mark}</svg></button>
+    <button class="slot" data-ck>할 일</button>
+    <span class="em">📌</span>
+    <button class="nm" data-ck><span class="t">${esc(t.name)}</span>${sub ? `<span class="memo">${esc(sub)}</span>` : ''}</button>
+    <button class="opt" data-opt aria-label="더 보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+  </div>`;
+}
+
+/* ---------- 할 일 다루기 ---------- */
+async function setTodo(date, tid, patch) {
+  const list = dayTodos(date).map(t => t.id === tid ? Object.assign({}, t, patch) : t);
+  await saveTodos(date, list);
+}
+
+async function toggleTodo(tid, date) {
+  const t = dayTodos(date).find(x => x.id === tid); if (!t) return;
+  const turningOn = t.s !== 'done';
+  await setTodo(date, tid, { s: t.s === 'done' ? '' : 'done', at: Date.now() });
+  renderRoutine();
+  if (turningOn && S.settings.memoOnCheck !== false) openTodoOptions(tid, date, { focusMemo: true });
+}
+
+function openTodoOptions(tid, date, opts = {}) {
+  const t0 = dayTodos(date).find(x => x.id === tid); if (!t0) return;
+  sheet(`📌 ${t0.name}`, `
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g" data-s="done" style="flex:1">완료</button>
+      <button class="btn btn-g" data-s="doing" style="flex:1">진행 중</button>
+      <button class="btn btn-o" data-s="" style="flex:1">지우기</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:9px;line-height:1.7">
+      진행 중은 완료의 절반만큼 오늘 달성률에 더해져요. 할 일은 오늘 하루만 있다가 사라져요.<br>
+      고른 상태는 바로 저장돼요. 창은 메모를 저장하거나 닫을 때까지 열려 있어요.</div>
+    <div class="field">
+      <div class="label">한 줄 메모</div>
+      <div class="box"><textarea id="rMemo" class="oneline" rows="1" maxlength="60" placeholder="어디까지 했나요?" autocomplete="off">${esc(t0.memo || '')}</textarea></div>
+    </div>
+    <button class="btn btn-p" id="rMemoSave" style="width:100%;margin-top:14px">메모 저장</button>
+    <button class="btn btn-o" id="tdDel" style="width:100%;margin-top:8px;color:var(--mad);border-color:#DB4F6544">이 할 일 지우기</button>`,
+    (root, close) => {
+      const cur = { s: t0.s || '', memo: t0.memo || '' };
+      const paintState = () => $$('[data-s]', root).forEach(b => {
+        const on = b.dataset.s && b.dataset.s === cur.s;
+        b.className = 'btn ' + (on ? 'btn-p' : (b.dataset.s ? 'btn-g' : 'btn-o'));
+      });
+      paintState();
+      $$('[data-s]', root).forEach(b => b.onclick = async () => {
+        cur.s = b.dataset.s;
+        cur.memo = $('#rMemo', root).value.trim();
+        await setTodo(date, tid, { s: cur.s, memo: cur.memo, at: Date.now() });
+        paintState(); renderRoutine(); opts.after && opts.after();
+      });
+      $('#rMemoSave', root).onclick = async () => {
+        const memo = $('#rMemo', root).value.trim();
+        await setTodo(date, tid, { s: cur.s, memo, at: Date.now() });
+        close(); renderRoutine(); opts.after && opts.after();
+        toast(memo ? '메모를 저장했어요' : '메모를 지웠어요');
+      };
+      $('#rMemo', root).onkeydown = e => {
+        if (e.key === 'Enter') { e.preventDefault(); $('#rMemoSave', root).click(); }
+      };
+      $('#tdDel', root).onclick = async () => {
+        await saveTodos(date, dayTodos(date).filter(x => x.id !== tid));
+        close(); renderRoutine(); opts.after && opts.after(); toast('할 일을 지웠어요');
+      };
+      if (opts.focusMemo) { const i = $('#rMemo', root); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+    });
+}
+
+/* 여러 개를 잇달아 적을 수 있게 창을 열어 둔 채로 담는다 */
+function openTodoAdder(date, onChange) {
+  sheet('오늘 할 일', `
+    <div class="box"><textarea id="tdName" class="oneline" rows="1" maxlength="40" placeholder="예: 은행 다녀오기" autocomplete="off"></textarea></div>
+    <button class="btn btn-p" id="tdAdd" style="width:100%;margin-top:11px">더하기</button>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:10px;line-height:1.7">
+      할 일은 <b style="color:var(--dim)">${dateLabel(date)}</b> 하루만 있다가 사라져요.
+      더한 만큼 오늘 달성률의 분모도 함께 늘어나요.</div>
+    <div id="tdList" style="margin-top:18px"></div>`,
+    (root, close) => {
+      const paint = () => {
+        const host = $('#tdList', root);
+        const list = dayTodos(date);
+        host.innerHTML = list.length
+          ? `<div class="label">오늘 담아 둔 것 ${list.length}개</div>` + list.map(t => `
+              <div class="tdrow"><span class="tn">📌 ${esc(t.name)}</span>
+                <button class="tx" data-del="${t.id}" aria-label="지우기">
+                  <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>`).join('')
+          : '';
+        $$('[data-del]', host).forEach(b => b.onclick = async () => {
+          await saveTodos(date, dayTodos(date).filter(x => x.id !== b.dataset.del));
+          paint(); renderRoutine(); onChange && onChange();
+        });
+      };
+      paint();
+      const add = async () => {
+        const box = $('#tdName', root);
+        const name = box.value.trim();
+        if (!name) { toast('할 일을 적어주세요'); return; }
+        await saveTodos(date, [...dayTodos(date), { id: uid(), name, s: '', memo: '', at: Date.now() }]);
+        box.value = ''; box.focus();
+        paint(); renderRoutine(); onChange && onChange();
+      };
+      $('#tdAdd', root).onclick = add;
+      $('#tdName', root).onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } };
+      $('#tdName', root).focus();
+    });
 }
 
 /* 목록을 늘어놓는 차례.
@@ -1785,7 +1952,8 @@ function openLightSetting(onChange) {
   sheet('신호등 기준', `
     <div class="lchips" id="lcPrev"></div>
     <div style="font-size:11.5px;color:var(--faint);margin-bottom:4px;line-height:1.7">
-      오늘 달성률이 어느 색으로 보일지 정해요. 쉼으로 둔 루틴은 완료의 절반으로 셉니다.</div>
+      오늘 달성률이 어느 색으로 보일지 정해요.
+      루틴의 쉼과 할 일의 진행 중은 완료의 절반으로 셉니다.</div>
     <div class="rowitem"><div class="rl"><b>초록불 기준</b><span>이 값 이상이면 초록불</span></div>
       <div class="step"><button data-g="-5">−</button><b id="lcG"></b><button data-g="5">＋</button></div></div>
     <div class="rowitem"><div class="rl"><b>노란불 기준</b><span>이 값 이상이면 노란불</span></div>
@@ -2420,7 +2588,7 @@ function calendarHTML(ym) {
     const bar = fams.length
       ? `<span class="bar">${fams.map(f => `<i style="background:${famColor(f)}"></i>`).join('')}</span>` : '';
     const cls = ['cday', metas.length || p.rate >= 0 ? 'lit' : '', key === today ? 'today' : ''].filter(Boolean).join(' ');
-    const tip = [key, p.total ? `루틴 ${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}` : '', metas.length ? `기록 ${metas.length}개` : '']
+    const tip = [key, p.total ? `${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''}` : '', metas.length ? `기록 ${metas.length}개` : '']
       .filter(Boolean).join(' · ');
     cells += `<button class="${cls}" data-day="${key}" title="${esc(tip)}" style="${style}">${d}${bar}</button>`;
   }
@@ -2472,19 +2640,12 @@ async function openDayReview(date, onChange) {
       ${p.total ? `<span class="dp" style="background:${L.color}22;color:${L.color}">${Math.round(p.rate * 100)}%</span>` : ''}</div>`;
 
     if (p.total) {
-      h += `<div class="eyebrow" style="padding:0">루틴 ${p.done}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}</div>`;
-      for (const r of sortRoutines(p.list)) {
-        const c = p.ck[r.id] || {}, st = c.s || '';
-        const sub = [st === 'rest' ? '오늘은 쉼' : '', c.memo || ''].filter(Boolean).join(' · ');
-        const mark = st === 'rest' ? `<path d="M6 12h12"/>` : `<path d="M20 6L9 17l-5-5"/>`;
-        h += `<div class="ritem ${st}" data-r="${r.id}">
-          <button class="ck" data-opt aria-label="체크"><svg viewBox="0 0 24 24">${mark}</svg></button>
-          <button class="slot" data-opt>${esc(slotName(r.slot))}</button>
-          <span class="em">${esc(r.emoji || '✅')}</span>
-          <button class="nm" data-opt><span class="t">${esc(r.name)}</span>${sub ? `<span class="memo">${esc(sub)}</span>` : ''}</button>
-          <button class="opt" data-opt aria-label="더 보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
-        </div>`;
-      }
+      const bits = [`${p.done + p.tdone}/${p.target}`];
+      if (p.rest) bits.push(`쉼 ${p.rest}`);
+      if (p.todos.length) bits.push(`할 일 ${p.todos.length}`);
+      h += `<div class="eyebrow" style="padding:0">루틴과 할 일 · ${bits.join(' · ')}</div>`;
+      for (const r of sortRoutines(p.list)) h += routineRowHTML(r, p.ck[r.id] || {});
+      for (const t of p.todos) h += todoRowHTML(t);
       h += `<div style="font-size:11.5px;color:var(--faint);margin-top:4px">
         줄을 누르면 그날의 체크와 메모를 고칠 수 있어요.</div>`;
     }
@@ -2512,10 +2673,12 @@ async function openDayReview(date, onChange) {
 
     const body = $('#dvBody', scr);
     body.innerHTML = h;
+    /* 지난 날 화면에서는 줄 어디를 눌러도 고치는 창이 열린다 */
     $$('.ritem', body).forEach(row => {
-      const id = row.dataset.r;
-      $$('[data-opt]', row).forEach(b => b.onclick =
-        () => openRoutineOptions(id, date, { after: paint }));
+      const rid = row.dataset.r, tid = row.dataset.t;
+      $$('[data-ck],[data-opt]', row).forEach(b => b.onclick = () => rid
+        ? openRoutineOptions(rid, date, { after: paint })
+        : openTodoOptions(tid, date, { after: paint }));
     });
     $$('[data-go]', body).forEach(b => b.onclick = () => openDetail(b.dataset.go));
   };
@@ -2655,7 +2818,7 @@ async function exportAll() {
   toast('내보내는 중…');
   const out = {
     app: 'maeumgyeol', version: 2, exportedAt: new Date().toISOString(),
-    entries: [], routines: S.routines, checks: S.checks, slots: S.slots
+    entries: [], routines: S.routines, checks: S.checks, slots: S.slots, todos: S.todos
   };
   for (const m of S.index) { const e = await getEntry(m.id); if (e) out.entries.push(e); }
   const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
@@ -2717,9 +2880,30 @@ async function importAll(file) {
     }
   }
 
+  /* 할 일 — 같은 id 는 건너뛰고 그날 목록 뒤에 이어 붙인다 */
+  let tn = 0;
+  if (data.todos && typeof data.todos === 'object') {
+    for (const [ym, bucket] of Object.entries(data.todos)) {
+      if (!bucket || typeof bucket !== 'object') continue;
+      const cur = S.todos[ym] || (S.todos[ym] = {});
+      let hit = false;
+      for (const [date, list] of Object.entries(bucket)) {
+        if (!Array.isArray(list)) continue;
+        const mine = cur[date] || (cur[date] = []);
+        for (const t of list) {
+          if (!t || !t.id || mine.some(x => x.id === t.id)) continue;
+          mine.push(t); tn++; hit = true;
+        }
+        if (!mine.length) delete cur[date];
+      }
+      if (hit) await KV.set(K.todo(ym), cur);
+    }
+  }
+
   renderHome();
   if (S.tab === 'routine') renderRoutine(); else updateTabBadge();
-  const parts = [n ? `기록 ${n}개` : '', rn ? `루틴 ${rn}개` : '', cn ? `체크 ${cn}개` : ''].filter(Boolean);
+  const parts = [n ? `기록 ${n}개` : '', rn ? `루틴 ${rn}개` : '',
+    cn ? `체크 ${cn}개` : '', tn ? `할 일 ${tn}개` : ''].filter(Boolean);
   toast(parts.length ? `${parts.join(' · ')}를 불러왔어요` : '새로 불러올 것이 없었어요');
 }
 
@@ -2737,7 +2921,7 @@ function openSettings() {
         <span class="nm">${esc(t.name)}</span>
       </button>`).join('')}</div>
     <div class="eyebrow" style="padding:0">내 데이터</div>
-    <div class="rowitem"><div class="rl"><b>백업 파일 내보내기</b><span>사진 · 루틴 · 체크까지 담은 JSON 한 개</span></div>
+    <div class="rowitem"><div class="rl"><b>백업 파일 내보내기</b><span>사진 · 루틴 · 체크 · 할 일까지 담은 JSON 한 개</span></div>
       <button class="btn btn-g" data-exp>내보내기</button></div>
     <div class="rowitem"><div class="rl"><b>백업 불러오기</b><span>기존 기록은 유지돼요</span></div>
       <button class="btn btn-g" data-imp>불러오기</button></div>
