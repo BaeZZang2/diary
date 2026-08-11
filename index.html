@@ -896,7 +896,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v23 · 2026-08-11';
+const APP_VERSION = 'v24 · 2026-08-11';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1446,58 +1446,67 @@ async function setTodo(date, tid, patch) {
   await saveTodos(date, list);
 }
 
+/* 할 일은 체크해도 메모 창을 띄우지 않는다 — 빠르게 지워 나가는 자리라서.
+   메모가 필요하면 점 세 개로 연다. */
 async function toggleTodo(tid, date) {
   const t = dayTodos(date).find(x => x.id === tid); if (!t) return;
-  const turningOn = t.s !== 'done';
   await setTodo(date, tid, { s: t.s === 'done' ? '' : 'done', at: Date.now() });
   renderRoutine();
-  if (turningOn && S.settings.memoOnCheck !== false) openTodoOptions(tid, date, { focusMemo: true });
 }
 
 function openTodoOptions(tid, date, opts = {}) {
   const t0 = dayTodos(date).find(x => x.id === tid); if (!t0) return;
-  sheet(`📌 ${t0.name}`, `
-    <div style="display:flex;gap:8px">
+  sheet('📌 할 일', `
+    <div class="field" style="margin-top:0">
+      <div class="label">할 일 내용</div>
+      <div class="box"><textarea id="tdName" class="oneline" rows="1" maxlength="40" placeholder="무엇을 할까요?" autocomplete="off">${esc(t0.name)}</textarea></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn btn-g" data-s="done" style="flex:1">완료</button>
       <button class="btn btn-g" data-s="doing" style="flex:1">진행 중</button>
       <button class="btn btn-o" data-s="" style="flex:1">지우기</button>
     </div>
     <div style="font-size:11.5px;color:var(--faint);margin-top:9px;line-height:1.7">
       진행 중은 완료의 절반만큼 오늘 달성률에 더해져요. 할 일은 오늘 하루만 있다가 사라져요.<br>
-      고른 상태는 바로 저장돼요. 창은 메모를 저장하거나 닫을 때까지 열려 있어요.</div>
+      고른 상태는 바로 저장돼요. 창은 저장하거나 닫을 때까지 열려 있어요.</div>
     <div class="field">
       <div class="label">한 줄 메모</div>
       <div class="box"><textarea id="rMemo" class="oneline" rows="1" maxlength="60" placeholder="어디까지 했나요?" autocomplete="off">${esc(t0.memo || '')}</textarea></div>
     </div>
-    <button class="btn btn-p" id="rMemoSave" style="width:100%;margin-top:14px">메모 저장</button>
+    <button class="btn btn-p" id="rMemoSave" style="width:100%;margin-top:14px">저장</button>
     <button class="btn btn-o" id="tdDel" style="width:100%;margin-top:8px;color:var(--mad);border-color:#DB4F6544">이 할 일 지우기</button>`,
     (root, close) => {
-      const cur = { s: t0.s || '', memo: t0.memo || '' };
+      const cur = { s: t0.s || '', memo: t0.memo || '', name: t0.name };
+      const read = () => {
+        cur.memo = $('#rMemo', root).value.trim();
+        const nm = $('#tdName', root).value.trim();
+        if (nm) cur.name = nm;                       /* 비워 두면 쓰던 이름을 지킨다 */
+      };
       const paintState = () => $$('[data-s]', root).forEach(b => {
         const on = b.dataset.s && b.dataset.s === cur.s;
         b.className = 'btn ' + (on ? 'btn-p' : (b.dataset.s ? 'btn-g' : 'btn-o'));
       });
       paintState();
+      /* 상태를 골라도 적다 만 내용·메모가 함께 저장돼 날아가지 않는다 */
       $$('[data-s]', root).forEach(b => b.onclick = async () => {
-        cur.s = b.dataset.s;
-        cur.memo = $('#rMemo', root).value.trim();
-        await setTodo(date, tid, { s: cur.s, memo: cur.memo, at: Date.now() });
+        cur.s = b.dataset.s; read();
+        await setTodo(date, tid, { s: cur.s, name: cur.name, memo: cur.memo, at: Date.now() });
         paintState(); renderRoutine(); opts.after && opts.after();
       });
       $('#rMemoSave', root).onclick = async () => {
-        const memo = $('#rMemo', root).value.trim();
-        await setTodo(date, tid, { s: cur.s, memo, at: Date.now() });
+        read();
+        if (!$('#tdName', root).value.trim()) { toast('할 일 내용을 적어주세요'); return; }
+        await setTodo(date, tid, { s: cur.s, name: cur.name, memo: cur.memo, at: Date.now() });
         close(); renderRoutine(); opts.after && opts.after();
-        toast(memo ? '메모를 저장했어요' : '메모를 지웠어요');
+        toast(cur.name !== t0.name ? '할 일을 고쳤어요' : (cur.memo ? '메모를 저장했어요' : '저장했어요'));
       };
-      $('#rMemo', root).onkeydown = e => {
+      for (const id of ['#rMemo', '#tdName']) $(id, root).onkeydown = e => {
         if (e.key === 'Enter') { e.preventDefault(); $('#rMemoSave', root).click(); }
       };
       $('#tdDel', root).onclick = async () => {
         await saveTodos(date, dayTodos(date).filter(x => x.id !== tid));
         close(); renderRoutine(); opts.after && opts.after(); toast('할 일을 지웠어요');
       };
-      if (opts.focusMemo) { const i = $('#rMemo', root); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
     });
 }
 
