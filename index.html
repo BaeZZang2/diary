@@ -1427,7 +1427,7 @@ function routineRowHTML(r, c) {
 
 function todoRowHTML(t) {
   const st = t.s || '';
-  const sub = [st === 'doing' ? '진행 중 · 절반으로 세요' : '', t.memo || ''].filter(Boolean).join(' · ');
+  const sub = st === 'doing' ? '진행 중 · 절반으로 세요' : '';
   const mark = st === 'doing'
     ? `<circle cx="12" cy="12" r="4.5"/>`            /* 진행 중은 가운데 점 */
     : `<path d="M20 6L9 17l-5-5"/>`;
@@ -1446,8 +1446,7 @@ async function setTodo(date, tid, patch) {
   await saveTodos(date, list);
 }
 
-/* 할 일은 체크해도 메모 창을 띄우지 않는다 — 빠르게 지워 나가는 자리라서.
-   메모가 필요하면 점 세 개로 연다. */
+/* 할 일은 체크해도 창을 띄우지 않는다 — 빠르게 지워 나가는 자리라서 */
 async function toggleTodo(tid, date) {
   const t = dayTodos(date).find(x => x.id === tid); if (!t) return;
   await setTodo(date, tid, { s: t.s === 'done' ? '' : 'done', at: Date.now() });
@@ -1466,16 +1465,11 @@ function openTodoOptions(tid, date, opts = {}) {
       <button class="btn btn-g" data-s="doing" style="flex:1">진행 중</button>
       <button class="btn btn-o" data-s="" style="flex:1">지우기</button>
     </div>
-    <div class="field">
-      <div class="label">한 줄 메모</div>
-      <div class="box"><textarea id="rMemo" class="oneline" rows="1" maxlength="60" placeholder="어디까지 했나요?" autocomplete="off">${esc(t0.memo || '')}</textarea></div>
-    </div>
-    <button class="btn btn-p" id="rMemoSave" style="width:100%;margin-top:14px">저장</button>
+    <button class="btn btn-p" id="tdSave" style="width:100%;margin-top:14px">저장</button>
     <button class="btn btn-o" id="tdDel" style="width:100%;margin-top:8px;color:var(--mad);border-color:#DB4F6544">이 할 일 지우기</button>`,
     (root, close) => {
-      const cur = { s: t0.s || '', memo: t0.memo || '', name: t0.name };
+      const cur = { s: t0.s || '', name: t0.name };
       const read = () => {
-        cur.memo = $('#rMemo', root).value.trim();
         const nm = $('#tdName', root).value.trim();
         if (nm) cur.name = nm;                       /* 비워 두면 쓰던 이름을 지킨다 */
       };
@@ -1484,21 +1478,21 @@ function openTodoOptions(tid, date, opts = {}) {
         b.className = 'btn ' + (on ? 'btn-p' : (b.dataset.s ? 'btn-g' : 'btn-o'));
       });
       paintState();
-      /* 상태를 골라도 적다 만 내용·메모가 함께 저장돼 날아가지 않는다 */
+      /* 상태를 골라도 적다 만 내용이 함께 저장돼 날아가지 않는다 */
       $$('[data-s]', root).forEach(b => b.onclick = async () => {
         cur.s = b.dataset.s; read();
-        await setTodo(date, tid, { s: cur.s, name: cur.name, memo: cur.memo, at: Date.now() });
+        await setTodo(date, tid, { s: cur.s, name: cur.name, at: Date.now() });
         paintState(); renderRoutine(); opts.after && opts.after();
       });
-      $('#rMemoSave', root).onclick = async () => {
+      $('#tdSave', root).onclick = async () => {
         read();
         if (!$('#tdName', root).value.trim()) { toast('할 일 내용을 적어주세요'); return; }
-        await setTodo(date, tid, { s: cur.s, name: cur.name, memo: cur.memo, at: Date.now() });
+        await setTodo(date, tid, { s: cur.s, name: cur.name, at: Date.now() });
         close(); renderRoutine(); opts.after && opts.after();
-        toast(cur.name !== t0.name ? '할 일을 고쳤어요' : (cur.memo ? '메모를 저장했어요' : '저장했어요'));
+        toast(cur.name !== t0.name ? '할 일을 고쳤어요' : '저장했어요');
       };
-      for (const id of ['#rMemo', '#tdName']) $(id, root).onkeydown = e => {
-        if (e.key === 'Enter') { e.preventDefault(); $('#rMemoSave', root).click(); }
+      $('#tdName', root).onkeydown = e => {
+        if (e.key === 'Enter') { e.preventDefault(); $('#tdSave', root).click(); }
       };
       $('#tdDel', root).onclick = async () => {
         await saveTodos(date, dayTodos(date).filter(x => x.id !== tid));
@@ -1533,7 +1527,7 @@ function openTodoAdder(date, onChange) {
         const box = $('#tdName', root);
         const name = box.value.trim();
         if (!name) { toast('할 일을 적어주세요'); return; }
-        await saveTodos(date, [...dayTodos(date), { id: uid(), name, s: '', memo: '', at: Date.now() }]);
+        await saveTodos(date, [...dayTodos(date), { id: uid(), name, s: '', at: Date.now() }]);
         box.value = ''; box.focus();
         paint(); renderRoutine(); onChange && onChange();
       };
