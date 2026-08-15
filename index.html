@@ -274,10 +274,12 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 
 /* detail */
 .affirmation{position:relative;overflow:hidden;background:var(--promptgrad);border:1px solid var(--line);
-  border-radius:var(--r);padding:17px 18px 16px;margin-top:18px}
+  border-radius:var(--r);padding:12px 14px 11px;margin-top:14px}
 .affirmation::before{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--calm)}
-.affirmation .ak{font-size:15.5px;line-height:1.75;font-family:var(--se);color:var(--tx)}
-.affirmation .ae{font-size:12.5px;line-height:1.6;color:var(--dim);margin-top:7px;font-family:var(--ui)}
+.affirmation .label{margin-bottom:3px}
+.affirmation .ae{font-size:16px;line-height:1.45;font-family:var(--se);color:var(--tx)}
+.affirmation .ak{font-size:11px;line-height:1.4;color:var(--faint);margin-top:3px;font-family:var(--ui)}
+#fAffirmation + .field{margin-top:12px}
 .dphotos{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--sp)*-1);
   padding:0 var(--sp);scrollbar-width:none}
 .dphotos::-webkit-scrollbar{display:none}
@@ -923,7 +925,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v27 · 2026-08-15';
+const APP_VERSION = 'v28 · 2026-08-15';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1083,10 +1085,10 @@ function affirmationFor(dateStr) {
 
 function affirmationHtml(dateStr) {
   const [ko, en] = affirmationFor(dateStr);
-  return `<div class="affirmation" aria-label="이날의 확언">
-    <div class="label">이날의 확언</div>
-    <div class="ak">${esc(ko)}</div>
+  return `<div class="affirmation" aria-label="오늘의 확언">
+    <div class="label">오늘의 확언</div>
     <div class="ae" lang="en">${esc(en)}</div>
+    <div class="ak">${esc(ko)}</div>
   </div>`;
 }
 
@@ -2488,7 +2490,7 @@ async function openDetail(id) {
       <button class="iconbtn" data-del aria-label="삭제"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
     </div>
     ${affirmationHtml(e.date)}
-    ${ordered.length ? `<div class="dphotos" style="margin-top:16px">${ordered.map((p, i) =>
+    ${ordered.length ? `<div class="dphotos" style="margin-top:10px">${ordered.map((p, i) =>
       `<img src="${p.data}" alt="" data-ph="${i}">`).join('')}</div>` : ''}
     ${e.text ? `<div class="dbody">${esc(e.text)}</div>` : ''}
     ${e.prompt && e.prompt.a ? `<div class="prompt" style="margin:18px 0 0">
