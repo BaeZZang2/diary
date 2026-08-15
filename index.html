@@ -273,6 +273,11 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .word.on{color:var(--ink);font-weight:600}
 
 /* detail */
+.affirmation{position:relative;overflow:hidden;background:var(--promptgrad);border:1px solid var(--line);
+  border-radius:var(--r);padding:17px 18px 16px;margin-top:18px}
+.affirmation::before{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--calm)}
+.affirmation .ak{font-size:15.5px;line-height:1.75;font-family:var(--se);color:var(--tx)}
+.affirmation .ae{font-size:12.5px;line-height:1.6;color:var(--dim);margin-top:7px;font-family:var(--ui)}
 .dphotos{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--sp)*-1);
   padding:0 var(--sp);scrollbar-width:none}
 .dphotos::-webkit-scrollbar{display:none}
@@ -837,6 +842,28 @@ const PROMPTS = [
   ['놀이와 창조','지금 떠오르는 엉뚱한 아이디어를 하나 적어 보세요.'],
 ];
 
+/* 날짜마다 한 문장씩 건네는 확언. 한국어와 영어는 언제나 같은 뜻의 한 쌍이다. */
+const AFFIRMATIONS = [
+  ['나는 모든 사람에게 사랑받지 않아도 충분히 괜찮은 사람이다.', 'I am enough even if I am not loved by everyone.'],
+  ['누군가의 반응이 나의 가치를 결정하지 않는다.', "Other people's reactions do not define my worth."],
+  ['나는 나를 불편하게 만드는 관계에서 거리를 둘 수 있다.', 'I can step back from relationships that make me uncomfortable.'],
+  ['외로운 순간에도 나는 버려진 사람이 아니다.', 'Even when I feel lonely, I am not abandoned.'],
+  ['오늘의 감정은 지나가고, 나는 다시 평온해질 수 있다.', "Today's feelings will pass, and I can find calm again."],
+  ['나는 오랜 시간 쌓아온 실력과 경험을 믿는다.', 'I trust the skills and experience I have built over time.'],
+  ['나는 모든 것을 완벽하게 알지 않아도 다음 단계로 나아갈 수 있다.', 'I can move forward without knowing everything perfectly.'],
+  ['나에게 맞는 기회는 분명히 존재한다.', 'The right opportunities for me do exist.'],
+  ['나는 새로운 환경에서도 배우고 적응할 수 있는 사람이다.', 'I can learn and adapt in new environments.'],
+  ['나의 속도는 늦은 것이 아니라, 나에게 필요한 속도다.', 'My pace is not too slow; it is the pace I need.'],
+  ['나는 억지로 밝은 척하지 않아도 존중받을 가치가 있다.', 'I deserve respect without pretending to be cheerful.'],
+  ['나를 소중히 여기는 사람들과 편안한 관계를 만들어갈 수 있다.', 'I can build comfortable relationships with people who value me.'],
+  ['관계가 끝나거나 멀어지는 것은 내가 부족하다는 뜻이 아니다.', 'A relationship ending or growing distant does not mean I am not enough.'],
+  ['나는 상대를 배려하면서도 나 자신을 지킬 수 있다.', 'I can care for others while protecting myself.'],
+  ['나는 사랑받기 위해 나를 증명할 필요가 없다.', 'I do not have to prove myself to be loved.'],
+  ['나에게 편안함과 안정감을 주는 사랑을 받을 자격이 있다.', 'I deserve love that brings comfort and stability.'],
+  ['좋은 인연은 나를 불안하게 만들기보다 나답게 만든다.', 'A good relationship helps me be myself rather than making me anxious.'],
+  ['내 인생은 아직 충분히 많은 가능성을 품고 있다.', 'My life still holds many possibilities.'],
+];
+
 /* ============================================================
    마음결 · 앱 로직
    ============================================================ */
@@ -896,7 +923,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v26 · 2026-08-14';
+const APP_VERSION = 'v27 · 2026-08-15';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1045,6 +1072,22 @@ function todaysPrompt(dateStr, offset = 0) {
     [order[i], order[j]] = [order[j], order[i]];
   }
   return PROMPTS[order[(doy + offset) % PROMPTS.length]];
+}
+
+/* 기록 날짜를 UTC 날짜 번호로 바꿔, 기기 시간대와 상관없이 늘 같은 확언을 고른다. */
+function affirmationFor(dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
+  const day = m ? Math.floor(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 864e5) : 0;
+  return AFFIRMATIONS[((day % AFFIRMATIONS.length) + AFFIRMATIONS.length) % AFFIRMATIONS.length];
+}
+
+function affirmationHtml(dateStr) {
+  const [ko, en] = affirmationFor(dateStr);
+  return `<div class="affirmation" aria-label="이날의 확언">
+    <div class="label">이날의 확언</div>
+    <div class="ak">${esc(ko)}</div>
+    <div class="ae" lang="en">${esc(en)}</div>
+  </div>`;
 }
 
 /* ============================================================
@@ -2198,6 +2241,8 @@ async function openEditor(id, opts = {}) {
       <div class="box"><input type="date" id="fDate" value="${entry.date}" class="datebtn mono" style="color:var(--tx)"></div>
     </div>
 
+    <div id="fAffirmation">${affirmationHtml(entry.date)}</div>
+
     <div class="field">
       <div class="label">사진</div>
       <div class="photos" id="fPhotos"></div>
@@ -2239,6 +2284,9 @@ async function openEditor(id, opts = {}) {
   $('#layers').appendChild(scr);
   const close = () => scr.remove();
   scr.querySelector('[data-x]').onclick = () => { if (confirm('저장하지 않고 나갈까요?')) close(); };
+  $('#fDate', scr).onchange = e => {
+    $('#fAffirmation', scr).innerHTML = affirmationHtml(e.target.value || entry.date);
+  };
 
   /* 사진 */
   const fp = $('#fPhotos', scr);
@@ -2439,6 +2487,7 @@ async function openDetail(id) {
       <button class="iconbtn" data-edit aria-label="고치기"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
       <button class="iconbtn" data-del aria-label="삭제"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
     </div>
+    ${affirmationHtml(e.date)}
     ${ordered.length ? `<div class="dphotos" style="margin-top:16px">${ordered.map((p, i) =>
       `<img src="${p.data}" alt="" data-ph="${i}">`).join('')}</div>` : ''}
     ${e.text ? `<div class="dbody">${esc(e.text)}</div>` : ''}
