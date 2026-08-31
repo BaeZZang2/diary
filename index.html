@@ -1306,7 +1306,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v32 · 2026-08-23';
+const APP_VERSION = 'v33 · 2026-08-23';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -2163,6 +2163,11 @@ function openRoutineEdit(id) {
     </div>
 
     <div class="field">
+      <div class="label">묶음</div>
+      <div class="words" id="rGid"></div>
+    </div>
+
+    <div class="field">
       <div class="label">체크하면 메모 창</div>
       <div class="words" id="rMemoMode">${MEMO_MODES.map(m =>
         `<button class="word" data-mm="${m.id}">${esc(m.name)}</button>`).join('')}</div>
@@ -2215,8 +2220,26 @@ function openRoutineEdit(id) {
       openSlotMaker(newId => { if (newId) r.slot = newId; paintSlots(); });
   }
 
+  /* 묶음이 없는 루틴은 '묶지 않음' 이 골라진 채로 보인다. gid 가 비어 있거나
+     이미 지워진 묶음을 가리켜도 이 버튼이 자동으로 선택돼서 안전하다 */
+  function paintGid() {
+    const host = $('#rGid', scr);
+    const groups = sortedGroups();
+    host.innerHTML = `<button class="word" data-gid="">묶지 않음</button>` +
+      groups.map(g => `<button class="word" data-gid="${g.id}">${esc(g.name)}</button>`).join('')
+      + (groups.length ? '' : `<div style="font-size:11.5px;color:var(--faint);margin-top:8px;line-height:1.7;width:100%">
+          아직 만든 묶음이 없어요. ‘루틴 관리’ 화면에서 먼저 만들 수 있어요.</div>`);
+    $$('[data-gid]', host).forEach(b => {
+      const on = (r.gid || '') === b.dataset.gid;
+      b.classList.toggle('on', on);
+      b.style.cssText = on ? 'background:var(--ivory);border-color:var(--ivory)' : '';
+      b.onclick = () => { r.gid = b.dataset.gid; paintGid(); };
+    });
+  }
+
   paint();
   paintSlots();
+  paintGid();
   /* 이름도 한 줄로 쓰는 자리다 */
   $('#rName', scr).onkeydown = e => { if (e.key === 'Enter') e.preventDefault(); };
 
@@ -2335,12 +2358,17 @@ function openRoutineManage() {
     <div style="font-size:11.5px;color:var(--faint);margin:16px 0 2px;line-height:1.7">
       여기서 옮긴 차례는 목록을 <b style="color:var(--dim)">‘내가 정한 순서’</b> 로 볼 때 그대로 보여요.</div>
     <div id="rmList"></div>
-    <button class="btn btn-o" data-preset style="width:100%;margin-top:22px">보기에서 골라 담기</button>
+    <div style="display:flex;flex-direction:column;gap:9px;margin-top:22px">
+      <button class="btn btn-o" data-preset style="width:100%">보기에서 골라 담기</button>
+      <button class="btn btn-o" data-groups style="width:100%">루틴 묶음</button>
+    </div>
   </div>`;
   $('#layers').appendChild(scr);
   scr.querySelector('[data-x]').onclick = () => { scr.remove(); renderRoutine(); };
   scr.querySelector('[data-new]').onclick = () => openRoutineEdit(null);
   scr.querySelector('[data-preset]').onclick = openPresetPicker;
+  /* 묶음 화면으로 넘어갈 땐 이 화면은 접어 둔다 — 뒤로 가면 목록이 최신으로 다시 그려진다 */
+  scr.querySelector('[data-groups]').onclick = () => { scr.remove(); openGroupManage(); };
 
   const paint = () => {
     const list = [...S.routines].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -2424,6 +2452,176 @@ function openPresetPicker() {
       toast(n ? `${n}개를 담았어요` : '이미 담겨 있는 루틴이에요');
     };
   });
+}
+
+/* ---------- 루틴 묶음 관리 ---------- */
+function openGroupManage() {
+  const scr = document.createElement('div'); scr.className = 'screen';
+  scr.innerHTML = `<div class="inner">
+    <div class="screenbar">
+      <button class="iconbtn" data-x><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="ttl">루틴 묶음</div>
+      <button class="btn btn-p" data-new>추가</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--faint);margin:16px 0 2px;line-height:1.7">
+      결이 비슷한 루틴끼리 묶어두면 목록에서 한눈에 갈라 보여요. 묶음을 눌러 이름·색을 고치고 담을 루틴을 골라요.</div>
+    <div id="gmList"></div>
+  </div>`;
+  $('#layers').appendChild(scr);
+  scr.querySelector('[data-x]').onclick = () => { scr.remove(); renderRoutine(); };
+
+  const paint = () => {
+    const list = sortedGroups();
+    const host = $('#gmList', scr);
+    if (!list.length) {
+      host.innerHTML = `<div class="empty"><b>아직 묶음이 없어요</b>위 추가 버튼으로 만들어 보세요.</div>`;
+      return;
+    }
+    host.innerHTML = list.map((g, i) => {
+      const n = S.routines.filter(r => r.gid === g.id).length;
+      return `<div class="rmg">
+        <span class="em"><i style="display:inline-block;width:13px;height:13px;border-radius:50%;background:${groupColor(g.color)};border:1px solid rgba(128,128,128,.25)"></i></span>
+        <button class="bd" style="text-align:left" data-edit="${g.id}">
+          <b>${esc(g.name)}</b>
+          <span>루틴 ${n}개</span>
+        </button>
+        <button class="mv" data-up="${g.id}" ${i === 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg></button>
+        <button class="mv" data-down="${g.id}" ${i === list.length - 1 ? 'disabled' : ''}><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>`;
+    }).join('');
+
+    $$('[data-edit]', host).forEach(b => b.onclick = () => openGroupEdit(b.dataset.edit, paint));
+    /* 순서 바꾸기는 루틴 관리 화면과 똑같은 방식 — 자리를 맞바꾸고 order 를 처음부터 다시 매긴다 */
+    const move = async (id, dir) => {
+      const arr = sortedGroups();
+      const i = arr.findIndex(x => x.id === id), j = i + dir;
+      if (i < 0 || j < 0 || j >= arr.length) return;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      arr.forEach((x, n) => x.order = n);
+      S.groups = arr;
+      await saveGroups(); paint();
+    };
+    $$('[data-up]', host).forEach(b => b.onclick = () => move(b.dataset.up, -1));
+    $$('[data-down]', host).forEach(b => b.onclick = () => move(b.dataset.down, 1));
+  };
+  paint();
+
+  scr.querySelector('[data-new]').onclick = () => openGroupAdd(paint);
+}
+
+/* 색 고르는 줄 — 새 묶음 만들기·묶음 고치기 두 군데서 똑같이 쓴다 */
+function groupColorPickerHTML() {
+  return GROUP_COLORS.map(c =>
+    `<button class="word" data-c="${c.id}"><i style="display:inline-block;width:10px;height:10px;border-radius:50%;
+      background:${c.hex};border:1px solid rgba(128,128,128,.25);margin-right:6px;vertical-align:-1px"></i>${esc(c.name)}</button>`
+  ).join('');
+}
+function bindGroupColorPicker(root, getColor, setColor) {
+  const paint = () => $$('[data-c]', root).forEach(b => {
+    const on = b.dataset.c === getColor();
+    b.style.cssText = on ? 'background:var(--ivory);border-color:var(--ivory)' : '';
+  });
+  paint();
+  $$('[data-c]', root).forEach(b => b.onclick = () => { setColor(b.dataset.c); paint(); });
+}
+
+/* ---------- 새 묶음 만들기 ---------- */
+function openGroupAdd(cb) {
+  let color = GROUP_COLORS[0].id;
+  sheet('새 묶음', `
+    <div class="field">
+      <div class="label">이름</div>
+      <div class="box"><textarea id="gName" class="oneline" rows="1" maxlength="20" placeholder="예: 아침 루틴" autocomplete="off"></textarea></div>
+    </div>
+    <div class="field">
+      <div class="label">색</div>
+      <div class="words" id="gColor">${groupColorPickerHTML()}</div>
+    </div>
+    <button class="btn btn-p" id="gAdd" style="width:100%;margin-top:14px">만들기</button>`,
+    (root, close) => {
+      bindGroupColorPicker(root, () => color, c => color = c);
+      const add = async () => {
+        const name = $('#gName', root).value.trim();
+        if (!name) { toast('이름을 적어주세요'); return; }
+        const order = S.groups.length ? Math.max(...S.groups.map(x => x.order || 0)) + 1 : 0;
+        S.groups.push({ id: uid(), name, color, fold: false, order });
+        await saveGroups();
+        close(); cb && cb();
+        toast(`‘${name}’ 묶음을 만들었어요`);
+      };
+      $('#gAdd', root).onclick = add;
+      /* 이름 칸도 한 줄이라 엔터는 줄바꿈 대신 만들기로 넘긴다 */
+      $('#gName', root).onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); add(); } };
+    });
+}
+
+/* ---------- 묶음 고치기 · 담을 루틴 고르기 ---------- */
+function openGroupEdit(gid, cb) {
+  const g = groupById(gid); if (!g) return;
+  let color = g.color;
+
+  /* 루틴은 한 묶음에만 들 수 있어, 여기서 목록 전체를 켜고 끄는 식으로 보여준다 */
+  const routinesHTML = () => {
+    const list = [...S.routines].sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (!list.length) return `<div class="empty" style="padding:30px 10px"><b>아직 루틴이 없어요</b></div>`;
+    return list.map(r => {
+      const on = r.gid === g.id;
+      return `<div class="rowitem"><div class="rl"><b>${esc(r.emoji || '✅')} ${esc(r.name)}</b>
+        <span>${r.active === false ? '보관됨' : ''}</span></div>
+        <button class="btn ${on ? 'btn-p' : 'btn-g'}" data-rt="${r.id}">${on ? '담김' : '담기'}</button></div>`;
+    }).join('');
+  };
+
+  sheet('묶음 고치기', `
+    <div class="field">
+      <div class="label">이름</div>
+      <div class="box"><textarea id="gName" class="oneline" rows="1" maxlength="20" placeholder="예: 아침 루틴" autocomplete="off">${esc(g.name)}</textarea></div>
+    </div>
+    <div class="field">
+      <div class="label">색</div>
+      <div class="words" id="gColor">${groupColorPickerHTML()}</div>
+    </div>
+    <button class="btn btn-p" id="gSave" style="width:100%;margin-top:14px">저장</button>
+    <div class="field">
+      <div class="label">이 묶음에 담을 루틴</div>
+      <div id="gRoutines">${routinesHTML()}</div>
+    </div>
+    <button class="btn btn-o" id="gDel" style="width:100%;margin-top:22px;color:var(--mad);border-color:#DB4F6544">이 묶음 지우기</button>`,
+    (root, close) => {
+      bindGroupColorPicker(root, () => color, c => color = c);
+
+      $('#gSave', root).onclick = async () => {
+        const name = $('#gName', root).value.trim();
+        if (!name) { toast('이름을 적어주세요'); return; }
+        g.name = name; g.color = color;
+        await saveGroups();
+        close(); cb && cb();
+        toast('묶음을 고쳤어요');
+      };
+
+      /* 켜면 이 묶음으로, 다시 누르면 묶지 않음으로 — 다른 묶음에 있던 루틴도 그대로 옮겨 온다 */
+      const bindRoutines = () => {
+        $$('[data-rt]', root).forEach(b => b.onclick = async () => {
+          const r = S.routines.find(x => x.id === b.dataset.rt); if (!r) return;
+          r.gid = r.gid === g.id ? '' : g.id;
+          await saveRoutines();
+          $('#gRoutines', root).innerHTML = routinesHTML();
+          bindRoutines();
+          cb && cb();
+        });
+      };
+      bindRoutines();
+
+      $('#gDel', root).onclick = async () => {
+        if (!confirm(`‘${g.name}’ 묶음을 지울까요? 안에 있던 루틴은 사라지지 않고 묶지 않은 채로 남아요.`)) return;
+        S.groups = S.groups.filter(x => x.id !== g.id);
+        S.routines.forEach(r => { if (r.gid === g.id) r.gid = ''; });
+        await saveGroups();
+        await saveRoutines();
+        close(); cb && cb();
+        toast('묶음을 지웠어요');
+      };
+    });
 }
 
 /* ---------- 루틴 통계 ---------- */
