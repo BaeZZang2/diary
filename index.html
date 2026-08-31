@@ -1306,7 +1306,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v33 · 2026-08-23';
+const APP_VERSION = 'v34 · 2026-08-23';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -2525,9 +2525,26 @@ function bindGroupColorPicker(root, getColor, setColor) {
   $$('[data-c]', root).forEach(b => b.onclick = () => { setColor(b.dataset.c); paint(); });
 }
 
+/* 묶음에 담을 루틴 줄 — 새로 만들 때와 고칠 때 같은 모양을 쓴다.
+   만들 때는 아직 묶음이 없어 고른 것을 잠시 들고 있고, 고칠 때는 바로 저장한다.
+   그 차이만 isOn 으로 물어본다. */
+function groupRoutineListHTML(isOn) {
+  const list = [...S.routines].sort((a, b) => (a.order || 0) - (b.order || 0));
+  if (!list.length) return `<div class="empty" style="padding:30px 10px"><b>아직 루틴이 없어요</b>먼저 루틴을 만들면 여기서 담을 수 있어요.</div>`;
+  return list.map(r => {
+    const on = isOn(r);
+    return `<div class="rowitem"><div class="rl"><b>${esc(r.emoji || '✅')} ${esc(r.name)}</b>
+      <span>${r.active === false ? '보관됨' : ''}</span></div>
+      <button class="btn ${on ? 'btn-p' : 'btn-g'}" data-rt="${r.id}">${on ? '담김' : '담기'}</button></div>`;
+  }).join('');
+}
+
 /* ---------- 새 묶음 만들기 ---------- */
 function openGroupAdd(cb) {
   let color = GROUP_COLORS[0].id;
+  /* 아직 만들어지지 않은 묶음이라 고른 루틴을 여기 들고 있다가 만들 때 한꺼번에 담는다.
+     중간에 닫으면 아무것도 건드리지 않은 채로 끝난다. */
+  const picked = new Set();
   sheet('새 묶음', `
     <div class="field">
       <div class="label">이름</div>
@@ -2537,17 +2554,38 @@ function openGroupAdd(cb) {
       <div class="label">색</div>
       <div class="words" id="gColor">${groupColorPickerHTML()}</div>
     </div>
+    <div class="field">
+      <div class="label">이 묶음에 담을 루틴</div>
+      <div id="gRoutines">${groupRoutineListHTML(() => false)}</div>
+    </div>
     <button class="btn btn-p" id="gAdd" style="width:100%;margin-top:14px">만들기</button>`,
     (root, close) => {
       bindGroupColorPicker(root, () => color, c => color = c);
+
+      const bindRoutines = () => {
+        $$('[data-rt]', root).forEach(b => b.onclick = () => {
+          const id = b.dataset.rt;
+          picked.has(id) ? picked.delete(id) : picked.add(id);
+          $('#gRoutines', root).innerHTML = groupRoutineListHTML(r => picked.has(r.id));
+          bindRoutines();
+        });
+      };
+      bindRoutines();
+
       const add = async () => {
         const name = $('#gName', root).value.trim();
         if (!name) { toast('이름을 적어주세요'); return; }
         const order = S.groups.length ? Math.max(...S.groups.map(x => x.order || 0)) + 1 : 0;
-        S.groups.push({ id: uid(), name, color, fold: false, order });
+        const gid = uid();
+        S.groups.push({ id: gid, name, color, fold: false, order });
         await saveGroups();
+        /* 고른 루틴을 이 묶음으로 옮긴다. 다른 묶음에 있던 것도 이쪽으로 온다 */
+        if (picked.size) {
+          S.routines.forEach(r => { if (picked.has(r.id)) r.gid = gid; });
+          await saveRoutines();
+        }
         close(); cb && cb();
-        toast(`‘${name}’ 묶음을 만들었어요`);
+        toast(picked.size ? `‘${name}’ 묶음에 루틴 ${picked.size}개를 담았어요` : `‘${name}’ 묶음을 만들었어요`);
       };
       $('#gAdd', root).onclick = add;
       /* 이름 칸도 한 줄이라 엔터는 줄바꿈 대신 만들기로 넘긴다 */
@@ -2561,16 +2599,7 @@ function openGroupEdit(gid, cb) {
   let color = g.color;
 
   /* 루틴은 한 묶음에만 들 수 있어, 여기서 목록 전체를 켜고 끄는 식으로 보여준다 */
-  const routinesHTML = () => {
-    const list = [...S.routines].sort((a, b) => (a.order || 0) - (b.order || 0));
-    if (!list.length) return `<div class="empty" style="padding:30px 10px"><b>아직 루틴이 없어요</b></div>`;
-    return list.map(r => {
-      const on = r.gid === g.id;
-      return `<div class="rowitem"><div class="rl"><b>${esc(r.emoji || '✅')} ${esc(r.name)}</b>
-        <span>${r.active === false ? '보관됨' : ''}</span></div>
-        <button class="btn ${on ? 'btn-p' : 'btn-g'}" data-rt="${r.id}">${on ? '담김' : '담기'}</button></div>`;
-    }).join('');
-  };
+  const routinesHTML = () => groupRoutineListHTML(r => r.gid === g.id);
 
   sheet('묶음 고치기', `
     <div class="field">
