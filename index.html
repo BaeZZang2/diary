@@ -483,6 +483,25 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ritem .opt{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--faint)}
 .ritem .opt svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+/* 루틴 묶음 — 결이 같은 루틴을 옅은 색 판 위에 모아 눈으로 바로 가르게 한다.
+   색은 --gc 로 받아 배경(11%)과 왼쪽 띠에만 쓴다. 글자까지 물들이면 읽기 힘들어진다. */
+.gwrap{background:var(--surface);border:1px solid var(--line);
+  background:color-mix(in srgb, var(--gc) 11%, transparent);
+  border:1px solid color-mix(in srgb, var(--gc) 26%, transparent);
+  border-radius:14px;padding:9px 9px 1px;margin-bottom:10px}
+.gwrap .ritem{background:var(--bg);margin-bottom:8px}
+.ghead{width:100%;display:flex;align-items:center;gap:8px;padding:3px 3px 9px;text-align:left}
+.ghead .ar{flex:none;width:16px;height:16px;stroke:var(--gc);fill:none;stroke-width:2.4;
+  transition:transform .18s}
+.ghead .ar.closed{transform:rotate(-90deg)}
+.ghead .gn{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--dim);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ghead .gc{flex:none;font-family:var(--mo);font-size:11.5px;color:var(--faint)}
+/* 접었을 때 — 줄은 지우지 않고 감추기만 해서 다시 펴면 그대로 돌아온다 */
+.gbody.fold{display:none}
+.ghead.plain{padding:12px 3px 8px}
+.ghead.plain .gn{color:var(--faint);font-weight:500;letter-spacing:.04em}
+
 /* 할 일 — 그날 하루만 사는 항목이라 시간대 칸을 다른 색으로 물들여 구분한다 */
 .ritem.todo{border-style:dashed}
 .ritem.todo .slot{color:var(--power);font-weight:600;letter-spacing:.02em}
@@ -627,6 +646,18 @@ const THEMES = [
   { id: 'indigo', name: '쪽빛',       sw: ['#0F1622', '#6FA8E8', '#57C9BE'] },
   { id: 'mist',   name: '안개',       sw: ['#F3F4F6', '#525860', '#20785F'] },
 ];
+
+/* 루틴 묶음에 물들일 색 — 어두운 테마와 밝은 테마 양쪽에서 흐리게 깔려야 해서
+   진하지 않은 색으로만 골랐다. 글자색이 아니라 배경 음영으로 쓴다. */
+const GROUP_COLORS = [
+  { id: 'moss',   name: '이끼',   hex: '#5FD3AE' },
+  { id: 'sky',    name: '하늘',   hex: '#6FA8E8' },
+  { id: 'apricot',name: '살구',   hex: '#E8A66F' },
+  { id: 'lilac',  name: '라일락', hex: '#B98FE0' },
+  { id: 'clay',   name: '흙',     hex: '#D08A8A' },
+  { id: 'sand',   name: '모래',   hex: '#E8C96F' },
+];
+const groupColor = id => (GROUP_COLORS.find(c => c.id === id) || GROUP_COLORS[0]).hex;
 
 /* 루틴 시간대 — 하루를 네 칸으로만 나눈다 (분 단위 계획표는 만들지 않는다) */
 const SLOTS = [
@@ -1271,6 +1302,7 @@ const K = {
   check: ym => 'md:check:' + ym,          /* 체크 기록은 달마다 나눠 담는다 (사진 썸네일과 같은 방식) */
   todo: ym => 'md:todo:' + ym,            /* 그날 하루짜리 할 일 */
   slot: 'md:slots',                       /* 직접 만든 시간대 */
+  grp: 'md:groups',                       /* 루틴 묶음 — 결이 같은 루틴을 한 칸에 모은다 */
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
@@ -1281,7 +1313,7 @@ const APP_VERSION = 'v32 · 2026-08-23';
 const LIGHT_DEFAULT = { yellow: 40, green: 80 };
 
 const S = {
-  index: [], thumbs: {}, routines: [], checks: {}, todos: {}, slots: [],
+  index: [], thumbs: {}, routines: [], checks: {}, todos: {}, slots: [], groups: [],
   settings: {
     pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '',
     memoOnCheck: true, rsort: 'slot', light: Object.assign({}, LIGHT_DEFAULT)
@@ -1363,6 +1395,7 @@ async function loadAll() {
   for (const k of ks) { const v = await KV.get(k); if (v) S.thumbs[k.replace('md:thumb:', '')] = v; }
   S.routines = (await KV.get(K.rt)) || [];
   S.slots = (await KV.get(K.slot)) || [];
+  S.groups = (await KV.get(K.grp)) || [];
   const cks = await KV.keys('md:check:');
   for (const k of cks) { const v = await KV.get(k); if (v) S.checks[k.replace('md:check:', '')] = v; }
   const tds = await KV.keys('md:todo:');
@@ -1570,6 +1603,33 @@ function renderHome() { renderRibbon(); renderPrompt(); renderMemory(); renderTa
    저장: 정의는 md:routines 한 덩어리, 체크는 md:check:YYYY-MM 로 달마다
    ============================================================ */
 const saveRoutines = () => KV.set(K.rt, S.routines);
+const saveGroups = () => KV.set(K.grp, S.groups);
+
+/* ---------- 루틴 묶음 ---------- */
+const sortedGroups = () => [...S.groups].sort((a, b) => (a.order || 0) - (b.order || 0));
+const groupById = id => S.groups.find(g => g.id === id) || null;
+
+/* 목록을 묶음별로 갈라 놓는다. 어느 묶음에도 안 든 루틴은 맨 끝 '묶지 않음' 칸으로 간다.
+   묶음이 하나도 없으면 예전처럼 한 덩어리로 보여 준다. */
+function groupRoutines(list) {
+  if (!S.groups.length) return [{ group: null, items: sortRoutines(list) }];
+  const out = [];
+  for (const g of sortedGroups()) {
+    const items = list.filter(r => r.gid === g.id);
+    if (items.length) out.push({ group: g, items: sortRoutines(items) });
+  }
+  const rest = list.filter(r => !r.gid || !groupById(r.gid));
+  if (rest.length) out.push({ group: null, items: sortRoutines(rest) });
+  return out;
+}
+
+/* 접은 상태는 묶음에 적어 두고 저장한다 — 앱을 다시 열어도 접어 둔 대로 보이도록 */
+async function toggleGroupFold(gid) {
+  const g = groupById(gid); if (!g) return;
+  g.fold = !g.fold;
+  await saveGroups();
+  renderRoutine();
+}
 const saveSlots = () => KV.set(K.slot, S.slots);
 
 /* 기본 시간대 + 직접 만든 시간대.
@@ -1730,7 +1790,27 @@ function renderRoutine() {
         <svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M17 20V4M17 4l3 3"/></svg>
         ${esc(sort.name)}</button></div>
       <div class="rlist">`;
-    for (const r of sortRoutines(p.list)) html += routineRowHTML(r, p.ck[r.id] || {});
+    for (const { group, items } of groupRoutines(p.list)) {
+      if (!group) {
+        /* 묶음이 없거나 어디에도 안 든 루틴 — 머리글 없이 그냥 늘어놓는다 */
+        if (S.groups.length && items.length) {
+          html += `<div class="ghead plain"><span class="gn">묶지 않음</span>
+            <span class="gc">${items.length}</span></div>`;
+        }
+        for (const r of items) html += routineRowHTML(r, p.ck[r.id] || {});
+        continue;
+      }
+      const done = items.filter(r => (p.ck[r.id] || {}).s === 'done').length;
+      const c = groupColor(group.color);
+      html += `<div class="gwrap" style="--gc:${c}">
+        <button class="ghead" data-fold="${group.id}" aria-expanded="${group.fold ? 'false' : 'true'}">
+          <svg class="ar ${group.fold ? 'closed' : ''}" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          <span class="gn">${esc(group.name)}</span>
+          <span class="gc">${done}/${items.length}</span></button>
+        <div class="gbody${group.fold ? ' fold' : ''}">`;
+      for (const r of items) html += routineRowHTML(r, p.ck[r.id] || {});
+      html += `</div></div>`;
+    }
     /* 할 일은 하루짜리라 늘 목록 끝에 모아 둔다 */
     for (const t of p.todos) html += todoRowHTML(t);
     html += `</div>`;
@@ -1749,6 +1829,7 @@ function renderRoutine() {
 
   host.innerHTML = html;
   bindWeekBar(host);
+  $$('[data-fold]', host).forEach(b => b.onclick = () => toggleGroupFold(b.dataset.fold));
   $$('.ritem', host).forEach(row => {
     const rid = row.dataset.r, tid = row.dataset.t;
     if (rid) {
@@ -3289,7 +3370,8 @@ async function exportAll() {
   toast('내보내는 중…');
   const out = {
     app: 'maeumgyeol', version: 2, exportedAt: new Date().toISOString(),
-    entries: [], routines: S.routines, checks: S.checks, slots: S.slots, todos: S.todos
+    entries: [], routines: S.routines, checks: S.checks, slots: S.slots, todos: S.todos,
+    groups: S.groups
   };
   for (const m of S.index) { const e = await getEntry(m.id); if (e) out.entries.push(e); }
   const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
@@ -3334,6 +3416,22 @@ async function importAll(file) {
     if (rn) await saveRoutines();
   }
 
+  /* 루틴 묶음 — 같은 id 는 건너뛰고 뒤에 이어 붙인다 */
+  let gn = 0;
+  if (Array.isArray(data.groups)) {
+    let gorder = S.groups.length ? Math.max(...S.groups.map(x => x.order || 0)) + 1 : 0;
+    for (const g of data.groups) {
+      if (!g || !g.id || S.groups.some(x => x.id === g.id)) continue;
+      S.groups.push({
+        id: g.id, name: String(g.name || '이름 없는 묶음').slice(0, 20),
+        color: (GROUP_COLORS.some(c => c.id === g.color) ? g.color : GROUP_COLORS[0].id),
+        fold: !!g.fold, order: gorder++
+      });
+      gn++;
+    }
+    if (gn) await saveGroups();
+  }
+
   /* 체크 기록 — 이미 있는 칸은 덮어쓰지 않는다 */
   let cn = 0;
   if (data.checks && typeof data.checks === 'object') {
@@ -3373,7 +3471,7 @@ async function importAll(file) {
 
   renderHome();
   if (S.tab === 'routine') renderRoutine(); else updateTabBadge();
-  const parts = [n ? `기록 ${n}개` : '', rn ? `루틴 ${rn}개` : '',
+  const parts = [n ? `기록 ${n}개` : '', rn ? `루틴 ${rn}개` : '', gn ? `묶음 ${gn}개` : '',
     cn ? `체크 ${cn}개` : '', tn ? `할 일 ${tn}개` : ''].filter(Boolean);
   toast(parts.length ? `${parts.join(' · ')}를 불러왔어요` : '새로 불러올 것이 없었어요');
 }
