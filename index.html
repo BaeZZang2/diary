@@ -1311,7 +1311,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v36 · 2026-08-31';
+const APP_VERSION = 'v37 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3625,6 +3625,22 @@ async function openPromptAnswers(cat, q) {
 /* ============================================================
    설정 · 백업
    ============================================================ */
+/* 확언 366개를 CSV 로 뽑는다. 표 프로그램에서 열어 눈으로 훑고 고칠 말을 고르라고 만든 자리다.
+   맨 앞의 BOM 은 엑셀이 한글을 깨뜨리지 않게 하는 표시. 없으면 글자가 깨져서 열린다.
+   쉼표와 따옴표가 든 문장이 있어 모든 칸을 따옴표로 감싼다. */
+function exportAffirmationsCSV() {
+  const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const rows = [['날짜', '주제', '확언(한국어)', '확언(영어)']]
+    .concat(AFFIRMATIONS.map(([d, t, ko, en]) => [d, t, ko, en]));
+  const csv = '\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `마음결_확언_${APP_VERSION.split(' ')[0]}_${ymd(new Date())}.csv`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast(`확언 ${AFFIRMATIONS.length}개를 내보냈어요`);
+}
+
 async function exportAll() {
   toast('내보내는 중…');
   const out = {
@@ -3753,6 +3769,8 @@ function openSettings() {
       <button class="btn btn-g" data-exp>내보내기</button></div>
     <div class="rowitem"><div class="rl"><b>백업 불러오기</b><span>기존 기록은 유지돼요</span></div>
       <button class="btn btn-g" data-imp>불러오기</button></div>
+    <div class="rowitem"><div class="rl"><b>확언 목록 내보내기</b><span>지금 쓰는 366개를 표(CSV) 한 장으로</span></div>
+      <button class="btn btn-g" data-affcsv>내보내기</button></div>
     <input type="file" accept="application/json,.json" class="hide" data-impf>
     <div class="eyebrow" style="padding:0">루틴</div>
     <div class="rowitem"><div class="rl"><b>신호등 기준</b>
@@ -3813,6 +3831,7 @@ function openSettings() {
     toast(S.settings.remind === false ? '알려주지 않을게요' : '앱을 열 때 알려드릴게요');
   };
   scr.querySelector('[data-exp]').onclick = exportAll;
+  scr.querySelector('[data-affcsv]').onclick = exportAffirmationsCSV;
   scr.querySelector('[data-imp]').onclick = () => scr.querySelector('[data-impf]').click();
   scr.querySelector('[data-impf]').onchange = e => { if (e.target.files[0]) importAll(e.target.files[0]); };
   scr.querySelector('[data-pin]').onclick = async () => {
