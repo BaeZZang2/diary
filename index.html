@@ -1318,7 +1318,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v39 · 2026-08-31';
+const APP_VERSION = 'v40 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3805,9 +3805,32 @@ function openSettings() {
       <b style="color:var(--dim)">이 앱은 생성형 AI(Claude)가 작성했습니다.</b>
     </div>
     <div class="mono" style="text-align:center;font-size:11px;color:var(--faint);margin-top:20px">
-      ${esc(APP_VERSION)}</div>
+      ${esc(APP_VERSION)}<br><span id="fontStat">글씨 확인 중…</span></div>
   </div>`;
   $('#layers').appendChild(scr);
+
+  /* 지금 화면에 실제로 어느 글씨가 쓰이고 있는지 알려 준다.
+     인터넷이 없거나 글씨를 못 받아오면 폰에 원래 있는 글씨로 대신 나오는데
+     눈으로는 구분이 어렵다.
+
+     document.fonts.check 는 못 쓴다. 글씨를 아예 못 받아온 경우에도
+     '폰에 깔린 글씨겠거니' 하고 참을 돌려주기 때문이다.
+     그래서 같은 글자를 두 번 그려 너비를 재 본다. 바탕(serif)으로 그린 것과
+     Noto 를 앞세워 그린 것의 너비가 다르면 Noto 가 실제로 쓰이고 있는 것이다. */
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => {
+    const el = $('#fontStat', scr); if (!el) return;
+    const widthOf = fam => {
+      const t = document.createElement('span');
+      t.textContent = '마음결 오늘의 확언 0123';
+      t.style.cssText = 'position:absolute;left:-9999px;top:-9999px;font-size:64px;white-space:nowrap;font-family:' + fam;
+      document.body.appendChild(t);
+      const w = t.getBoundingClientRect().width;
+      t.remove();
+      return w;
+    };
+    const ok = Math.abs(widthOf('serif') - widthOf("'Noto Sans KR',serif")) > 0.5;
+    el.textContent = ok ? 'Noto Sans KR 로 보는 중' : '폰 기본 글씨로 보는 중';
+  });
   scr.querySelector('[data-x]').onclick = () => scr.remove();
   $$('[data-th]', scr).forEach(b => b.onclick = async () => {
     S.settings.theme = b.dataset.th;
