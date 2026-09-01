@@ -10,22 +10,20 @@
 <title>마음결 · 감정일기</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<!-- 나눔스퀘어 AC (네이버 나눔글꼴, 무료 배포). 300·400·700·800 네 굵기가 들어 있다.
+     판을 @2.0 으로 못 박아 둔다. 그래야 저쪽이 바뀌어도 글씨가 갑자기 달라지지 않는다. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css">
 <style>
 :root{
   --r:14px; --sp:16px;
-  --ui:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
-  /* 힘을 주는 자리. 예전에는 명조(고운바탕)를 썼는데 이제 한 글씨로 맞추고
-     굵기로만 힘을 준다. 되돌리려면 아래를 'Gowun Batang',ui-serif,serif 로 바꾸고
-     맨 위 구글 폰트 주소에 family=Gowun+Batang:wght@400;700 을 다시 붙이면 된다. */
-  --se:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
-  /* 숫자·날짜 자리. 예전에는 고정폭 글씨(IBM Plex Mono)를 썼는데 앱에서 혼자 튀어
-     본문과 같은 글씨로 맞췄다. 되돌리려면 아래 한 줄을
-     'IBM Plex Mono',ui-monospace,monospace 로 바꾸고,
-     맨 위 구글 폰트 주소에 &family=IBM+Plex+Mono:wght@400;500 을 다시 붙이면 된다. */
-  --mo:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --ui:'NanumSquareAc',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  /* 힘을 주는 자리. 서체를 바꾸지 않고 굵기로만 힘을 준다. */
+  --se:'NanumSquareAc',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  /* 숫자·날짜 자리. 예전에는 고정폭 글씨를 썼는데 그 자리만 혼자 튀어 본문과 맞췄다.
+     되돌리려면 'IBM Plex Mono',ui-monospace,monospace 로 바꾸고
+     구글 폰트 주소를 다시 붙이면 된다. */
+  --mo:'NanumSquareAc',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
 }
 /* ---------- 색상 테마 ---------- */
 :root,:root[data-theme="night"]{
@@ -1318,7 +1316,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v40 · 2026-08-31';
+const APP_VERSION = 'v41 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3828,8 +3826,8 @@ function openSettings() {
       t.remove();
       return w;
     };
-    const ok = Math.abs(widthOf('serif') - widthOf("'Noto Sans KR',serif")) > 0.5;
-    el.textContent = ok ? 'Noto Sans KR 로 보는 중' : '폰 기본 글씨로 보는 중';
+    const ok = Math.abs(widthOf('serif') - widthOf("'NanumSquareAc',serif")) > 0.5;
+    el.textContent = ok ? '나눔스퀘어 AC 로 보는 중' : '폰 기본 글씨로 보는 중';
   });
   scr.querySelector('[data-x]').onclick = () => scr.remove();
   $$('[data-th]', scr).forEach(b => b.onclick = async () => {
