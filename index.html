@@ -12,12 +12,15 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --r:14px; --sp:16px;
   --ui:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
-  --se:'Gowun Batang',ui-serif,'Apple SD Gothic Neo',serif;
+  /* 힘을 주는 자리. 예전에는 명조(고운바탕)를 썼는데 이제 한 글씨로 맞추고
+     굵기로만 힘을 준다. 되돌리려면 아래를 'Gowun Batang',ui-serif,serif 로 바꾸고
+     맨 위 구글 폰트 주소에 family=Gowun+Batang:wght@400;700 을 다시 붙이면 된다. */
+  --se:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   /* 숫자·날짜 자리. 예전에는 고정폭 글씨(IBM Plex Mono)를 썼는데 앱에서 혼자 튀어
      본문과 같은 글씨로 맞췄다. 되돌리려면 아래 한 줄을
      'IBM Plex Mono',ui-monospace,monospace 로 바꾸고,
@@ -149,7 +152,7 @@ main{padding:0 0 172px}
   display:flex;align-items:center;gap:8px}
 .prompt .cat .more{margin-left:auto;color:var(--dim);letter-spacing:.04em;font-size:11px;
   border-bottom:1px solid var(--line);padding-bottom:1px}
-.prompt q{display:block;font-family:var(--se);font-size:18px;line-height:1.65;margin:8px 0 14px;quotes:none}
+.prompt q{display:block;font-family:var(--se);font-size:18px;font-weight:600;line-height:1.65;margin:8px 0 14px;quotes:none}
 .prompt .row{display:flex;gap:8px}
 .btn{border-radius:10px;padding:9px 14px;font-size:13px;font-weight:500;transition:opacity .15s}
 .btn:active{opacity:.7}
@@ -186,7 +189,7 @@ main{padding:0 0 172px}
 .tile .bar{position:absolute;left:0;right:0;bottom:0;height:3px;display:flex}
 .tile .bar i{flex:1}
 .empty{text-align:center;padding:70px 30px;color:var(--faint)}
-.empty b{display:block;font-family:var(--se);font-size:17px;color:var(--dim);margin-bottom:6px}
+.empty b{display:block;font-family:var(--se);font-size:17px;font-weight:700;color:var(--dim);margin-bottom:6px}
 
 /* FAB */
 .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));
@@ -281,7 +284,7 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
   border-radius:var(--r);padding:12px 14px 11px;margin-top:14px}
 .affirmation::before{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--calm)}
 .affirmation .label{margin-bottom:3px}
-.affirmation .ae{font-size:16px;line-height:1.45;font-family:var(--se);color:var(--tx)}
+.affirmation .ae{font-size:16px;font-weight:600;line-height:1.45;font-family:var(--se);color:var(--tx)}
 .affirmation .ak{font-size:11px;line-height:1.4;color:var(--faint);margin-top:3px;font-family:var(--ui)}
 #fAffirmation + .field{margin-top:12px}
 .dphotos{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--sp)*-1);
@@ -1315,7 +1318,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v38 · 2026-08-31';
+const APP_VERSION = 'v39 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3032,7 +3035,7 @@ async function openEditor(id, opts = {}) {
         <button id="fPShuf" style="margin-left:auto;text-transform:none;letter-spacing:.02em;
           font-size:11px;color:var(--dim);border-bottom:1px solid var(--line)">다른 질문</button></div>
       <div class="box">
-        <q style="font-family:var(--se);display:block;margin-bottom:9px;color:var(--dim);quotes:none">${esc(entry.prompt.q)}</q>
+        <q style="font-family:var(--se);font-weight:600;display:block;margin-bottom:9px;color:var(--dim);quotes:none">${esc(entry.prompt.q)}</q>
         <textarea id="fPromptA" rows="3" placeholder="떠오르는 대로 적어보세요 (비워두면 저장되지 않아요)">${esc(entry.prompt.a || '')}</textarea>
       </div>`;
     $('#fPromptA', scr).oninput = e => entry.prompt.a = e.target.value;
@@ -3851,7 +3854,7 @@ function openSettings() {
 /* ---------- 잠금 화면 ---------- */
 function lockScreen(onOk) {
   const el = document.createElement('div'); el.className = 'lock';
-  el.innerHTML = `<div style="font-family:var(--se);font-size:20px">마음결</div>
+  el.innerHTML = `<div style="font-family:var(--se);font-size:20px;font-weight:700">마음결</div>
     <div style="font-size:13px;color:var(--faint)">비밀번호를 입력하세요</div>
     <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
     <div class="keys">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button data-k="${n}">${n}</button>`).join('')}
