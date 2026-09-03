@@ -281,14 +281,15 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* detail */
 .affirmation{position:relative;overflow:hidden;background:var(--promptgrad);border:1px solid var(--line);
   border-radius:var(--r);padding:12px 14px 11px;margin-top:14px}
-.affirmation::before{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--calm)}
+/* 왼쪽 띠는 --ivory 로 — 팔레트마다 정한 정체성 색이라 테마를 바꾸면 여기도 따라 바뀐다 */
+.affirmation::before{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--ivory)}
 .affirmation .label{margin-bottom:3px}
 .affirmation .ae{font-size:16px;font-weight:600;line-height:1.45;font-family:var(--se);color:var(--tx)}
 .affirmation .ak{font-size:11px;line-height:1.4;color:var(--faint);margin-top:3px;font-family:var(--ui)}
 /* 기록 화면의 오늘의 질문 — 바로 위 확언과 다른 방식으로 구별한다.
    확언은 카드 전체를 감싸는 띠, 질문은 문장에만 붙는 세로선. */
 .fq{display:block;font-family:var(--se);font-size:16px;font-weight:600;line-height:1.45;
-  color:var(--dim);border-left:2px solid var(--joy);padding:1px 0 2px 11px;
+  color:var(--dim);border-left:2px solid var(--ivory);padding:1px 0 2px 11px;
   margin-bottom:12px;quotes:none}
 
 #fAffirmation + .field{margin-top:12px}
@@ -1333,7 +1334,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v52 · 2026-08-31';
+const APP_VERSION = 'v53 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3099,7 +3100,9 @@ async function openEditor(id, opts = {}) {
   function paintCards() {
     fc.innerHTML = entry.cards.map((c, i) => {
       const fams = c.emotions.map(famOf);
-      const line = fams.length ? famColor(fams[0]) : 'var(--faint)';
+      /* 감정을 고르면 그 감정 고유 색으로, 아직 안 골랐으면 이 테마의
+         정체성 색(--ivory)이 보인다 — 새 카드에도 팔레트 색이 비친다 */
+      const line = fams.length ? famColor(fams[0]) : 'var(--ivory)';
       return `<div class="ecard" data-c="${c.id}" style="border-left-color:${line}">
         <div class="eh"><span class="n">CARD ${pad(i + 1)}</span>
           <button class="iconbtn" style="width:26px;height:26px;margin-left:auto" data-rm>
