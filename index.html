@@ -285,6 +285,15 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .affirmation .label{margin-bottom:3px}
 .affirmation .ae{font-size:16px;font-weight:600;line-height:1.45;font-family:var(--se);color:var(--tx)}
 .affirmation .ak{font-size:11px;line-height:1.4;color:var(--faint);margin-top:3px;font-family:var(--ui)}
+/* 기록 화면의 오늘의 질문 — 바로 위 확언과 다른 방식으로 구별한다.
+   확언은 카드 전체를 감싸는 띠, 질문은 문장에만 붙는 세로선. */
+.fq{display:block;font-family:var(--se);font-size:16px;font-weight:600;line-height:1.45;
+  color:var(--dim);border-left:2px solid var(--joy);padding:1px 0 11px 11px;
+  margin-bottom:11px;position:relative;quotes:none}
+/* 질문과 답을 가르는 줄. 세로선 쪽에서 시작해 오른쪽으로 스며들듯 사라진다.
+   양끝이 반듯한 선은 칸을 자르는 모양이 되어 눈에 먼저 들어온다. */
+.fq::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:linear-gradient(to right,var(--line),transparent 76%)}
 #fAffirmation + .field{margin-top:12px}
 .dphotos{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--sp)*-1);
   padding:0 var(--sp);scrollbar-width:none}
@@ -1317,7 +1326,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v48 · 2026-08-31';
+const APP_VERSION = 'v49 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3029,7 +3038,7 @@ async function openEditor(id, opts = {}) {
         <button id="fPShuf" style="margin-left:auto;text-transform:none;letter-spacing:.02em;
           font-size:11px;color:var(--dim);border-bottom:1px solid var(--line)">다른 질문</button></div>
       <div class="box">
-        <q style="font-family:var(--se);font-size:16px;font-weight:600;line-height:1.45;display:block;margin-bottom:9px;color:var(--dim);quotes:none">${esc(entry.prompt.q)}</q>
+        <q class="fq">${esc(entry.prompt.q)}</q>
         <textarea id="fPromptA" rows="3" placeholder="떠오르는 대로 적어보세요 (비워두면 저장되지 않아요)">${esc(entry.prompt.a || '')}</textarea>
       </div>`;
     $('#fPromptA', scr).oninput = e => entry.prompt.a = e.target.value;
