@@ -289,9 +289,9 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 기록 화면의 오늘의 질문 — 바로 위 확언과 다른 방식으로 구별한다.
    확언은 카드 전체를 감싸는 띠, 질문은 문장에만 붙는 세로선. */
 .fq{display:block;font-family:var(--se);font-size:16px;font-weight:600;line-height:1.45;
-  color:var(--dim);margin-bottom:12px;quotes:none}
-/* 질문 박스 배경에 옅게 팔레트 색을 두른다 — 왼쪽 띠 대신 박스 전체를 물들인다.
-   14% 정도만 섞어야 글자 위에서 안 튄다 */
+  color:var(--dim);border-left:2px solid var(--ivory);padding:1px 0 2px 11px;
+  margin-bottom:12px;quotes:none}
+/* 질문 박스 배경에도 옅게 팔레트 색을 둔다. 세로줄과 같은 색이라 한 덩어리로 읽힌다 */
 .pqbox{background:color-mix(in srgb, var(--ivory) 8%, var(--surface))}
 
 #fAffirmation + .field{margin-top:12px}
@@ -1342,7 +1342,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v55 · 2026-08-31';
+const APP_VERSION = 'v56 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
