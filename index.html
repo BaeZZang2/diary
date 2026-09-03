@@ -1316,7 +1316,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v46 · 2026-08-31';
+const APP_VERSION = 'v47 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3028,7 +3028,7 @@ async function openEditor(id, opts = {}) {
         <button id="fPShuf" style="margin-left:auto;text-transform:none;letter-spacing:.02em;
           font-size:11px;color:var(--dim);border-bottom:1px solid var(--line)">다른 질문</button></div>
       <div class="box">
-        <q style="font-family:var(--se);font-weight:600;display:block;margin-bottom:9px;color:var(--dim);quotes:none">${esc(entry.prompt.q)}</q>
+        <q style="font-family:var(--se);font-size:16px;font-weight:600;line-height:1.45;display:block;margin-bottom:9px;color:var(--dim);quotes:none">${esc(entry.prompt.q)}</q>
         <textarea id="fPromptA" rows="3" placeholder="떠오르는 대로 적어보세요 (비워두면 저장되지 않아요)">${esc(entry.prompt.a || '')}</textarea>
       </div>`;
     $('#fPromptA', scr).oninput = e => entry.prompt.a = e.target.value;
