@@ -251,7 +251,7 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .coverhint{font-size:11.5px;color:var(--faint);margin-top:7px}
 
 /* emotion card */
-.ecard{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--faint);
+.ecard{background:var(--surface);border:1px solid var(--line);
   border-radius:12px;padding:13px 14px;margin-bottom:10px}
 .ecard .eh{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .ecard .eh .n{font-size:11px;letter-spacing:.14em;color:var(--faint)}
@@ -289,8 +289,10 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 기록 화면의 오늘의 질문 — 바로 위 확언과 다른 방식으로 구별한다.
    확언은 카드 전체를 감싸는 띠, 질문은 문장에만 붙는 세로선. */
 .fq{display:block;font-family:var(--se);font-size:16px;font-weight:600;line-height:1.45;
-  color:var(--dim);border-left:2px solid var(--ivory);padding:1px 0 2px 11px;
-  margin-bottom:12px;quotes:none}
+  color:var(--dim);margin-bottom:12px;quotes:none}
+/* 질문 박스 배경에 옅게 팔레트 색을 두른다 — 왼쪽 띠 대신 박스 전체를 물들인다.
+   14% 정도만 섞어야 글자 위에서 안 튄다 */
+.pqbox{background:color-mix(in srgb, var(--ivory) 8%, var(--surface))}
 
 #fAffirmation + .field{margin-top:12px}
 .dphotos{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--sp)*-1);
@@ -396,7 +398,7 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .ansitem .at{font-size:14.5px;line-height:1.7;white-space:pre-wrap}
 
 /* ---------- 감정카드 모아보기 ---------- */
-.ccard{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--faint);
+.ccard{background:var(--surface);border:1px solid var(--line);
   border-radius:12px;padding:13px 14px;margin-bottom:10px;width:100%;text-align:left;display:block}
 .ccard .cd{font-family:var(--mo);font-size:11px;color:var(--faint);margin-bottom:7px}
 .ccard .cev{font-size:14.5px;line-height:1.65;white-space:pre-wrap;margin-bottom:9px}
@@ -523,8 +525,8 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 오늘의 이야기 · 감사일기 — 확언·질문과 같은 왼쪽 띠 어법을 쓰되
    같은 팔레트에서 고른 다른 색을 써서 칸마다 다르게 비친다.
    전부 --ivory 하나만 쓰면 그것대로 밋밋해진다. */
-.fbox-story{border-left:3px solid var(--accent2)}
-.fbox-grat{border-left:3px solid var(--accent3)}
+.fbox-story{background:color-mix(in srgb, var(--accent2) 8%, var(--surface))}
+.fbox-grat{background:color-mix(in srgb, var(--accent3) 8%, var(--surface))}
 
 /* 할 일 — 그날 하루만 사는 항목이라 시간대 칸을 다른 색으로 물들여 구분한다 */
 .ritem.todo{border-style:dashed}
@@ -1340,7 +1342,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v54 · 2026-08-31';
+const APP_VERSION = 'v55 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3055,7 +3057,7 @@ async function openEditor(id, opts = {}) {
         오늘의 질문 · ${esc(entry.prompt.cat)}
         <button id="fPShuf" style="margin-left:auto;text-transform:none;letter-spacing:.02em;
           font-size:11px;color:var(--dim);border-bottom:1px solid var(--line)">다른 질문</button></div>
-      <div class="box">
+      <div class="box pqbox">
         <q class="fq">${esc(entry.prompt.q)}</q>
         <textarea id="fPromptA" rows="3" placeholder="떠오르는 대로 적어보세요 (비워두면 저장되지 않아요)">${esc(entry.prompt.a || '')}</textarea>
       </div>`;
@@ -3107,9 +3109,10 @@ async function openEditor(id, opts = {}) {
     fc.innerHTML = entry.cards.map((c, i) => {
       const fams = c.emotions.map(famOf);
       /* 감정을 고르면 그 감정 고유 색으로, 아직 안 골랐으면 이 테마의
-         정체성 색(--ivory)이 보인다 — 새 카드에도 팔레트 색이 비친다 */
-      const line = fams.length ? famColor(fams[0]) : 'var(--ivory)';
-      return `<div class="ecard" data-c="${c.id}" style="border-left-color:${line}">
+         정체성 색(--ivory)이 보인다 — 새 카드에도 팔레트 색이 비친다.
+         띠 대신 박스 배경을 옅게 물들인다. */
+      const shade = fams.length ? famColor(fams[0]) : 'var(--ivory)';
+      return `<div class="ecard" data-c="${c.id}" style="background:color-mix(in srgb, ${shade} 8%, var(--surface))">
         <div class="eh"><span class="n">CARD ${pad(i + 1)}</span>
           <button class="iconbtn" style="width:26px;height:26px;margin-left:auto" data-rm>
             <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
@@ -3223,8 +3226,8 @@ async function openDetail(id) {
         `<li><span>${i + 1}</span><div>${esc(g)}</div></li>`).join('')}</ul>` : ''}
     ${e.cards.length ? `<div class="eyebrow" style="padding:0">감정 카드 ${e.cards.length}</div>` : ''}
     ${e.cards.map(c => {
-      const line = c.emotions.length ? colorOf(c.emotions[0]) : 'var(--faint)';
-      return `<div class="ecard" style="border-left-color:${line}">
+      const shade = c.emotions.length ? colorOf(c.emotions[0]) : 'var(--ivory)';
+      return `<div class="ecard" style="background:color-mix(in srgb, ${shade} 8%, var(--surface))">
         ${c.event ? `<div class="subfield" style="margin-top:0"><div class="sl">상황</div><div style="font-size:14.5px;white-space:pre-wrap">${esc(c.event)}</div></div>` : ''}
         ${c.emotions.length ? `<div class="subfield" style="margin-top:${c.event ? '11px' : '0'}"><div class="sl">감정</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px">${c.emotions.map(w =>
@@ -3561,7 +3564,7 @@ async function openEmotionCards(word) {
     list.innerHTML = `<div class="empty"><b>아직 없어요</b>이 감정으로 남긴 카드가 아직 없습니다.</div>`;
     return;
   }
-  list.innerHTML = rows.map(r => `<button class="ccard" data-go="${r.id}" style="border-left-color:${colorOf(r.card.emotions[0])}">
+  list.innerHTML = rows.map(r => `<button class="ccard" data-go="${r.id}" style="background:color-mix(in srgb, ${colorOf(r.card.emotions[0])} 8%, var(--surface))">
       <div class="cd">${dateLabel(r.date)}</div>
       ${r.card.event ? `<div class="cev">${esc(r.card.event)}</div>` : ''}
       <div class="ctags">${r.card.emotions.map(w =>
