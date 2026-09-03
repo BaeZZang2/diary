@@ -353,8 +353,10 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .gline{display:flex;align-items:center;gap:9px;margin-bottom:7px}
 .gline .gn{flex:none;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;
   font-family:var(--mo);font-size:11px;background:var(--raised);color:var(--faint)}
-.gline .oneline{flex:1;min-width:0;background:var(--raised);border:1px solid var(--line);border-radius:9px;
-  padding:8px 11px;font-size:14px}
+/* 감사일기 한 줄 한 줄도 팔레트 색에 연동한다. 칸이 여러 개 나란히 있는
+   자리라 감사일기 박스(--accent3)보다도 더 여리게, 5% 만 섞는다 */
+.gline .oneline{flex:1;min-width:0;background:color-mix(in srgb, var(--accent3) 5%, var(--raised));
+  border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:14px}
 .gline .gx{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--faint)}
 .gline .gx svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
 .gadd{margin-top:2px;font-size:12.5px;color:var(--dim);display:flex;align-items:center;gap:6px}
@@ -1342,7 +1344,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v56 · 2026-08-31';
+const APP_VERSION = 'v57 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
