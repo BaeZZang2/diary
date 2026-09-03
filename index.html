@@ -343,17 +343,8 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .gline{display:flex;align-items:center;gap:9px;margin-bottom:7px}
 .gline .gn{flex:none;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;
   font-family:var(--mo);font-size:11px;background:var(--raised);color:var(--faint)}
-/* 글이 칸보다 길면 넘친 글자가 오른쪽 여백 위로 그려져 테두리에 딱 붙는다.
-   여백을 아무리 줘도 소용이 없다. 넘친 글은 테두리 안쪽까지 칠해지기 때문이다.
-   그래서 오른쪽 끝에 칸과 같은 색 덮개를 얹어 글자가 테두리에 닿기 전에 흐려지게 했다.
-   덮개는 칸 색과 같아 짧은 글에서는 보이지 않는다. */
-.gline .gfield{flex:1;min-width:0;position:relative;display:block}
-.gline .gfield::after{content:'';position:absolute;top:1px;bottom:1px;right:1px;width:20px;
-  border-radius:0 8px 8px 0;pointer-events:none;
-  background:linear-gradient(to right,transparent,var(--raised) 62%)}
-.gline .oneline{width:100%;background:var(--raised);border:1px solid var(--line);border-radius:9px;
-  /* 왼쪽은 11px 로 줄이고, 오른쪽은 덮개에 가리지 않게 넉넉히 둔다 */
-  padding:8px 20px 8px 11px;font-size:14px}
+.gline .oneline{flex:1;min-width:0;background:var(--raised);border:1px solid var(--line);border-radius:9px;
+  padding:8px 11px;font-size:14px}
 .gline .gx{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--faint)}
 .gline .gx svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
 .gadd{margin-top:2px;font-size:12.5px;color:var(--dim);display:flex;align-items:center;gap:6px}
@@ -1325,7 +1316,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v45 · 2026-08-31';
+const APP_VERSION = 'v46 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3056,7 +3047,7 @@ async function openEditor(id, opts = {}) {
     g.innerHTML = entry.gratitude.map((v, i) => `
       <div class="gline" data-g="${i}">
         <span class="gn">${i + 1}</span>
-        <span class="gfield"><textarea class="oneline" rows="1" placeholder="${i === 0 ? '예: 따뜻한 커피 한 잔' : '오늘 고마웠던 것'}" autocomplete="off">${esc(v)}</textarea></span>
+        <textarea class="oneline" rows="1" placeholder="${i === 0 ? '예: 따뜻한 커피 한 잔' : '오늘 고마웠던 것'}" autocomplete="off">${esc(v)}</textarea>
         ${entry.gratitude.length > 1 ? `<button class="gx" data-gx aria-label="줄 지우기">
           <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>` : ''}
       </div>`).join('');
