@@ -251,8 +251,17 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .coverhint{font-size:11.5px;color:var(--faint);margin-top:7px}
 
 /* emotion card */
-.ecard{background:var(--surface);border:1px solid var(--line);
-  border-radius:12px;padding:13px 14px;margin-bottom:10px}
+/* 카드마다 다른 색(감정 고유색 또는 --ivory)을 --cardshade 라는 변수로
+   받아 카드 배경과 안쪽 입력칸이 같은 색을 나눠 쓴다. 색은 카드마다
+   자바스크립트에서 인라인으로 정해 준다. */
+.ecard{--cardshade:var(--ivory);background:color-mix(in srgb, var(--cardshade) 8%, var(--surface));
+  border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px}
+.ecard textarea.mini{background:color-mix(in srgb, var(--cardshade) 16%, var(--surface))}
+/* 감정 단어 고르기 · 욕구 단어에서 찾기 — 같은 카드 색이지만 눌러야 하는
+   자리라 입력칸보다 한 단계 더 진하게 둬서 존재감을 준다 */
+.ecard .selectbtn{background:color-mix(in srgb, var(--cardshade) 26%, var(--surface));
+  border-color:color-mix(in srgb, var(--cardshade) 40%, var(--line))}
+.ecard [data-needpick]{background:color-mix(in srgb, var(--cardshade) 26%, var(--surface));color:var(--tx)}
 .ecard .eh{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .ecard .eh .n{font-size:11px;letter-spacing:.14em;color:var(--faint)}
 .subfield{margin-top:11px}
@@ -353,9 +362,10 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .gline{display:flex;align-items:center;gap:9px;margin-bottom:7px}
 .gline .gn{flex:none;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;
   font-family:var(--mo);font-size:11px;background:var(--raised);color:var(--faint)}
-/* 감사일기 한 줄 한 줄도 팔레트 색에 연동한다. 칸이 여러 개 나란히 있는
-   자리라 감사일기 박스(--accent3)보다도 더 여리게, 5% 만 섞는다 */
-.gline .oneline{flex:1;min-width:0;background:color-mix(in srgb, var(--accent3) 5%, var(--raised));
+/* 감사일기 한 줄 한 줄도 팔레트 색에 연동한다. 회색 기운이 있는 --raised
+   위에 섞으면 탁해져서, 흰 바탕에 가까운 --surface 위에 섞는다 —
+   배경(--bg)이 산뜻해 보이는 것과 같은 방식이다 */
+.gline .oneline{flex:1;min-width:0;background:color-mix(in srgb, var(--accent3) 18%, var(--surface));
   border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:14px}
 .gline .gx{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--faint)}
 .gline .gx svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
@@ -1344,7 +1354,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v57 · 2026-08-31';
+const APP_VERSION = 'v58 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3114,7 +3124,7 @@ async function openEditor(id, opts = {}) {
          정체성 색(--ivory)이 보인다 — 새 카드에도 팔레트 색이 비친다.
          띠 대신 박스 배경을 옅게 물들인다. */
       const shade = fams.length ? famColor(fams[0]) : 'var(--ivory)';
-      return `<div class="ecard" data-c="${c.id}" style="background:color-mix(in srgb, ${shade} 8%, var(--surface))">
+      return `<div class="ecard" data-c="${c.id}" style="--cardshade:${shade}">
         <div class="eh"><span class="n">CARD ${pad(i + 1)}</span>
           <button class="iconbtn" style="width:26px;height:26px;margin-left:auto" data-rm>
             <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
@@ -3229,7 +3239,7 @@ async function openDetail(id) {
     ${e.cards.length ? `<div class="eyebrow" style="padding:0">감정 카드 ${e.cards.length}</div>` : ''}
     ${e.cards.map(c => {
       const shade = c.emotions.length ? colorOf(c.emotions[0]) : 'var(--ivory)';
-      return `<div class="ecard" style="background:color-mix(in srgb, ${shade} 8%, var(--surface))">
+      return `<div class="ecard" style="--cardshade:${shade}">
         ${c.event ? `<div class="subfield" style="margin-top:0"><div class="sl">상황</div><div style="font-size:14.5px;white-space:pre-wrap">${esc(c.event)}</div></div>` : ''}
         ${c.emotions.length ? `<div class="subfield" style="margin-top:${c.event ? '11px' : '0'}"><div class="sl">감정</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px">${c.emotions.map(w =>
