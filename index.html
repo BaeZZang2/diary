@@ -26,77 +26,77 @@
   --mo:'NanumSquareAc',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
 }
 /* ---------- 색상 테마 ---------- */
-:root,:root[data-theme="night"]{
-  --bg:#15131C; --surface:#1E1B27; --raised:#272233; --line:#332D42;
-  --tx:#EFEBF5; --dim:#A29CB4; --faint:#6E687F;
-  --ivory:#F3EEE4; --ink:#15131C;
-  --topbg:rgba(21,19,28,.86); --promptgrad:linear-gradient(160deg,#241F33,#1B1826);
-  --shadow:0 10px 34px rgba(0,0,0,.55); --shadow2:0 8px 26px rgba(0,0,0,.5);
-  --joy:#F2B441; --calm:#5FC3A4; --power:#E8734F;
-  --sad:#5B93DB; --mad:#DB4F65; --fear:#9B7BE0; --numb:#8E8AA0;
+:root,:root[data-theme="linen"]{
+  --bg:#F6F1E9; --surface:#FDFAF4; --raised:#EDE3D6; --line:#DCCFBD;
+  --tx:#382F26; --dim:#6C6053; --faint:#8A7D6C;
+  --ivory:#382F26; --ink:#FDFAF4;
+  --topbg:rgba(246,241,233,.9); --promptgrad:linear-gradient(160deg,#F0E7D8,#FCF9F3);
+  --shadow:0 10px 30px rgba(56,47,38,.14); --shadow2:0 8px 24px rgba(56,47,38,.11);
+  --joy:#9C6F0E; --calm:#35785F; --power:#B04E27; --sad:#3A6087;
+  --mad:#A63D4C; --fear:#6C5192; --numb:#7E7364;
 }
-:root[data-theme="bright"]{
-  --bg:#FFFFFF; --surface:#F6F7F9; --raised:#EDEFF3; --line:#DEE3EA;
-  --tx:#171A21; --dim:#5B6473; --faint:#767E8C;
-  --ivory:#1D2129; --ink:#FFFFFF;
-  --topbg:rgba(255,255,255,.88); --promptgrad:linear-gradient(160deg,#F2F5FA,#FAFBFD);
-  --shadow:0 10px 30px rgba(23,26,33,.16); --shadow2:0 8px 24px rgba(23,26,33,.14);
-  --joy:#B0760D; --calm:#26866A; --power:#C04E27; --sad:#2C68B4;
-  --mad:#BC2B43; --fear:#6845BC; --numb:#6A7183;
-}
-:root[data-theme="beige"]{
-  --bg:#F7F1E6; --surface:#FDF9F1; --raised:#EFE5D4; --line:#DFD1B9;
-  --tx:#3B3226; --dim:#7A6B57; --faint:#8A7A63;
-  --ivory:#3B3226; --ink:#FDF9F1;
-  --topbg:rgba(247,241,230,.9); --promptgrad:linear-gradient(160deg,#F1E6D2,#FBF6EC);
-  --shadow:0 10px 30px rgba(59,50,38,.18); --shadow2:0 8px 24px rgba(59,50,38,.15);
-  --joy:#A87410; --calm:#347F64; --power:#B84F26; --sad:#33639A;
-  --mad:#B23A4C; --fear:#7050AE; --numb:#847660;
-}
-:root[data-theme="pink"]{
-  --bg:#FFF4F6; --surface:#FFFAFB; --raised:#FBE5EB; --line:#F2CFD9;
-  --tx:#3F2830; --dim:#8A6270; --faint:#9A7280;
-  --ivory:#3F2830; --ink:#FFFAFB;
-  --topbg:rgba(255,244,246,.9); --promptgrad:linear-gradient(160deg,#FCE4EB,#FFF6F8);
-  --shadow:0 10px 30px rgba(63,40,48,.16); --shadow2:0 8px 24px rgba(63,40,48,.14);
-  --joy:#AC720C; --calm:#2B836B; --power:#BC4C2A; --sad:#3062A6;
-  --mad:#B92F4E; --fear:#7247B4; --numb:#8A7079;
-}
-:root[data-theme="green"]{
-  --bg:#0E1A15; --surface:#15241F; --raised:#1D302A; --line:#2A4239;
-  --tx:#E6F0EA; --dim:#9BB3A8; --faint:#6B8478;
-  --ivory:#EAF3ED; --ink:#0E1A15;
-  --topbg:rgba(14,26,21,.86); --promptgrad:linear-gradient(160deg,#1B302A,#132420);
-  --shadow:0 10px 34px rgba(0,0,0,.5); --shadow2:0 8px 26px rgba(0,0,0,.45);
-  --joy:#E8B54A; --calm:#5FD3AE; --power:#EC7B52; --sad:#5F9BD8;
-  --mad:#E05A6E; --fear:#A489E4; --numb:#8FA096;
-}
-:root[data-theme="sand"]{
-  --bg:#1A1614; --surface:#241F1B; --raised:#2F2823; --line:#3C332C;
-  --tx:#F1EAE1; --dim:#AE9F90; --faint:#7E7164;
-  --ivory:#F2E9DD; --ink:#1A1614;
-  --topbg:rgba(26,22,20,.86); --promptgrad:linear-gradient(160deg,#2C2520,#201B18);
-  --shadow:0 10px 34px rgba(0,0,0,.55); --shadow2:0 8px 26px rgba(0,0,0,.5);
-  --joy:#E8B14A; --calm:#63C7A6; --power:#E5794F; --sad:#6E9BD6;
-  --mad:#DC5C6E; --fear:#A488DF; --numb:#93877A;
-}
-:root[data-theme="indigo"]{
-  --bg:#0F1622; --surface:#16202E; --raised:#1E2A3B; --line:#2A394D;
-  --tx:#E7EEF7; --dim:#9AAAC0; --faint:#6C7C93;
-  --ivory:#E9F0F8; --ink:#0F1622;
-  --topbg:rgba(15,22,34,.86); --promptgrad:linear-gradient(160deg,#1B2739,#131C29);
-  --shadow:0 10px 34px rgba(0,0,0,.55); --shadow2:0 8px 26px rgba(0,0,0,.5);
-  --joy:#EFB752; --calm:#57C9BE; --power:#EC7F5C; --sad:#6FA8E8;
-  --mad:#E45E77; --fear:#9E8CEA; --numb:#8894A6;
+:root[data-theme="sage"]{
+  --bg:#F0F3EE; --surface:#FAFCF8; --raised:#E3E9DE; --line:#D2DBCB;
+  --tx:#2E362E; --dim:#5E6A5D; --faint:#7D8A7B;
+  --ivory:#2E362E; --ink:#FAFCF8;
+  --topbg:rgba(240,243,238,.9); --promptgrad:linear-gradient(160deg,#E6EBE1,#FAFCF8);
+  --shadow:0 10px 30px rgba(46,54,46,.13); --shadow2:0 8px 24px rgba(46,54,46,.1);
+  --joy:#8E6A11; --calm:#35785C; --power:#A2502E; --sad:#3A6183;
+  --mad:#9E3D4A; --fear:#65508C; --numb:#6F7568;
 }
 :root[data-theme="mist"]{
-  --bg:#F3F4F6; --surface:#FFFFFF; --raised:#E7E9EC; --line:#D3D7DC;
-  --tx:#15171A; --dim:#525860; --faint:#79808A;
-  --ivory:#15171A; --ink:#FFFFFF;
-  --topbg:rgba(243,244,246,.9); --promptgrad:linear-gradient(160deg,#EAECEF,#FAFBFC);
-  --shadow:0 10px 30px rgba(21,23,26,.14); --shadow2:0 8px 24px rgba(21,23,26,.12);
-  --joy:#9C6A0C; --calm:#20785F; --power:#B0461F; --sad:#265CA3;
-  --mad:#AC2439; --fear:#5D3EA8; --numb:#5F666E;
+  --bg:#EEF2F4; --surface:#FAFBFC; --raised:#E0E7EB; --line:#CDD7DD;
+  --tx:#2A3238; --dim:#5A666E; --faint:#79858D;
+  --ivory:#2A3238; --ink:#FAFBFC;
+  --topbg:rgba(238,242,244,.9); --promptgrad:linear-gradient(160deg,#E4EAEE,#FAFBFC);
+  --shadow:0 10px 30px rgba(42,50,56,.13); --shadow2:0 8px 24px rgba(42,50,56,.1);
+  --joy:#8B6A10; --calm:#2F775F; --power:#A04E2D; --sad:#35618B;
+  --mad:#9B3B4A; --fear:#61508A; --numb:#6C757B;
+}
+:root[data-theme="blush"]{
+  --bg:#F7F0ED; --surface:#FDF8F6; --raised:#EEDFDA; --line:#DFCBC4;
+  --tx:#392D29; --dim:#6C5952; --faint:#8B776F;
+  --ivory:#392D29; --ink:#FDF8F6;
+  --topbg:rgba(247,240,237,.9); --promptgrad:linear-gradient(160deg,#F1E4DF,#FDF8F6);
+  --shadow:0 10px 30px rgba(57,45,41,.14); --shadow2:0 8px 24px rgba(57,45,41,.11);
+  --joy:#976C13; --calm:#377660; --power:#AB4C2B; --sad:#3B5F84;
+  --mad:#A43B49; --fear:#694E8C; --numb:#7B6E67;
+}
+:root[data-theme="forest"]{
+  --bg:#16201B; --surface:#1E2A23; --raised:#27352C; --line:#334339;
+  --tx:#E5EDE7; --dim:#9DB0A3; --faint:#798C80;
+  --ivory:#E5EDE7; --ink:#16201B;
+  --topbg:rgba(22,32,27,.86); --promptgrad:linear-gradient(160deg,#243328,#1B261F);
+  --shadow:0 10px 34px rgba(0,0,0,.5); --shadow2:0 8px 26px rgba(0,0,0,.45);
+  --joy:#DFB05B; --calm:#6DC5A2; --power:#DE8355; --sad:#7BA4D6;
+  --mad:#D9697A; --fear:#A793DB; --numb:#94A398;
+}
+:root[data-theme="dusk"]{
+  --bg:#191621; --surface:#231F2D; --raised:#2D2838; --line:#3A3447;
+  --tx:#EBE6F0; --dim:#A79DB3; --faint:#837A8E;
+  --ivory:#EBE6F0; --ink:#191621;
+  --topbg:rgba(25,22,33,.86); --promptgrad:linear-gradient(160deg,#292336,#1F1B29);
+  --shadow:0 10px 34px rgba(0,0,0,.55); --shadow2:0 8px 26px rgba(0,0,0,.5);
+  --joy:#E3B45E; --calm:#6FC8A6; --power:#E28758; --sad:#7FA9DB;
+  --mad:#DD6D7E; --fear:#AC98E0; --numb:#97909F;
+}
+:root[data-theme="clay"]{
+  --bg:#1E1815; --surface:#29211C; --raised:#342A24; --line:#42362F;
+  --tx:#F0E7DF; --dim:#B2A195; --faint:#8C7E73;
+  --ivory:#F0E7DF; --ink:#1E1815;
+  --topbg:rgba(30,24,21,.86); --promptgrad:linear-gradient(160deg,#2F2620,#231C18);
+  --shadow:0 10px 34px rgba(0,0,0,.55); --shadow2:0 8px 26px rgba(0,0,0,.5);
+  --joy:#E5B155; --calm:#6BC29C; --power:#E2814F; --sad:#7FA3CE;
+  --mad:#DC6A74; --fear:#A794D4; --numb:#9C9086;
+}
+:root[data-theme="slate"]{
+  --bg:#151A1E; --surface:#1E242A; --raised:#272F36; --line:#333D45;
+  --tx:#E5EBF0; --dim:#9EACB7; --faint:#7B8895;
+  --ivory:#E5EBF0; --ink:#151A1E;
+  --topbg:rgba(21,26,30,.86); --promptgrad:linear-gradient(160deg,#232B33,#1A2026);
+  --shadow:0 10px 34px rgba(0,0,0,.5); --shadow2:0 8px 26px rgba(0,0,0,.45);
+  --joy:#DDB05F; --calm:#6AC5AC; --power:#DD8460; --sad:#7DAAE0;
+  --mad:#D96E80; --fear:#A596DE; --numb:#8F9AA3;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);font-family:var(--ui);
@@ -288,12 +288,9 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 기록 화면의 오늘의 질문 — 바로 위 확언과 다른 방식으로 구별한다.
    확언은 카드 전체를 감싸는 띠, 질문은 문장에만 붙는 세로선. */
 .fq{display:block;font-family:var(--se);font-size:16px;font-weight:600;line-height:1.45;
-  color:var(--dim);border-left:2px solid var(--joy);padding:1px 0 11px 11px;
-  margin-bottom:11px;position:relative;quotes:none}
-/* 질문과 답을 가르는 줄. 세로선 쪽에서 시작해 오른쪽으로 스며들듯 사라진다.
-   양끝이 반듯한 선은 칸을 자르는 모양이 되어 눈에 먼저 들어온다. */
-.fq::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
-  background:linear-gradient(to right,var(--line),transparent 76%)}
+  color:var(--dim);border-left:2px solid var(--joy);padding:1px 0 2px 11px;
+  margin-bottom:12px;quotes:none}
+
 #fAffirmation + .field{margin-top:12px}
 .dphotos{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--sp)*-1);
   padding:0 var(--sp);scrollbar-width:none}
@@ -655,17 +652,26 @@ const FAMILIES = [
   { id: 'numb',  name: '무감각', color: '#8E8AA0' },
 ];
 
-/* 색상 테마 — 스와치는 설정 화면 미리보기용 */
+/* 화면 색 — 낮은 채도로 눌러 둔 자연색. 흰 바탕 넷, 어두운 바탕 넷.
+   감정 색 일곱 개는 테마마다 다시 정한다. 같은 색을 어두운 바탕에 그대로 쓰면
+   글자가 안 읽히고, 밝은 바탕에서는 눈이 아프다. */
 const THEMES = [
-  { id: 'night',  name: '나이트',     sw: ['#15131C', '#9B7BE0', '#F2B441'] },
-  { id: 'bright', name: '브라이트',   sw: ['#FFFFFF', '#2C68B4', '#B0760D'] },
-  { id: 'beige',  name: '베이지',     sw: ['#F7F1E6', '#B84F26', '#347F64'] },
-  { id: 'pink',   name: '베이비핑크', sw: ['#FFF4F6', '#B92F4E', '#7247B4'] },
-  { id: 'green',  name: '딥그린',     sw: ['#0E1A15', '#5FD3AE', '#E8B54A'] },
-  { id: 'sand',   name: '모래',       sw: ['#1A1614', '#E8B14A', '#63C7A6'] },
-  { id: 'indigo', name: '쪽빛',       sw: ['#0F1622', '#6FA8E8', '#57C9BE'] },
-  { id: 'mist',   name: '안개',       sw: ['#F3F4F6', '#525860', '#20785F'] },
+  { id: 'linen',  name: '리넨',   sw: ['#F6F1E9', '#B04E27', '#35785F'] },
+  { id: 'sage',   name: '세이지', sw: ['#F0F3EE', '#35785C', '#8E6A11'] },
+  { id: 'mist',   name: '안개',   sw: ['#EEF2F4', '#35618B', '#2F775F'] },
+  { id: 'blush',  name: '블러시', sw: ['#F7F0ED', '#A43B49', '#377660'] },
+  { id: 'forest', name: '숲그늘', sw: ['#16201B', '#6DC5A2', '#DFB05B'] },
+  { id: 'dusk',   name: '해질녘', sw: ['#191621', '#AC98E0', '#E3B45E'] },
+  { id: 'clay',   name: '흙빛',   sw: ['#1E1815', '#E2814F', '#6BC29C'] },
+  { id: 'slate',  name: '돌빛',   sw: ['#151A1E', '#7DAAE0', '#6AC5AC'] },
 ];
+
+/* 예전 테마를 쓰던 분은 결이 가장 가까운 새 테마로 옮겨 준다.
+   그냥 두면 고른 적 없는 테마가 켜져 있는 것처럼 보인다. */
+const THEME_MOVED = {
+  night: 'dusk', bright: 'mist', beige: 'linen', pink: 'blush',
+  green: 'forest', sand: 'clay', indigo: 'slate',
+};
 
 /* 루틴 묶음에 물들일 색 — 어두운 테마와 밝은 테마 양쪽에서 흐리게 깔려야 해서
    진하지 않은 색으로만 골랐다. 글자색이 아니라 배경 음영으로 쓴다. */
@@ -1326,7 +1332,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v49 · 2026-08-31';
+const APP_VERSION = 'v50 · 2026-08-31';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1335,7 +1341,7 @@ const LIGHT_DEFAULT = { yellow: 40, green: 80 };
 const S = {
   index: [], thumbs: {}, routines: [], checks: {}, todos: {}, slots: [], groups: [],
   settings: {
-    pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '',
+    pin: '', promptLog: {}, theme: 'linen', remind: true, remindLog: '',
     memoOnCheck: true, rsort: 'slot', light: Object.assign({}, LIGHT_DEFAULT)
   },
   query: '', tag: '', tab: 'diary', rday: '', ready: false
@@ -1408,9 +1414,13 @@ async function shrink(file, max, quality) {
 async function loadAll() {
   S.index = (await KV.get(K.idx)) || [];
   S.settings = Object.assign(
-    { pin: '', promptLog: {}, theme: 'night', remind: true, remindLog: '', memoOnCheck: true, rsort: 'slot' },
+    { pin: '', promptLog: {}, theme: 'linen', remind: true, remindLog: '', memoOnCheck: true, rsort: 'slot' },
     (await KV.get(K.set)) || {});
   S.settings.light = Object.assign({}, LIGHT_DEFAULT, S.settings.light || {});
+  if (!THEMES.some(t => t.id === S.settings.theme)) {
+    S.settings.theme = THEME_MOVED[S.settings.theme] || THEMES[0].id;
+    await KV.set(K.set, S.settings);
+  }
   const ks = await KV.keys('md:thumb:');
   for (const k of ks) { const v = await KV.get(k); if (v) S.thumbs[k.replace('md:thumb:', '')] = v; }
   S.routines = (await KV.get(K.rt)) || [];
