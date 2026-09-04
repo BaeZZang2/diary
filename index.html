@@ -1428,7 +1428,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v69 · 2026-09-04';
+const APP_VERSION = 'v70 · 2026-09-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1487,14 +1487,25 @@ function extractTags(text) {
 }
 
 /* ---------- 이미지 압축 ---------- */
-/* 사진을 <img> 로 읽는 길 — createImageBitmap 이 못 읽는 형식일 때 쓴다 */
-function loadImgEl(file) {
-  return new Promise((res, rej) => {
-    const i = new Image(), u = URL.createObjectURL(file);
-    i.onload = () => { URL.revokeObjectURL(u); res(i); };
-    i.onerror = () => { URL.revokeObjectURL(u); rej(new Error('사진을 읽지 못했어요')); };
-    i.src = u;
-  });
+/* 사진을 읽는 세 가지 길. 앞의 것이 실패하거나 끝까지 읽히지 않으면 다음 것을 쓴다.
+   기기에 따라 파일을 흘려보내며 읽다가 중간에 끊기는 일이 있어서, 두 번째 길은
+   파일을 통째로 메모리에 받아 둔 뒤 다시 읽는다. */
+const PHOTO_READERS = [
+  f => createImageBitmap(f, { imageOrientation: 'from-image' }),
+  async f => createImageBitmap(new Blob([await f.arrayBuffer()], { type: f.type || 'image/jpeg' }),
+    { imageOrientation: 'from-image' }),
+  loadImgEl,
+];
+
+/* <img> 로 읽는 길. onload 만으로는 그림이 다 준비되지 않은 채로 넘어올 수 있어
+   decode() 를 기다린다. 주소는 다 쓰고 나서 거둔다. */
+async function loadImgEl(file) {
+  const i = new Image();
+  i._u = URL.createObjectURL(file);
+  i.src = i._u;
+  try { await i.decode(); }
+  catch (e) { URL.revokeObjectURL(i._u); throw new Error('사진을 읽지 못했어요'); }
+  return i;
 }
 
 /* 그림이 통째로 비었는지 본다. 아주 큰 사진은 브라우저가 그리다 포기하고
@@ -1578,24 +1589,28 @@ function renderShrunk(src, max) {
   ctx.globalCompositeOperation = 'destination-over';
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, dw, dh);
-  return cur;
+
+  /* 그림이 맨 위에서 시작해 가로는 꽉 차는데 아래만 없다 — 이건 잘라 저장한
+     사진이 아니라 '읽다 만 사진' 이다. 잘라 저장한 사진은 사방에 빈자리가 남는다.
+     읽다 만 것을 그대로 저장하면 사진의 아래쪽이 통째로 사라진다. */
+  const cut = r.x === 0 && r.y === 0 && r.w >= w * .99 && r.h < h * .97;
+  return { canvas: cur, cut };
 }
 
 async function shrink(file, max, quality) {
-  let err = null;
-  /* 먼저 createImageBitmap, 안 되거나 빈 그림이 나오면 <img> 로 한 번 더 */
-  for (const useBitmap of [true, false]) {
+  let err = null, best = null;
+  for (const read of PHOTO_READERS) {
     let src = null;
-    try {
-      src = useBitmap
-        ? await createImageBitmap(file, { imageOrientation: 'from-image' })
-        : await loadImgEl(file);
-    } catch (e) { err = e; continue; }
-    let c = null;
-    try { c = renderShrunk(src, max); } finally { if (src.close) src.close(); }
-    if (c) return c.toDataURL('image/jpeg', quality);
-    err = new Error('사진을 그리지 못했어요');
+    try { src = await read(file); } catch (e) { err = e; continue; }
+    let out = null;
+    try { out = renderShrunk(src, max); }
+    finally { if (src.close) src.close(); if (src._u) URL.revokeObjectURL(src._u); }
+    if (!out) { err = new Error('사진을 그리지 못했어요'); continue; }
+    if (!out.cut) return { url: out.canvas.toDataURL('image/jpeg', quality), cut: false };
+    /* 끝까지 읽힌 게 나올 때까지 다음 길로. 다 실패하면 그중 가장 많이 읽힌 것을 쓴다 */
+    if (!best || out.canvas.height > best.height) best = out.canvas;
   }
+  if (best) return { url: best.toDataURL('image/jpeg', quality), cut: true };
   throw err || new Error('사진을 읽지 못했어요');
 }
 
@@ -3220,16 +3235,22 @@ async function openEditor(id, opts = {}) {
     const files = [...e.target.files].slice(0, 10); e.target.value = '';
     if (!files.length) return;
     toast('사진을 정리하는 중…');
+    let cut = 0, failed = 0;
     for (const f of files) {
       try {
         const data = await shrink(f, 1440, .72);
         const thumb = await shrink(f, 360, .6);
-        const p = { id: uid(), data, thumb };
+        if (data.cut) cut++;
+        const p = { id: uid(), data: data.url, thumb: thumb.url };
         entry.photos.push(p);
         if (!entry.cover) entry.cover = p.id;
-      } catch (err) { toast('불러오지 못한 사진이 있어요'); }
+      } catch (err) { failed++; }
     }
     paintPhotos();
+    /* 끝까지 읽히지 않은 사진은 아래쪽이 잘린 채로 들어간다. 조용히 두면
+       나중에 잘린 사진을 보고서야 알게 되므로, 그 자리에서 알려 준다. */
+    if (failed) toast('불러오지 못한 사진이 있어요');
+    else if (cut) toast('사진이 끝까지 읽히지 않았어요. 다시 넣어 보세요');
   };
   paintPhotos();
 
