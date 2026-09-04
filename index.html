@@ -166,6 +166,13 @@ main{padding:0 0 172px}
 .btn-p{background:var(--ivory);color:var(--ink)}
 .btn-g{background:var(--raised);color:var(--dim)}
 .btn-o{border:1px solid var(--line);color:var(--dim)}
+/* 루틴 탭의 버튼 — 기록 화면과 같은 어법이다.
+   더하는 자리는 색을 채우거나 색 테두리를 두르고, 관리하는 자리는 무채색으로 둔다.
+   루틴(반복)과 할 일(하루짜리)은 색을 갈라 둔다 — 루틴은 대표색, 할 일은 --accent2.
+   테마색을 글씨로 쓸 때는 본문색 쪽으로 조금 당겨야 바탕에서 또렷하다 (최저 4.74). */
+.btn-todo{background:var(--accent2);color:var(--on2);font-weight:600}
+.btn-line{border:1px solid color-mix(in srgb, var(--ivory) 42%, var(--line));
+  color:color-mix(in srgb, var(--ivory) 90%, var(--tx));font-weight:600}
 
 /* memory card */
 .memory{margin:14px var(--sp) 0;display:flex;gap:12px;align-items:center;background:var(--surface);
@@ -507,8 +514,10 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 목록 머리: 왼쪽 이름표 + 오른쪽 정렬 단추 */
 .rbar{display:flex;align-items:center;gap:8px;margin:22px var(--sp) 10px}
 .rbar .lb{font-size:10.5px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
-.rbar .sortbtn{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim);
-  border:1px solid var(--line);border-radius:999px;padding:5px 11px;white-space:nowrap}
+.rbar .sortbtn{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;
+  color:color-mix(in srgb, var(--ivory) 90%, var(--tx));
+  border:1px solid color-mix(in srgb, var(--ivory) 35%, var(--line));
+  border-radius:999px;padding:5px 11px;white-space:nowrap}
 .rbar .sortbtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex:none}
 .rlist{margin:0 var(--sp)}
 /* 루틴 이름 앞에 붙는 시간대 칸 */
@@ -609,9 +618,11 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .ritem.doing .ck{background:var(--joy);border-color:var(--joy);color:var(--ink)}
 .ritem.doing .ck svg{fill:currentColor;stroke:none}
 .ritem.doing .nm{color:var(--dim)}
-.addtodo{width:100%;margin-top:2px;border:1px dashed var(--line);border-radius:12px;padding:12px;
-  color:var(--dim);font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:7px}
-.addtodo:active{background:var(--surface)}
+/* 할 일 더하기 — 이 화면에서 가장 자주 누르는 '더하는' 자리라 색을 채운다 */
+.addtodo{width:100%;margin-top:2px;border:0;border-radius:12px;padding:13px;
+  background:var(--accent2);color:var(--on2);font-size:13.5px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s}
+.addtodo:active{opacity:.75}
 .addtodo svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2}
 .tdrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
 .tdrow .tn{flex:1;min-width:0;font-size:14px}
@@ -1417,7 +1428,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v66 · 2026-09-04';
+const APP_VERSION = 'v67 · 2026-09-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1863,9 +1874,9 @@ function renderRoutine() {
       <div class="empty"><b>${isToday ? '아직 루틴이 없어요' : '이 날은 아직 비어 있어요'}</b>
         ${isToday ? '매일 지키고 싶은 것 하나부터 적어보세요.' : '할 일을 미리 담아둘 수 있어요.'}</div>
       <div class="section" style="display:flex;flex-direction:column;gap:9px">
-        <button class="btn btn-p" data-addtodo style="width:100%">${esc(dateLabel(date))}에 할 일 담기</button>
-        <button class="btn btn-o" data-preset style="width:100%">보기에서 골라 담기</button>
-        <button class="btn btn-o" data-new style="width:100%">루틴 직접 만들기</button>
+        <button class="btn btn-todo" data-addtodo style="width:100%">${esc(dateLabel(date))}에 할 일 담기</button>
+        <button class="btn btn-line" data-preset style="width:100%">보기에서 골라 담기</button>
+        <button class="btn btn-line" data-new style="width:100%">루틴 직접 만들기</button>
       </div>`;
     bindWeekBar(host);
     host.querySelector('[data-addtodo]').onclick = () => openTodoAdder(date);
@@ -1938,7 +1949,7 @@ function renderRoutine() {
     </div>
     <div class="section" style="margin-top:22px;display:flex;flex-direction:column;gap:9px">
       <button class="btn btn-o" data-manage style="width:100%">루틴 관리</button>
-      <button class="btn btn-g" data-preset2 style="width:100%">보기에서 더 담기</button>
+      <button class="btn btn-line" data-preset2 style="width:100%">보기에서 더 담기</button>
     </div>`;
 
   host.innerHTML = html;
