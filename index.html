@@ -250,9 +250,9 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .pthumb.cover .star svg{fill:var(--ivory);stroke:var(--ivory)}
 /* 사진 추가 — 비어 있는 자리라 눈에 띄어야 누른다. 팔레트 색을 진하게 준다 */
 .padd{flex:none;width:92px;height:92px;border-radius:12px;
-  border:1.5px dashed color-mix(in srgb, var(--accent2) 55%, var(--line));
-  background:color-mix(in srgb, var(--accent2) 12%, var(--surface));
-  display:grid;place-items:center;color:color-mix(in srgb, var(--accent2) 70%, var(--tx));
+  border:1.5px dashed color-mix(in srgb, var(--sec) 55%, var(--line));
+  background:color-mix(in srgb, var(--sec) 17%, var(--surface));
+  display:grid;place-items:center;color:color-mix(in srgb, var(--sec) 70%, var(--tx));
   font-size:11px;font-weight:600;gap:2px;text-align:center}
 .padd svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;display:block;margin:0 auto 3px}
 .coverhint{font-size:11.5px;color:var(--faint);margin-top:7px}
@@ -308,7 +308,7 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
   color:var(--dim);border-left:2px solid var(--ivory);padding:1px 0 2px 11px;
   margin-bottom:12px;quotes:none}
 /* 질문 박스 배경에도 옅게 팔레트 색을 둔다. 세로줄과 같은 색이라 한 덩어리로 읽힌다 */
-.pqbox{background:color-mix(in srgb, var(--ivory) 8%, var(--surface))}
+
 
 #fAffirmation + .field{margin-top:12px}
 .dphotos{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--sp)*-1);
@@ -367,15 +367,12 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 
 /* ---------- 감사일기 ---------- */
 .gline{display:flex;align-items:center;gap:9px;margin-bottom:7px}
-/* 번호도 옆 입력칸과 같은 색을 쓴다. 회색으로 남으면 그 자리만 따로 논다 */
+/* 번호도 옆 입력칸과 같은 색·같은 짙기를 쓴다. 회색으로 남으면 그 자리만 따로 논다 */
 .gline .gn{flex:none;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;
   font-family:var(--mo);font-size:11px;color:var(--dim);
-  background:color-mix(in srgb, var(--accent3) 18%, var(--surface))}
-/* 감사일기 한 줄 한 줄도 팔레트 색에 연동한다. 회색 기운이 있는 --raised
-   위에 섞으면 탁해져서, 흰 바탕에 가까운 --surface 위에 섞는다 —
-   배경(--bg)이 산뜻해 보이는 것과 같은 방식이다 */
-.gline .oneline{flex:1;min-width:0;background:color-mix(in srgb, var(--accent3) 18%, var(--surface));
-  border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:14px}
+  background:color-mix(in srgb, var(--sec) 17%, var(--surface))}
+.gline .oneline{flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;
+  padding:8px 11px;font-size:14px}
 .gline .gx{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--faint)}
 .gline .gx svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
 .gadd{margin-top:2px;font-size:12.5px;color:var(--dim);display:flex;align-items:center;gap:6px}
@@ -543,11 +540,25 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 다른 묶음에 담겨 있다는 안내 — 경고는 아니라서 흐린 강조 정도로만 */
 :root{--gcnote:#C9A227}
 
+/* ── 편집 화면의 색 체계 ──────────────────────────────────
+   섹션마다 색 하나(--sec)를 정하고, 전체 배경 → 섹션 박스 → 입력칸 순으로
+   그 색이 점점 진해진다. 한 섹션 안에서는 제목·박스·입력칸이 모두 같은 색을
+   나눠 쓰므로, 어디까지가 한 덩어리인지 눈으로 바로 갈린다.
+   --sec 을 정하지 않은 칸은 대표색을 따라가므로 다른 화면은 영향받지 않는다. */
+.editor .field{--sec:var(--ivory)}
+.editor .sec-photo,.editor .sec-story{--sec:var(--accent2)}
+.editor .sec-grat{--sec:var(--accent3)}
+.editor .sec-card,.editor .sec-tags{--sec:var(--accent4)}
+.editor .label{color:color-mix(in srgb, var(--sec) 62%, var(--tx))}
+.editor .box{background:color-mix(in srgb, var(--sec) 8%, var(--surface))}
+.editor .box textarea,.editor .box input{
+  background:color-mix(in srgb, var(--sec) 17%, var(--surface));
+  border-radius:9px;padding:8px 11px}
+
 /* 오늘의 이야기 · 감사일기 — 확언·질문과 같은 왼쪽 띠 어법을 쓰되
    같은 팔레트에서 고른 다른 색을 써서 칸마다 다르게 비친다.
    전부 --ivory 하나만 쓰면 그것대로 밋밋해진다. */
-.fbox-story{background:color-mix(in srgb, var(--accent2) 8%, var(--surface))}
-.fbox-grat{background:color-mix(in srgb, var(--accent3) 8%, var(--surface))}
+
 
 /* 할 일 — 그날 하루만 사는 항목이라 시간대 칸을 다른 색으로 물들여 구분한다 */
 .ritem.todo{border-style:dashed}
@@ -1363,7 +1374,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v59 · 2026-08-31';
+const APP_VERSION = 'v60 · 2026-09-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1763,6 +1774,10 @@ function lightOf(rate) {
   if (rate < 0) return { i: -1, color: 'var(--faint)', msg: '오늘은 예정된 루틴이 없어요' };
   if (pct >= t.green) return { i: 2, color: famColor('calm'), msg: '오늘 흐름이 좋아요' };
   if (pct >= t.yellow) return { i: 1, color: famColor('joy'), msg: '절반쯤 왔어요. 남은 건 천천히' };
+  /* 아직 아무것도 손대지 않은 상태까지 빨간불로 두면, 같은 카드에서 글은
+     '하나만 해봐도 충분해요' 라 말하고 색은 실패라 말하는 꼴이 된다.
+     시작 전에는 불을 켜지 않고, 하나라도 지키면 그때 색이 살아난다. */
+  if (rate === 0) return { i: -1, color: 'var(--faint)', msg: '하나만 해봐도 충분해요' };
   return { i: 0, color: famColor('mad'), msg: '하나만 해봐도 충분해요' };
 }
 
@@ -2971,7 +2986,7 @@ async function openEditor(id, opts = {}) {
     entry.prompt = { cat: c0, q: q0, a: '' };
   }
 
-  const scr = document.createElement('div'); scr.className = 'screen';
+  const scr = document.createElement('div'); scr.className = 'screen editor';
   scr.innerHTML = `
   <div class="inner">
     <div class="screenbar">
@@ -2980,28 +2995,28 @@ async function openEditor(id, opts = {}) {
       <button class="btn btn-p" data-save>저장</button>
     </div>
 
-    <div class="field">
+    <div class="field sec-date">
       <div class="label">날짜</div>
       <div class="box"><input type="date" id="fDate" value="${entry.date}" class="datebtn mono" style="color:var(--tx)"></div>
     </div>
 
     <div id="fAffirmation">${affirmationHtml(entry.date)}</div>
 
-    <div class="field">
+    <div class="field sec-photo">
       <div class="label">사진</div>
       <div class="photos" id="fPhotos"></div>
       <div class="coverhint">★ 을 눌러 목록에 보일 대표 사진을 정하세요.</div>
       <input type="file" id="fFile" accept="image/*" multiple class="hide">
     </div>
 
-    <div class="field">
+    <div class="field sec-story">
       <div class="label">오늘의 이야기</div>
       <div class="box fbox-story"><textarea class="body" id="fText" placeholder="무슨 일이 있었는지 편하게 적어보세요.&#10;본문에 #태그 를 쓰면 자동으로 등록돼요.">${esc(entry.text)}</textarea></div>
     </div>
 
-    <div class="field" id="fPromptField"></div>
+    <div class="field sec-q" id="fPromptField"></div>
 
-    <div class="field">
+    <div class="field sec-grat">
       <div class="label">감사일기</div>
       <div class="box fbox-grat">
         <div id="fGrat"></div>
@@ -3009,13 +3024,13 @@ async function openEditor(id, opts = {}) {
       </div>
     </div>
 
-    <div class="field">
+    <div class="field sec-card">
       <div class="label">감정 카드</div>
       <div id="fCards"></div>
       <button class="addbox" id="fAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>감정 카드 추가</button>
     </div>
 
-    <div class="field">
+    <div class="field sec-tags">
       <div class="label">해시태그</div>
       <div class="box">
         <div id="fTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
