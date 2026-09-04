@@ -557,6 +557,11 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
   background:color-mix(in srgb, var(--sec) 17%, var(--surface));
   border-radius:9px;padding:8px 11px}
 
+/* 오늘의 이야기 — 긴 글 한 덩어리라 박스 안에 박스를 또 두면 테두리만 겹쳐 보인다.
+   바깥 박스 하나만 남기고 안쪽 칸은 배경도 여백도 비워 둔다. */
+.editor .sec-story .box textarea{background:transparent;border-radius:0;padding:0}
+.detail .sec-story .rbody{background:transparent;border:0;border-radius:0;padding:0}
+
 /* 조회 화면에는 입력칸이 없다. 대신 읽는 칸(.rbody)이 그 자리를 대신해
    같은 세 번째 단계를 맡는다 — 짙기도 모양도 입력칸과 같게 맞춘다. */
 .detail .rbody{background:color-mix(in srgb, var(--sec) 17%, var(--surface));
@@ -1393,7 +1398,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v61 · 2026-09-04';
+const APP_VERSION = 'v62 · 2026-09-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
