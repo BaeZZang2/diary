@@ -281,9 +281,9 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .selectbtn svg{width:15px;height:15px;stroke:var(--faint);fill:none;stroke-width:2;margin-left:auto;flex:none}
 .etag{font-size:12.5px;padding:3px 9px;border-radius:999px;font-weight:500}
 .mini{background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px}
-/* 감정 카드 추가 — 사진 추가·줄 추가와 한 형제. 셋 다 '오늘 기록하기' 의 색을 쓴다 */
+/* 감정 카드 추가 — 줄 추가와 같은 어법. 그 칸의 입력창과 같은 색(--sec)을 진하게 채운다 */
 .addbox{width:100%;border:0;border-radius:14px;padding:13px;
-  background:var(--ivory);color:var(--ink);
+  background:var(--sec);color:var(--ink);
   display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;transition:.15s}
 .addbox:active{opacity:.75}
 .addbox svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
@@ -378,9 +378,10 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
   padding:8px 11px;font-size:14px}
 .gline .gx{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--faint)}
 .gline .gx svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
-/* 줄 추가 — 같은 형제지만 박스 안에 들어앉는 작은 버튼이라 알약 모양으로 줄인다 */
-.gadd{margin-top:9px;font-size:12.5px;font-weight:600;border-radius:999px;padding:7px 14px;
-  background:var(--ivory);color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+/* 줄 추가 — 그 칸의 입력창과 같은 색(--sec)을 진하게 채운다. 글자만큼만 차지한다 */
+.gadd{margin-top:9px;font-size:12.5px;font-weight:600;border-radius:999px;padding:6px 12px;
+  width:fit-content;background:var(--sec);color:var(--ink);
+  display:inline-flex;align-items:center;gap:5px}
 .gadd:active{opacity:.75}
 .gadd svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2}
 .glist{margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
@@ -1406,7 +1407,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v64 · 2026-09-04';
+const APP_VERSION = 'v65 · 2026-09-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
