@@ -316,8 +316,7 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .dphotos::-webkit-scrollbar{display:none}
 .dphotos img{scroll-snap-align:center;width:calc(100% - 40px);flex:none;border-radius:var(--r);
   object-fit:cover;max-height:64dvh}
-.dbody{font-family:var(--ui);font-size:15.5px;line-height:1.85;white-space:pre-wrap;margin-top:18px}
-.dtags{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.dtags{display:flex;flex-wrap:wrap;gap:6px}
 .dtag{font-size:12.5px;color:var(--dim);background:var(--surface);border:1px solid var(--line);
   border-radius:999px;padding:4px 11px}
 
@@ -540,20 +539,40 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 다른 묶음에 담겨 있다는 안내 — 경고는 아니라서 흐린 강조 정도로만 */
 :root{--gcnote:#C9A227}
 
-/* ── 편집 화면의 색 체계 ──────────────────────────────────
+/* ── 기록 화면·조회 화면의 색 체계 ────────────────────────
    섹션마다 색 하나(--sec)를 정하고, 전체 배경 → 섹션 박스 → 입력칸 순으로
    그 색이 점점 진해진다. 한 섹션 안에서는 제목·박스·입력칸이 모두 같은 색을
    나눠 쓰므로, 어디까지가 한 덩어리인지 눈으로 바로 갈린다.
+   쓸 때와 읽을 때가 같은 색이라야 같은 기록으로 보이므로 두 화면이 함께 쓴다.
    --sec 을 정하지 않은 칸은 대표색을 따라가므로 다른 화면은 영향받지 않는다. */
-.editor .field{--sec:var(--ivory)}
-.editor .sec-photo,.editor .sec-story{--sec:var(--accent2)}
-.editor .sec-grat{--sec:var(--accent3)}
-.editor .sec-card,.editor .sec-tags{--sec:var(--accent4)}
-.editor .label{color:color-mix(in srgb, var(--sec) 62%, var(--tx))}
-.editor .box{background:color-mix(in srgb, var(--sec) 8%, var(--surface))}
+/* 섹션 밖(확언 카드 등)에서도 --sec 이 비어 있지 않도록 대표색을 기본값으로 깔아둔다 */
+.editor,.detail{--sec:var(--ivory)}
+.editor .field,.detail .field{--sec:var(--ivory)}
+.editor .sec-photo,.editor .sec-story,.detail .sec-photo,.detail .sec-story{--sec:var(--accent2)}
+.editor .sec-grat,.detail .sec-grat{--sec:var(--accent3)}
+.editor .sec-card,.editor .sec-tags,.detail .sec-card,.detail .sec-tags{--sec:var(--accent4)}
+.editor .label,.detail .label{color:color-mix(in srgb, var(--sec) 62%, var(--tx))}
+.editor .box,.detail .box{background:color-mix(in srgb, var(--sec) 8%, var(--surface))}
 .editor .box textarea,.editor .box input{
   background:color-mix(in srgb, var(--sec) 17%, var(--surface));
   border-radius:9px;padding:8px 11px}
+
+/* 조회 화면에는 입력칸이 없다. 대신 읽는 칸(.rbody)이 그 자리를 대신해
+   같은 세 번째 단계를 맡는다 — 짙기도 모양도 입력칸과 같게 맞춘다. */
+.detail .rbody{background:color-mix(in srgb, var(--sec) 17%, var(--surface));
+  border:1px solid var(--line);border-radius:9px;padding:9px 12px;
+  font-family:var(--ui);font-size:15px;line-height:1.8;white-space:pre-wrap}
+.detail .glist{margin-top:0}
+.detail .glist li>div{flex:1;min-width:0;padding:8px 11px;font-size:14px;line-height:1.6;
+  border:1px solid var(--line);border-radius:9px;
+  background:color-mix(in srgb, var(--sec) 17%, var(--surface))}
+.detail .glist li span{color:var(--dim);margin-top:0;
+  background:color-mix(in srgb, var(--sec) 17%, var(--surface))}
+.detail .dtag{background:color-mix(in srgb, var(--sec) 17%, var(--surface))}
+/* 감정 카드 안의 글도 카드가 정한 감정색을 따라간다 (편집 화면의 입력칸과 같은 16%) */
+.detail .ecard .rbody{font-size:14.5px;line-height:1.7;
+  background:color-mix(in srgb, var(--cardshade) 16%, var(--surface))}
+.detail .affirmation + .field{margin-top:12px}
 
 /* 오늘의 이야기 · 감사일기 — 확언·질문과 같은 왼쪽 띠 어법을 쓰되
    같은 팔레트에서 고른 다른 색을 써서 칸마다 다르게 비친다.
@@ -1374,7 +1393,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v60 · 2026-09-04';
+const APP_VERSION = 'v61 · 2026-09-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -3241,7 +3260,10 @@ async function openDetail(id) {
   const e = await getEntry(id);
   if (!e) { toast('기록을 찾을 수 없어요'); return; }
   const ordered = [...e.photos].sort((a, b) => (b.id === e.cover) - (a.id === e.cover));
-  const scr = document.createElement('div'); scr.className = 'screen';
+  /* 조회 화면도 기록 화면과 같은 섹션 구성을 쓴다 — 같은 제목, 같은 색, 같은 3단.
+     읽을 때와 쓸 때가 다른 모양이면 같은 기록인데도 다른 화면처럼 느껴진다. */
+  const scr = document.createElement('div'); scr.className = 'screen detail';
+  const grat = (e.gratitude || []).filter(Boolean);
   scr.innerHTML = `<div class="inner">
     <div class="screenbar">
       <button class="iconbtn" data-x><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -3250,28 +3272,53 @@ async function openDetail(id) {
       <button class="iconbtn" data-del aria-label="삭제"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
     </div>
     ${affirmationHtml(e.date)}
-    ${ordered.length ? `<div class="dphotos" style="margin-top:10px">${ordered.map((p, i) =>
-      `<img src="${p.data}" alt="" data-ph="${i}">`).join('')}</div>` : ''}
-    ${e.text ? `<div class="dbody">${esc(e.text)}</div>` : ''}
-    ${e.prompt && e.prompt.a ? `<div class="prompt" style="margin:18px 0 0">
-        <div class="cat">오늘의 질문 · ${esc(e.prompt.cat)}</div>
-        <q>${esc(e.prompt.q)}</q>
-        <div style="font-size:14.5px;color:var(--dim);white-space:pre-wrap">${esc(e.prompt.a)}</div></div>` : ''}
-    ${(e.gratitude || []).filter(Boolean).length ? `<div class="eyebrow" style="padding:0">감사일기</div>
-      <ul class="glist">${e.gratitude.filter(Boolean).map((g, i) =>
-        `<li><span>${i + 1}</span><div>${esc(g)}</div></li>`).join('')}</ul>` : ''}
-    ${e.cards.length ? `<div class="eyebrow" style="padding:0">감정 카드 ${e.cards.length}</div>` : ''}
-    ${e.cards.map(c => {
+
+    ${ordered.length ? `<div class="field sec-photo">
+      <div class="label">사진</div>
+      <div class="dphotos">${ordered.map((p, i) =>
+      `<img src="${p.data}" alt="" data-ph="${i}">`).join('')}</div>
+    </div>` : ''}
+
+    ${e.text ? `<div class="field sec-story">
+      <div class="label">오늘의 이야기</div>
+      <div class="box"><div class="rbody">${esc(e.text)}</div></div>
+    </div>` : ''}
+
+    ${e.prompt && e.prompt.a ? `<div class="field sec-q">
+      <div class="label">오늘의 질문 · ${esc(e.prompt.cat)}</div>
+      <div class="box">
+        <q class="fq">${esc(e.prompt.q)}</q>
+        <div class="rbody">${esc(e.prompt.a)}</div>
+      </div>
+    </div>` : ''}
+
+    ${grat.length ? `<div class="field sec-grat">
+      <div class="label">감사일기</div>
+      <div class="box"><ul class="glist">${grat.map((g, i) =>
+      `<li><span>${i + 1}</span><div>${esc(g)}</div></li>`).join('')}</ul></div>
+    </div>` : ''}
+
+    ${e.cards.length ? `<div class="field sec-card">
+      <div class="label">감정 카드 ${e.cards.length}</div>
+      ${e.cards.map(c => {
       const shade = c.emotions.length ? colorOf(c.emotions[0]) : 'var(--accent4)';
       return `<div class="ecard" style="--cardshade:${shade}">
-        ${c.event ? `<div class="subfield" style="margin-top:0"><div class="sl">상황</div><div style="font-size:14.5px;white-space:pre-wrap">${esc(c.event)}</div></div>` : ''}
+        ${c.event ? `<div class="subfield" style="margin-top:0"><div class="sl">상황</div>
+          <div class="rbody">${esc(c.event)}</div></div>` : ''}
         ${c.emotions.length ? `<div class="subfield" style="margin-top:${c.event ? '11px' : '0'}"><div class="sl">감정</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px">${c.emotions.map(w =>
           `<span class="etag" style="background:${colorOf(w)}22;color:${colorOf(w)};border:1px solid ${colorOf(w)}55">${esc(w)}</span>`).join('')}</div></div>` : ''}
-        ${c.need ? `<div class="subfield"><div class="sl">바람</div><div style="font-size:14.5px;white-space:pre-wrap;color:var(--dim)">${esc(c.need)}</div></div>` : ''}
+        ${c.need ? `<div class="subfield"><div class="sl">바람</div>
+          <div class="rbody">${esc(c.need)}</div></div>` : ''}
       </div>`;
     }).join('')}
-    ${e.tags.length ? `<div class="dtags">${e.tags.map(t => `<button class="dtag" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+    </div>` : ''}
+
+    ${e.tags.length ? `<div class="field sec-tags">
+      <div class="label">해시태그</div>
+      <div class="box"><div class="dtags">${e.tags.map(t => `<button class="dtag" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div></div>
+    </div>` : ''}
+
     <div class="mono" style="color:var(--faint);font-size:11px;margin-top:24px">기록 ${new Date(e.createdAt).toLocaleString('ko-KR')}</div>
   </div>`;
   $('#layers').appendChild(scr);
