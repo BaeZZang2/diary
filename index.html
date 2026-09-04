@@ -248,12 +248,13 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .pthumb .del{right:5px;top:5px}
 .pthumb svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2}
 .pthumb.cover .star svg{fill:var(--ivory);stroke:var(--ivory)}
-/* 사진 추가 — 비어 있는 자리라 눈에 띄어야 누른다. 팔레트 색을 진하게 준다 */
-.padd{flex:none;width:92px;height:92px;border-radius:12px;
-  border:1.5px dashed color-mix(in srgb, var(--sec) 55%, var(--line));
-  background:color-mix(in srgb, var(--sec) 17%, var(--surface));
-  display:grid;place-items:center;color:color-mix(in srgb, var(--sec) 70%, var(--tx));
+/* 사진 추가 — '오늘 기록하기' 와 같은 옷을 입는다. 무언가를 더하는 자리라는
+   뜻이 같으니 색도 같아야 눈이 헷갈리지 않는다 (대표색을 채우고 글씨는 --ink). */
+.padd{flex:none;width:92px;height:92px;border-radius:12px;border:0;
+  background:var(--ivory);color:var(--ink);
+  display:grid;place-items:center;
   font-size:11px;font-weight:600;gap:2px;text-align:center}
+.padd:active{opacity:.75}
 .padd svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;display:block;margin:0 auto 3px}
 .coverhint{font-size:11.5px;color:var(--faint);margin-top:7px}
 
@@ -280,9 +281,11 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .selectbtn svg{width:15px;height:15px;stroke:var(--faint);fill:none;stroke-width:2;margin-left:auto;flex:none}
 .etag{font-size:12.5px;padding:3px 9px;border-radius:999px;font-weight:500}
 .mini{background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px}
-.addbox{width:100%;border:1px dashed var(--line);border-radius:12px;padding:16px;color:var(--dim);
-  display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;transition:.15s}
-.addbox:active{background:var(--surface)}
+/* 감정 카드 추가 — 사진 추가·줄 추가와 한 형제. 셋 다 '오늘 기록하기' 의 색을 쓴다 */
+.addbox{width:100%;border:0;border-radius:14px;padding:13px;
+  background:var(--ivory);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;transition:.15s}
+.addbox:active{opacity:.75}
 .addbox svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
 
 /* picker */
@@ -314,8 +317,9 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .dphotos{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(var(--sp)*-1);
   padding:0 var(--sp);scrollbar-width:none}
 .dphotos::-webkit-scrollbar{display:none}
-.dphotos img{scroll-snap-align:center;width:calc(100% - 40px);flex:none;border-radius:var(--r);
-  object-fit:cover;max-height:64dvh}
+/* 조회 화면의 사진 — 이전 크기의 70%. 가로를 줄이면 세로도 같은 비율로 따라 줄어든다 */
+.dphotos img{scroll-snap-align:center;width:calc((100% - 40px) * .7);flex:none;border-radius:var(--r);
+  object-fit:cover;max-height:45dvh}
 .dtags{display:flex;flex-wrap:wrap;gap:6px}
 .dtag{font-size:12.5px;color:var(--dim);background:var(--surface);border:1px solid var(--line);
   border-radius:999px;padding:4px 11px}
@@ -374,7 +378,10 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
   padding:8px 11px;font-size:14px}
 .gline .gx{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:var(--faint)}
 .gline .gx svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
-.gadd{margin-top:2px;font-size:12.5px;color:var(--dim);display:flex;align-items:center;gap:6px}
+/* 줄 추가 — 같은 형제지만 박스 안에 들어앉는 작은 버튼이라 알약 모양으로 줄인다 */
+.gadd{margin-top:9px;font-size:12.5px;font-weight:600;border-radius:999px;padding:7px 14px;
+  background:var(--ivory);color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.gadd:active{opacity:.75}
 .gadd svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2}
 .glist{margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
 .glist li{display:flex;gap:9px;align-items:flex-start;font-size:14.5px;list-style:none}
@@ -1398,7 +1405,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v62 · 2026-09-04';
+const APP_VERSION = 'v63 · 2026-09-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
