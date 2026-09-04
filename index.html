@@ -1428,7 +1428,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v68 · 2026-09-04';
+const APP_VERSION = 'v69 · 2026-09-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1511,35 +1511,74 @@ function drewNothing(ctx, w, h) {
   return true;
 }
 
+/* 사진에서 그림이 실제로 있는 자리를 찾는다.
+   사진을 잘라 놓고 저장하면, 잘라낸 자리를 비운 채 원본 크기를 그대로 들고
+   있는 편집기가 있다. 그런 파일을 그냥 넣으면 잘린 대로 들어가지 않고
+   빈 테두리까지 함께 들어온다 — 그 빈 자리가 까맣게 보이던 것이다.
+   그림이 있는 네모만 골라내서, 그 안쪽만 저장한다.
+   작게 줄인 미리보기에서 재기 때문에 한 칸씩 바깥으로 넉넉히 잡는다. */
+function contentRect(src, w, h) {
+  /* 미리보기를 너무 작게 잡으면 한 칸이 원본 열 몇 줄을 뭉쳐서, 잘라낸 자리가
+     몇 픽셀 남는다. 1024 면 그 오차가 한 픽셀 안쪽이라 눈에 띄지 않는다. */
+  const P = 1024, s = Math.min(1, P / Math.max(w, h));
+  const pw = Math.max(1, Math.round(w * s)), ph = Math.max(1, Math.round(h * s));
+  const c = document.createElement('canvas'); c.width = pw; c.height = ph;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(src, 0, 0, pw, ph);
+  let d;
+  try { d = ctx.getImageData(0, 0, pw, ph).data; } catch (e) { return { x: 0, y: 0, w, h }; }
+  let x0 = pw, y0 = ph, x1 = -1, y1 = -1;
+  for (let y = 0; y < ph; y++) for (let x = 0; x < pw; x++) {
+    if (d[(y * pw + x) * 4 + 3] > 8) {
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+  }
+  if (x1 < 0) return null;                       /* 아무것도 안 그려졌다 */
+  /* 미리보기 한 칸에는 원본 여러 줄이 섞여 들어가므로, 그림이 조금이라도
+     닿은 칸은 이미 잡혀 있다. 더 넓히면 빈 테두리를 다시 들여오게 된다. */
+  const r = {
+    x: Math.floor(x0 / pw * w), y: Math.floor(y0 / ph * h),
+    w: Math.ceil((x1 - x0 + 1) / pw * w), h: Math.ceil((y1 - y0 + 1) / ph * h)
+  };
+  r.w = Math.min(w - r.x, r.w); r.h = Math.min(h - r.y, r.h);
+  /* 빈 테두리가 거의 없으면 손대지 않는다 — 멀쩡한 사진을 건드릴 이유가 없다 */
+  if (r.w >= w * .99 && r.h >= h * .99) return { x: 0, y: 0, w, h };
+  return r;
+}
+
 function renderShrunk(src, max) {
   const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
   if (!w || !h) return null;
-  const s = Math.min(1, max / Math.max(w, h));
-  const dw = Math.max(1, Math.round(w * s)), dh = Math.max(1, Math.round(h * s));
+  const r = contentRect(src, w, h);
+  if (!r) return null;
+  const s = Math.min(1, max / Math.max(r.w, r.h));
+  const dw = Math.max(1, Math.round(r.w * s)), dh = Math.max(1, Math.round(r.h * s));
 
-  /* 크게 줄일 때는 한 번에 줄이지 않고 절반씩 내려온다.
+  /* 첫 걸음에서 그림이 있는 자리만 옮겨 담고, 그 뒤로는 절반씩 내려온다.
      한 번에 줄이면 큰 사진에서 빈 그림이 나오기도 하고, 결도 거칠어진다. */
-  let cur = src, cw = w, ch = h;
-  while (cw >= dw * 2 && ch >= dh * 2 && cw > 1 && ch > 1) {
-    const nw = Math.max(dw, cw >> 1), nh = Math.max(dh, ch >> 1);
+  let cur = null, cw = r.w, ch = r.h;
+  for (;;) {
+    const step = cw >= dw * 2 && ch >= dh * 2;
+    const nw = step ? Math.max(dw, cw >> 1) : dw;
+    const nh = step ? Math.max(dh, ch >> 1) : dh;
     const t = document.createElement('canvas'); t.width = nw; t.height = nh;
-    t.getContext('2d').drawImage(cur, 0, 0, nw, nh);
+    const tx = t.getContext('2d');
+    if (cur) tx.drawImage(cur, 0, 0, nw, nh);
+    else tx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, nw, nh);
     cur = t; cw = nw; ch = nh;
+    if (nw === dw && nh === dh) break;
   }
 
-  const c = document.createElement('canvas');
-  c.width = dw; c.height = dh;
-  const ctx = c.getContext('2d');
-  ctx.drawImage(cur, 0, 0, dw, dh);
+  const ctx = cur.getContext('2d');
   if (drewNothing(ctx, dw, dh)) return null;
 
-  /* 비치는 자리(자르고 남은 모서리, 지운 자리 등)는 흰색으로 받친다.
-     JPEG 에는 '비침' 이 없어서 받쳐 두지 않으면 그 자리가 까맣게 나온다.
-     destination-over 는 이미 그린 사진 뒤쪽에 색을 깔아 준다. */
+  /* 잘린 네모 안에도 비치는 자리가 남아 있으면 (돌려서 자른 모서리 등)
+     흰색으로 받친다. JPEG 에는 '비침' 이 없어서 받쳐 두지 않으면 까맣게 굳는다. */
   ctx.globalCompositeOperation = 'destination-over';
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, dw, dh);
-  return c;
+  return cur;
 }
 
 async function shrink(file, max, quality) {
