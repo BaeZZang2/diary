@@ -1,5 +1,5 @@
 /* 마음결 서비스 워커 — 오프라인 실행용 */
-const CACHE = 'maeumgyeol-v60';
+const CACHE = 'maeumgyeol-v70';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 /* 설치할 때는 서버에서 새로 받아온다 (브라우저 캐시를 타지 않도록) */
