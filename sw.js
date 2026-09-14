@@ -1,5 +1,5 @@
 /* 마음결 서비스 워커 — 오프라인 실행용 */
-const CACHE = 'maeumgyeol-v65';
+const CACHE = 'maeumgyeol-v72';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 /* 설치할 때는 서버에서 새로 받아온다 (브라우저 캐시를 타지 않도록) */
@@ -30,6 +30,22 @@ self.addEventListener('fetch', e => {
         caches.open(CACHE).then(c => c.put('./index.html', copy)).catch(() => { });
         return res;
       }).catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  /* 설치 정보(manifest)도 새 것을 먼저 확인한다.
+     폰은 홈 화면에 깔린 앱의 설정 — 상단 상태바 색, 이름, 아이콘 — 을 이 파일에서
+     읽어 앱 안에 새겨 둔다. 그러고는 가끔 다시 읽으러 온다. 그때 캐시에 있던
+     옛 파일을 건네주면 폰은 "바뀐 게 없네" 하고 옛 색을 계속 쓴다.
+     실제로 상태바가 예전 어두운 색에서 넘어오지 않던 까닭이 여기에 있었다. */
+  if (req.destination === 'manifest' || /manifest\.webmanifest($|\?)/.test(req.url)) {
+    e.respondWith(
+      fetch(new Request(req.url, { cache: 'no-cache' })).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy)).catch(() => { });
+        return res;
+      }).catch(() => caches.match(req).then(hit => hit || caches.match('./manifest.webmanifest')))
     );
     return;
   }
