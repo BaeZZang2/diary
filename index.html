@@ -1441,7 +1441,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v73 · 2026-09-14';
+const APP_VERSION = 'v74 · 2026-09-18';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1545,8 +1545,7 @@ async function loadImgEl(file) {
 
    점 몇 개만 찍어 보거나 작게 줄여서 보면 안 된다. 가는 선이나 글씨만 있는
    그림은 점 사이로 빠져나가고, 줄이는 과정에서는 선 자체가 사라지기도 한다.
-   그러면 멀쩡한 그림을 '못 읽었다' 고 내치게 된다. 줄이지 않고 전부 훑는다.
-   다 줄여 놓은 그림이라 커 봐야 1440 언저리, 한 번 훑는 데 몇 밀리초다. */
+   그러면 멀쩡한 그림을 '못 읽었다' 고 내치게 된다. 줄이지 않고 훑는다. */
 function drewNothing(canvas) {
   const ctx = canvas.getContext('2d');
   const hasInk = (y, h) => {
@@ -1648,10 +1647,12 @@ async function shrink(file, sizes) {
   for (const read of PHOTO_READERS) {
     let src = null;
     try { src = await read(file); } catch (e) { err = e; continue; }
-    let outs = null;
+    let outs = null, drawErr = null;
+    /* 그리다 튕겨도 여기서 멈추지 않는다 — 남은 길을 마저 가 봐야 한다 */
     try { outs = sizes.map(s => renderShrunk(src, s.max)); }
+    catch (e) { drawErr = e; outs = null; }
     finally { if (src.close) src.close(); if (src._u) URL.revokeObjectURL(src._u); }
-    if (!outs || outs.some(o => !o)) { err = new Error('사진을 그리지 못했어요'); continue; }
+    if (!outs || outs.some(o => !o)) { err = drawErr || new Error('사진을 그리지 못했어요'); continue; }
     if (!outs.some(o => o.cut)) return { urls: encode(outs), cut: false };
     /* 끝까지 읽힌 게 나올 때까지 다음 길로. 다 끊기면 그중 가장 많이 읽은 것을 쓴다 */
     if (!best || outs[0].read > best[0].read) best = outs;
@@ -3293,7 +3294,7 @@ async function openEditor(id, opts = {}) {
     /* 끝까지 읽히지 않은 사진은 아래쪽이 잘린 채로 들어간다. 조용히 두면
        나중에 잘린 사진을 보고서야 알게 되므로, 그 자리에서 알려 준다.
        한 번에 여러 장을 넣다가 둘 다 생길 수 있으니 한쪽만 말하지 않는다. */
-    if (failed && cut) toast('한 장은 못 불러왔고, 한 장은 끝까지 읽히지 않았어요');
+    if (failed && cut) toast('일부는 못 불러왔고, 일부는 끝까지 읽히지 않았어요');
     else if (failed) toast('불러오지 못한 사진이 있어요');
     else if (cut) toast('사진이 끝까지 읽히지 않았어요. 다시 넣어 보세요');
   };

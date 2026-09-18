@@ -1,5 +1,5 @@
 /* 마음결 서비스 워커 — 오프라인 실행용 */
-const CACHE = 'maeumgyeol-v73';
+const CACHE = 'maeumgyeol-v74';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 /* 설치할 때는 서버에서 새로 받아온다 (브라우저 캐시를 타지 않도록) */
@@ -52,10 +52,13 @@ self.addEventListener('fetch', e => {
   }
 
   /* 그 밖의 파일(아이콘·글꼴 등)은 캐시를 먼저 쓴다.
-     여기서도 제대로 온 것만 넣어 둔다 — 잠깐의 오류를 넣어 두면 계속 그것만 나온다. */
+     여기서도 제대로 온 것만 넣어 둔다 — 잠깐의 오류를 넣어 두면 계속 그것만 나온다.
+     다만 다른 집(글꼴 서버 등)에서 온 것은 속을 들여다볼 수 없게 잠겨 온다(opaque).
+     성공인지 실패인지 알 길이 없지만, 이것까지 빼면 글꼴이 오프라인에서 사라진다.
+     잠겨 온 것은 예전처럼 그대로 넣어 둔다. */
   e.respondWith(
     caches.match(req).then(hit => hit || fetch(req).then(res => {
-      if (res.ok) {
+      if (res.ok || res.type === 'opaque') {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(req, copy)).catch(() => { });
       }
