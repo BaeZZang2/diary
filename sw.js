@@ -1,15 +1,32 @@
 /* 마음결 서비스 워커 — 오프라인 실행용 */
-const CACHE = 'maeumgyeol-v74';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CACHE = 'maeumgyeol-v75';
+/* 앱 화면은 반드시 제대로 받아야 하는 것. 아이콘·설치 정보는 없어도 앱은 돈다. */
+const MUST = ['./', './index.html'];
+const NICE = ['./manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
-/* 설치할 때는 서버에서 새로 받아온다 (브라우저 캐시를 타지 않도록) */
+/* 설치할 때는 서버에서 새로 받아온다 (브라우저 캐시를 타지 않도록).
+   예전에는 받아온 것이 404 페이지든 서버 오류든 그대로 넣고, 아예 못 받아도
+   조용히 넘어간 뒤 새 판으로 갈아탔다. 갈아타면서 멀쩡하던 옛 캐시를 지우므로,
+   인터넷이 없을 때 오류 페이지가 앱으로 열리거나 아무것도 안 열릴 수 있었다.
+   그래서 꼭 필요한 것이 하나라도 어긋나면 설치를 접는다 — 쓰던 판과 그 캐시가
+   그대로 남고, 다음 기회에 다시 시도한다. */
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE)
-      .then(c => Promise.all(ASSETS.map(u =>
-        fetch(new Request(u, { cache: 'reload' })).then(r => c.put(u, r)).catch(() => { }))))
-      .then(() => self.skipWaiting())
-  );
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    const grab = async u => {
+      const r = await fetch(new Request(u, { cache: 'reload' }));
+      if (!r.ok) throw new Error(u + ' ' + r.status);
+      await c.put(u, r);
+    };
+    try {
+      await Promise.all(MUST.map(grab));
+      await Promise.all(NICE.map(u => grab(u).catch(() => { })));
+    } catch (err) {
+      await caches.delete(CACHE);       /* 반쪽짜리 캐시를 남기지 않는다 */
+      throw err;                        /* 설치 실패 — 옛 판이 계속 쓰인다 */
+    }
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', e => {

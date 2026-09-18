@@ -1441,7 +1441,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v74 · 2026-09-18';
+const APP_VERSION = 'v75 · 2026-09-18';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1605,19 +1605,23 @@ function renderShrunk(src, max) {
   const s = Math.min(1, max / Math.max(r.w, r.h));
   const dw = Math.max(1, Math.round(r.w * s)), dh = Math.max(1, Math.round(r.h * s));
 
-  /* 첫 걸음에서 그림이 있는 자리만 옮겨 담고, 그 뒤로는 절반씩 내려온다.
-     한 번에 줄이면 큰 사진에서 빈 그림이 나오기도 하고, 결도 거칠어진다. */
-  let cur = null, cw = r.w, ch = r.h;
-  for (;;) {
-    const step = cw >= dw * 2 && ch >= dh * 2;
-    const nw = step ? Math.max(dw, cw >> 1) : dw;
-    const nh = step ? Math.max(dh, ch >> 1) : dh;
+  /* 그림이 있는 자리를 한 판으로 옮겨 담고, 그 뒤로는 절반씩 내려온다.
+     한 번에 확 줄이면 결이 거칠어지기 때문이다.
+
+     다만 원본의 절반부터 시작하면 안 된다. 요즘 폰 사진(8064x6048)이면 첫 판이
+     4032x3024, 46MB 짜리다. 읽는 길이 셋이라 그만큼 되풀이되기도 한다.
+     메모리가 빠듯한 폰에서는 이것 때문에 멀쩡한 사진이 안 들어가거나 화면이
+     꺼진다. 그래서 첫 판을 목표 크기의 두 배로 묶는다 — 같은 사진에서 24MB 다.
+     묶어 두면 마지막 걸음이 정확히 절반이라 결도 곱게 남는다. */
+  let cw = Math.min(r.w, dw * 2), ch = Math.min(r.h, dh * 2);
+  let cur = document.createElement('canvas');
+  cur.width = cw; cur.height = ch;
+  cur.getContext('2d').drawImage(src, r.x, r.y, r.w, r.h, 0, 0, cw, ch);
+  while (cw > dw || ch > dh) {
+    const nw = Math.max(dw, cw >> 1), nh = Math.max(dh, ch >> 1);
     const t = document.createElement('canvas'); t.width = nw; t.height = nh;
-    const tx = t.getContext('2d');
-    if (cur) tx.drawImage(cur, 0, 0, nw, nh);
-    else tx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, nw, nh);
+    t.getContext('2d').drawImage(cur, 0, 0, nw, nh);
     cur = t; cw = nw; ch = nh;
-    if (nw === dw && nh === dh) break;
   }
 
   if (drewNothing(cur)) return null;
