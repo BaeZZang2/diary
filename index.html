@@ -3,9 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#15131C">
+<!-- 폰 상단 상태바 색. 어두운 색이면 시계·배터리가 안 보이던 자리라 밝은 바탕으로 둔다.
+     테마를 바꾸면 applyTheme 이 이 값을 그 테마의 바탕색으로 다시 써 준다.
+     manifest 의 theme_color 와 같은 값이어야 한다 — 어긋나면 바탕과 글자 색이 따로 논다. -->
+<meta name="theme-color" content="#F6F7F6">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- black-translucent 는 상태바를 화면 위에 겹치고 글자를 흰색으로 고정한다.
+     밝은 테마에서는 흰 글자가 흰 바탕에 묻혀 시계가 사라진다. default 로 둔다. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="마음결">
 <title>마음결 · 감정일기</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -17,6 +22,8 @@
 <style>
 :root{
   --r:14px; --sp:16px;
+  /* 위에 붙박인 머리글의 높이. 자바스크립트가 실제로 재어 채워 넣는다 */
+  --topH:0px;
   --ui:'NanumSquareAc',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   /* 힘을 주는 자리. 서체를 바꾸지 않고 굵기로만 힘을 준다. */
   --se:'NanumSquareAc',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
@@ -30,6 +37,7 @@
   --bg:#F6F7F6; --surface:#FBFBFB; --raised:#E8EBE8; --line:#D2DAD3;
   --tx:#0E110E; --dim:#3D4D3E; --faint:#637E66;
   --ivory:#278657; --ink:#FFFFFF; --accent2:#74952D; --accent3:#36A174; --accent4:#36A13F;
+  --on2:#0A0A0A; --on3:#0A0A0A; --on4:#0A0A0A;
   --topbg:rgba(246,247,246,.9); --promptgrad:linear-gradient(160deg,#E6EFEB,#EAF0EC);
   --shadow:0 10px 30px rgba(14,17,14,.15); --shadow2:0 8px 24px rgba(14,17,14,.12);
   --joy:#966D1D; --calm:#2D8067; --power:#B8572E; --sad:#4076B5;
@@ -39,6 +47,7 @@
   --bg:#F7F6F6; --surface:#FBFBFB; --raised:#EBE8E8; --line:#DAD3D2;
   --tx:#110E0E; --dim:#4D3E3D; --faint:#7E6563;
   --ivory:#DB2E49; --ink:#FFFFFF; --accent2:#E36D08; --accent3:#389AA8; --accent4:#CF6E82;
+  --on2:#0A0A0A; --on3:#0A0A0A; --on4:#0A0A0A;
   --topbg:rgba(247,246,246,.9); --promptgrad:linear-gradient(160deg,#F8E6E9,#F5EAEC);
   --shadow:0 10px 30px rgba(17,14,14,.15); --shadow2:0 8px 24px rgba(17,14,14,.12);
   --joy:#966D1D; --calm:#2D8067; --power:#B8572E; --sad:#4076B5;
@@ -48,6 +57,7 @@
   --bg:#F6F6F7; --surface:#FBFBFB; --raised:#E8E9EB; --line:#D2D6DA;
   --tx:#0E0F11; --dim:#3D434D; --faint:#636E7E;
   --ivory:#7F61D1; --ink:#FFFFFF; --accent2:#4796C2; --accent3:#3B97B0; --accent4:#3B94B0;
+  --on2:#0A0A0A; --on3:#0A0A0A; --on4:#0A0A0A;
   --topbg:rgba(246,246,247,.9); --promptgrad:linear-gradient(160deg,#EFECF7,#EFEDF5);
   --shadow:0 10px 30px rgba(14,15,17,.15); --shadow2:0 8px 24px rgba(14,15,17,.12);
   --joy:#966D1D; --calm:#2D8067; --power:#B8572E; --sad:#4076B5;
@@ -57,6 +67,7 @@
   --bg:#F7F6F6; --surface:#FBFBFB; --raised:#EBE9E8; --line:#DAD5D2;
   --tx:#110F0E; --dim:#4D423D; --faint:#7E6C63;
   --ivory:#CA4C49; --ink:#FFFFFF; --accent2:#CF7611; --accent3:#6E85CF; --accent4:#CF6E7D;
+  --on2:#0A0A0A; --on3:#0A0A0A; --on4:#0A0A0A;
   --topbg:rgba(247,246,246,.9); --promptgrad:linear-gradient(160deg,#F6EAE9,#F4ECEC);
   --shadow:0 10px 30px rgba(17,15,14,.15); --shadow2:0 8px 24px rgba(17,15,14,.12);
   --joy:#966D1D; --calm:#2D8067; --power:#B8572E; --sad:#4076B5;
@@ -66,6 +77,7 @@
   --bg:#F7F6F6; --surface:#FBFBFB; --raised:#EBE9E8; --line:#DAD6D2;
   --tx:#110F0E; --dim:#4D443D; --faint:#7E7063;
   --ivory:#A86105; --ink:#FFFFFF; --accent2:#709933; --accent3:#DE6A54; --accent4:#7C921B;
+  --on2:#0A0A0A; --on3:#0A0A0A; --on4:#0A0A0A;
   --topbg:rgba(247,246,246,.9); --promptgrad:linear-gradient(160deg,#F3ECE2,#F2EDE8);
   --shadow:0 10px 30px rgba(17,15,14,.15); --shadow2:0 8px 24px rgba(17,15,14,.12);
   --joy:#966D1D; --calm:#2D8067; --power:#B8572E; --sad:#4076B5;
@@ -75,6 +87,7 @@
   --bg:#F7F6F6; --surface:#FBFBFB; --raised:#EBE9E8; --line:#DAD4D2;
   --tx:#110F0E; --dim:#4D423D; --faint:#7E6B63;
   --ivory:#C84187; --ink:#FFFFFF; --accent2:#CF6E7C; --accent3:#938E2F; --accent4:#578FC7;
+  --on2:#0A0A0A; --on3:#0A0A0A; --on4:#0A0A0A;
   --topbg:rgba(247,246,246,.9); --promptgrad:linear-gradient(160deg,#F6E8EF,#F4EBEF);
   --shadow:0 10px 30px rgba(17,15,14,.15); --shadow2:0 8px 24px rgba(17,15,14,.12);
   --joy:#966D1D; --calm:#2D8067; --power:#B8572E; --sad:#4076B5;
@@ -84,6 +97,7 @@
   --bg:#171B16; --surface:#20241E; --raised:#282F25; --line:#394335;
   --tx:#EFF0EF; --dim:#B7C1B4; --faint:#8A9A84;
   --ivory:#62962C; --ink:#0A0A0A; --accent2:#30916F; --accent3:#995733; --accent4:#308591;
+  --on2:#0A0A0A; --on3:#FFFFFF; --on4:#0A0A0A;
   --topbg:rgba(23,27,22,.86); --promptgrad:linear-gradient(160deg,#272F1F,#242B1F);
   --shadow:0 10px 34px rgba(0,0,0,.5); --shadow2:0 8px 26px rgba(0,0,0,.45);
   --joy:#A3771F; --calm:#328F74; --power:#CC6133; --sad:#4A81BF;
@@ -93,6 +107,7 @@
   --bg:#1B1617; --surface:#241E20; --raised:#2F2528; --line:#433539;
   --tx:#F0EFEF; --dim:#C1B4B7; --faint:#9A848A;
   --ivory:#CE5076; --ink:#0A0A0A; --accent2:#B03B4C; --accent3:#308A91; --accent4:#C70F4A;
+  --on2:#FFFFFF; --on3:#0A0A0A; --on4:#FFFFFF;
   --topbg:rgba(27,22,23,.86); --promptgrad:linear-gradient(160deg,#352329,#2E2125);
   --shadow:0 10px 34px rgba(0,0,0,.5); --shadow2:0 8px 26px rgba(0,0,0,.45);
   --joy:#A3771F; --calm:#318C70; --power:#C85F32; --sad:#4A81BF;
@@ -158,6 +173,13 @@ main{padding:0 0 172px}
 .btn-p{background:var(--ivory);color:var(--ink)}
 .btn-g{background:var(--raised);color:var(--dim)}
 .btn-o{border:1px solid var(--line);color:var(--dim)}
+/* 루틴 탭의 버튼 — 기록 화면과 같은 어법이다.
+   더하는 자리는 색을 채우거나 색 테두리를 두르고, 관리하는 자리는 무채색으로 둔다.
+   루틴(반복)과 할 일(하루짜리)은 색을 갈라 둔다 — 루틴은 대표색, 할 일은 --accent2.
+   테마색을 글씨로 쓸 때는 본문색 쪽으로 조금 당겨야 바탕에서 또렷하다 (최저 4.74). */
+.btn-todo{background:var(--accent2);color:var(--on2);font-weight:600}
+.btn-line{border:1px solid color-mix(in srgb, var(--ivory) 42%, var(--line));
+  color:color-mix(in srgb, var(--ivory) 90%, var(--tx));font-weight:600}
 
 /* memory card */
 .memory{margin:14px var(--sp) 0;display:flex;gap:12px;align-items:center;background:var(--surface);
@@ -283,7 +305,7 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .mini{background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px}
 /* 감정 카드 추가 — 줄 추가와 같은 어법. 그 칸의 입력창과 같은 색(--sec)을 진하게 채운다 */
 .addbox{width:100%;border:0;border-radius:14px;padding:13px;
-  background:var(--sec);color:var(--ink);
+  background:var(--sec);color:var(--secink);
   display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;transition:.15s}
 .addbox:active{opacity:.75}
 .addbox svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
@@ -380,7 +402,7 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .gline .gx svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
 /* 줄 추가 — 그 칸의 입력창과 같은 색(--sec)을 진하게 채운다. 글자만큼만 차지한다 */
 .gadd{margin-top:9px;font-size:12.5px;font-weight:600;border-radius:999px;padding:6px 12px;
-  width:fit-content;background:var(--sec);color:var(--ink);
+  width:fit-content;background:var(--sec);color:var(--secink);
   display:inline-flex;align-items:center;gap:5px}
 .gadd:active{opacity:.75}
 .gadd svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2}
@@ -479,7 +501,13 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 
 /* ---------- 루틴 목록 ---------- */
 /* ---------- 루틴 탭의 주간 날짜 바 ---------- */
-.wkbar{display:flex;align-items:center;gap:4px;margin:14px var(--sp) 0}
+/* 스크롤을 내려도 어느 날을 보고 있는지 늘 보이도록 머리글 바로 아래에 붙여 둔다.
+   머리글 높이(--topH)는 검색창을 열고 닫으면 달라지므로 자바스크립트가 재어 넣는다.
+   좌우 여백 대신 안쪽 여백을 써야 붙었을 때 뒤 내용이 옆으로 비쳐 보이지 않는다. */
+.wkbar{position:sticky;top:var(--topH);z-index:30;
+  display:flex;align-items:center;gap:4px;padding:10px var(--sp);
+  background:var(--topbg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line)}
 .wkbar .nav{flex:none;width:26px;height:46px;border-radius:9px;display:grid;place-items:center;color:var(--faint)}
 .wkbar .nav svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
 .wkdays{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
@@ -499,8 +527,10 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 목록 머리: 왼쪽 이름표 + 오른쪽 정렬 단추 */
 .rbar{display:flex;align-items:center;gap:8px;margin:22px var(--sp) 10px}
 .rbar .lb{font-size:10.5px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
-.rbar .sortbtn{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim);
-  border:1px solid var(--line);border-radius:999px;padding:5px 11px;white-space:nowrap}
+.rbar .sortbtn{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;
+  color:color-mix(in srgb, var(--ivory) 90%, var(--tx));
+  border:1px solid color-mix(in srgb, var(--ivory) 35%, var(--line));
+  border-radius:999px;padding:5px 11px;white-space:nowrap}
 .rbar .sortbtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex:none}
 .rlist{margin:0 var(--sp)}
 /* 루틴 이름 앞에 붙는 시간대 칸 */
@@ -552,13 +582,15 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
    그 색이 점점 진해진다. 한 섹션 안에서는 제목·박스·입력칸이 모두 같은 색을
    나눠 쓰므로, 어디까지가 한 덩어리인지 눈으로 바로 갈린다.
    쓸 때와 읽을 때가 같은 색이라야 같은 기록으로 보이므로 두 화면이 함께 쓴다.
-   --sec 을 정하지 않은 칸은 대표색을 따라가므로 다른 화면은 영향받지 않는다. */
+   --sec 을 정하지 않은 칸은 대표색을 따라가므로 다른 화면은 영향받지 않는다.
+   --secink 은 그 색을 꽉 채운 위에 얹을 글씨 색이다. 색마다 밝기가 달라서
+   흰 글씨가 맞는 색이 있고 검은 글씨라야 읽히는 색이 있다 — 테마마다 미리 정해 뒀다. */
 /* 섹션 밖(확언 카드 등)에서도 --sec 이 비어 있지 않도록 대표색을 기본값으로 깔아둔다 */
-.editor,.detail{--sec:var(--ivory)}
-.editor .field,.detail .field{--sec:var(--ivory)}
-.editor .sec-photo,.editor .sec-story,.detail .sec-photo,.detail .sec-story{--sec:var(--accent2)}
-.editor .sec-grat,.detail .sec-grat{--sec:var(--accent3)}
-.editor .sec-card,.editor .sec-tags,.detail .sec-card,.detail .sec-tags{--sec:var(--accent4)}
+.editor,.detail{--sec:var(--ivory);--secink:var(--ink)}
+.editor .field,.detail .field{--sec:var(--ivory);--secink:var(--ink)}
+.editor .sec-photo,.editor .sec-story,.detail .sec-photo,.detail .sec-story{--sec:var(--accent2);--secink:var(--on2)}
+.editor .sec-grat,.detail .sec-grat{--sec:var(--accent3);--secink:var(--on3)}
+.editor .sec-card,.editor .sec-tags,.detail .sec-card,.detail .sec-tags{--sec:var(--accent4);--secink:var(--on4)}
 .editor .label,.detail .label{color:color-mix(in srgb, var(--sec) 62%, var(--tx))}
 .editor .box,.detail .box{background:color-mix(in srgb, var(--sec) 8%, var(--surface))}
 .editor .box textarea,.editor .box input{
@@ -599,9 +631,11 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .ritem.doing .ck{background:var(--joy);border-color:var(--joy);color:var(--ink)}
 .ritem.doing .ck svg{fill:currentColor;stroke:none}
 .ritem.doing .nm{color:var(--dim)}
-.addtodo{width:100%;margin-top:2px;border:1px dashed var(--line);border-radius:12px;padding:12px;
-  color:var(--dim);font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:7px}
-.addtodo:active{background:var(--surface)}
+/* 할 일 더하기 — 이 화면에서 가장 자주 누르는 '더하는' 자리라 색을 채운다 */
+.addtodo{width:100%;margin-top:2px;border:0;border-radius:12px;padding:13px;
+  background:var(--accent2);color:var(--on2);font-size:13.5px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s}
+.addtodo:active{opacity:.75}
 .addtodo svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2}
 .tdrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
 .tdrow .tn{flex:1;min-width:0;font-size:14px}
@@ -1407,7 +1441,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v65 · 2026-09-04';
+const APP_VERSION = 'v75 · 2026-09-18';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1423,7 +1457,11 @@ const S = {
 };
 
 /* ---------- 유틸 ---------- */
+/* 안내 쪽지. 자리가 하나뿐이라 먼저 있던 것을 치우고 새로 띄운다 —
+   겹쳐 놓으면 두 글이 같은 자리에 포개져 둘 다 읽을 수 없게 된다.
+   ('사진을 정리하는 중…' 위에 그 결과 안내가 뜨는 경우가 그렇다) */
 function toast(msg) {
+  document.querySelectorAll('.toast').forEach(o => o.remove());
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2000);
 }
@@ -1449,9 +1487,24 @@ function applyTheme(id) {
   const t = THEMES.find(x => x.id === id) || THEMES[0];
   document.documentElement.setAttribute('data-theme', t.id);
   _colorCache = {};
+  /* 폰 상단 상태바 색. 이 값과 manifest 의 theme_color 가 어긋나면
+     바탕은 어두운데 시계·배터리 글자는 어두운 쪽으로 칠해져 안 보이게 된다.
+     그래서 기본값도 manifest 와 같은 밝은 색으로 둔다. */
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content',
-    getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#15131C');
+    getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#F6F7F6');
+}
+
+/* 붙박인 머리글의 높이를 재어 --topH 에 넣는다.
+   루틴 탭의 날짜 바가 이 값만큼 내려와 머리글 바로 아래에 붙는다.
+   검색창을 열고 닫으면 머리글 높이가 달라지므로 계속 지켜본다. */
+function watchHeaderHeight() {
+  const el = document.querySelector('header.top');
+  if (!el) return;
+  const set = () => document.documentElement.style.setProperty('--topH', el.offsetHeight + 'px');
+  set();
+  if (window.ResizeObserver) new ResizeObserver(set).observe(el);
+  else window.addEventListener('resize', set);
 }
 const dateShort = s => {
   const d = new Date(s + 'T00:00:00');
@@ -1466,23 +1519,150 @@ function extractTags(text) {
 }
 
 /* ---------- 이미지 압축 ---------- */
-async function shrink(file, max, quality) {
-  let bmp = null;
-  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
-  catch (e) {
-    bmp = await new Promise((res, rej) => {
-      const i = new Image(), u = URL.createObjectURL(file);
-      i.onload = () => { URL.revokeObjectURL(u); res(i); }; i.onerror = rej; i.src = u;
-    });
-  }
-  const w = bmp.width, h = bmp.height, s = Math.min(1, max / Math.max(w, h));
-  const c = document.createElement('canvas');
-  c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+/* 사진을 읽는 세 가지 길. 앞의 것이 실패하거나 끝까지 읽히지 않으면 다음 것을 쓴다.
+   기기에 따라 파일을 흘려보내며 읽다가 중간에 끊기는 일이 있어서, 두 번째 길은
+   파일을 통째로 메모리에 받아 둔 뒤 다시 읽는다. */
+const PHOTO_READERS = [
+  f => createImageBitmap(f, { imageOrientation: 'from-image' }),
+  async f => createImageBitmap(new Blob([await f.arrayBuffer()], { type: f.type || 'image/jpeg' }),
+    { imageOrientation: 'from-image' }),
+  loadImgEl,
+];
+
+/* <img> 로 읽는 길. onload 만으로는 그림이 다 준비되지 않은 채로 넘어올 수 있어
+   decode() 를 기다린다. 주소는 다 쓰고 나서 거둔다. */
+async function loadImgEl(file) {
+  const i = new Image();
+  i._u = URL.createObjectURL(file);
+  i.src = i._u;
+  try { await i.decode(); }
+  catch (e) { URL.revokeObjectURL(i._u); throw new Error('사진을 읽지 못했어요'); }
+  return i;
+}
+
+/* 그림이 통째로 비었는지 본다. 아주 큰 사진은 브라우저가 그리다 포기하고
+   빈 캔버스를 내놓을 때가 있는데, 그대로 저장하면 까만 사진이 된다.
+
+   점 몇 개만 찍어 보거나 작게 줄여서 보면 안 된다. 가는 선이나 글씨만 있는
+   그림은 점 사이로 빠져나가고, 줄이는 과정에서는 선 자체가 사라지기도 한다.
+   그러면 멀쩡한 그림을 '못 읽었다' 고 내치게 된다. 줄이지 않고 훑는다. */
+function drewNothing(canvas) {
+  const ctx = canvas.getContext('2d');
+  const hasInk = (y, h) => {
+    let d;
+    try { d = ctx.getImageData(0, y, canvas.width, h).data; }
+    catch (e) { return true; }                  /* 읽을 수 없으면 그려진 것으로 본다 */
+    for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) return true;
+    return false;
+  };
+  /* 보통 사진은 첫 줄부터 꽉 차 있어 여기서 끝난다 (한 줄만 읽으면 되니 거의 공짜).
+     첫 줄이 비어 있을 때만 전부 훑는다 — 1440 크기에서 십여 밀리초다. */
+  if (hasInk(0, 1)) return false;
+  return !hasInk(0, canvas.height);
+}
+
+/* 사진에서 그림이 실제로 있는 자리를 찾는다.
+   사진을 잘라 놓고 저장하면, 잘라낸 자리를 비운 채 원본 크기를 그대로 들고
+   있는 편집기가 있다. 그런 파일을 그냥 넣으면 잘린 대로 들어가지 않고
+   빈 테두리까지 함께 들어온다 — 그 빈 자리가 까맣게 보이던 것이다.
+   그림이 있는 네모만 골라내서, 그 안쪽만 저장한다.
+   작게 줄인 미리보기에서 재기 때문에 한 칸씩 바깥으로 넉넉히 잡는다. */
+function contentRect(src, w, h) {
+  /* 미리보기를 너무 작게 잡으면 한 칸이 원본 열 몇 줄을 뭉쳐서, 잘라낸 자리가
+     몇 픽셀 남는다. 1024 면 그 오차가 한 픽셀 안쪽이라 눈에 띄지 않는다. */
+  const P = 1024, s = Math.min(1, P / Math.max(w, h));
+  const pw = Math.max(1, Math.round(w * s)), ph = Math.max(1, Math.round(h * s));
+  const c = document.createElement('canvas'); c.width = pw; c.height = ph;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#1E1B27'; ctx.fillRect(0, 0, c.width, c.height);
-  ctx.drawImage(bmp, 0, 0, c.width, c.height);
-  if (bmp.close) bmp.close();
-  return c.toDataURL('image/jpeg', quality);
+  ctx.drawImage(src, 0, 0, pw, ph);
+  let d;
+  try { d = ctx.getImageData(0, 0, pw, ph).data; } catch (e) { return { x: 0, y: 0, w, h }; }
+  let x0 = pw, y0 = ph, x1 = -1, y1 = -1;
+  for (let y = 0; y < ph; y++) for (let x = 0; x < pw; x++) {
+    if (d[(y * pw + x) * 4 + 3] > 8) {
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+  }
+  if (x1 < 0) return null;                       /* 아무것도 안 그려졌다 */
+  /* 미리보기 한 칸에는 원본 여러 줄이 섞여 들어가므로, 그림이 조금이라도
+     닿은 칸은 이미 잡혀 있다. 더 넓히면 빈 테두리를 다시 들여오게 된다. */
+  const r = {
+    x: Math.floor(x0 / pw * w), y: Math.floor(y0 / ph * h),
+    w: Math.ceil((x1 - x0 + 1) / pw * w), h: Math.ceil((y1 - y0 + 1) / ph * h)
+  };
+  r.w = Math.min(w - r.x, r.w); r.h = Math.min(h - r.y, r.h);
+  /* 빈 테두리가 거의 없으면 손대지 않는다 — 멀쩡한 사진을 건드릴 이유가 없다 */
+  if (r.w >= w * .99 && r.h >= h * .99) return { x: 0, y: 0, w, h };
+  return r;
+}
+
+function renderShrunk(src, max) {
+  const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
+  if (!w || !h) return null;
+  const r = contentRect(src, w, h);
+  if (!r) return null;
+  const s = Math.min(1, max / Math.max(r.w, r.h));
+  const dw = Math.max(1, Math.round(r.w * s)), dh = Math.max(1, Math.round(r.h * s));
+
+  /* 그림이 있는 자리를 한 판으로 옮겨 담고, 그 뒤로는 절반씩 내려온다.
+     한 번에 확 줄이면 결이 거칠어지기 때문이다.
+
+     다만 원본의 절반부터 시작하면 안 된다. 요즘 폰 사진(8064x6048)이면 첫 판이
+     4032x3024, 46MB 짜리다. 읽는 길이 셋이라 그만큼 되풀이되기도 한다.
+     메모리가 빠듯한 폰에서는 이것 때문에 멀쩡한 사진이 안 들어가거나 화면이
+     꺼진다. 그래서 첫 판을 목표 크기의 두 배로 묶는다 — 같은 사진에서 24MB 다.
+     묶어 두면 마지막 걸음이 정확히 절반이라 결도 곱게 남는다. */
+  let cw = Math.min(r.w, dw * 2), ch = Math.min(r.h, dh * 2);
+  let cur = document.createElement('canvas');
+  cur.width = cw; cur.height = ch;
+  cur.getContext('2d').drawImage(src, r.x, r.y, r.w, r.h, 0, 0, cw, ch);
+  while (cw > dw || ch > dh) {
+    const nw = Math.max(dw, cw >> 1), nh = Math.max(dh, ch >> 1);
+    const t = document.createElement('canvas'); t.width = nw; t.height = nh;
+    t.getContext('2d').drawImage(cur, 0, 0, nw, nh);
+    cur = t; cw = nw; ch = nh;
+  }
+
+  if (drewNothing(cur)) return null;
+
+  /* 잘린 네모 안에도 비치는 자리가 남아 있으면 (돌려서 자른 모서리 등)
+     흰색으로 받친다. JPEG 에는 '비침' 이 없어서 받쳐 두지 않으면 까맣게 굳는다. */
+  const ctx = cur.getContext('2d');
+  ctx.globalCompositeOperation = 'destination-over';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, dw, dh);
+
+  /* 그림이 맨 위에서 시작해 가로는 꽉 차는데 아래만 없다 — 이건 잘라 저장한
+     사진이 아니라 '읽다 만 사진' 이다. 잘라 저장한 사진은 사방에 빈자리가 남는다.
+     읽다 만 것을 그대로 저장하면 사진의 아래쪽이 통째로 사라진다.
+     read 는 원본에서 실제로 읽힌 넓이다 — 어느 길이 더 많이 읽었는지 견줄 때 쓴다.
+     줄인 뒤의 크기로 견주면 둘 다 최대 크기에 걸려 같아져 버린다. */
+  const cut = r.x === 0 && r.y === 0 && r.w >= w * .99 && r.h < h * .97;
+  return { canvas: cur, cut, read: r.w * r.h };
+}
+
+/* 사진 한 장을 여러 크기로 한꺼번에 줄인다. sizes 는 [{max, q}, ...].
+   크기마다 따로 읽지 않는 것이 중요하다 — 따로 읽으면 한 번은 끝까지 읽히고
+   한 번은 끊겨서, 큰 사진은 멀쩡한데 목록의 작은 사진만 잘리는 일이 생긴다. */
+async function shrink(file, sizes) {
+  let err = null, best = null;
+  const encode = outs => outs.map((o, i) => o.canvas.toDataURL('image/jpeg', sizes[i].q));
+  for (const read of PHOTO_READERS) {
+    let src = null;
+    try { src = await read(file); } catch (e) { err = e; continue; }
+    let outs = null, drawErr = null;
+    /* 그리다 튕겨도 여기서 멈추지 않는다 — 남은 길을 마저 가 봐야 한다 */
+    try { outs = sizes.map(s => renderShrunk(src, s.max)); }
+    catch (e) { drawErr = e; outs = null; }
+    finally { if (src.close) src.close(); if (src._u) URL.revokeObjectURL(src._u); }
+    if (!outs || outs.some(o => !o)) { err = drawErr || new Error('사진을 그리지 못했어요'); continue; }
+    if (!outs.some(o => o.cut)) return { urls: encode(outs), cut: false };
+    /* 끝까지 읽힌 게 나올 때까지 다음 길로. 다 끊기면 그중 가장 많이 읽은 것을 쓴다 */
+    if (!best || outs[0].read > best[0].read) best = outs;
+  }
+  if (best) return { urls: encode(best), cut: true };
+  throw err || new Error('사진을 읽지 못했어요');
 }
 
 /* ---------- 데이터 I/O ---------- */
@@ -1853,9 +2033,9 @@ function renderRoutine() {
       <div class="empty"><b>${isToday ? '아직 루틴이 없어요' : '이 날은 아직 비어 있어요'}</b>
         ${isToday ? '매일 지키고 싶은 것 하나부터 적어보세요.' : '할 일을 미리 담아둘 수 있어요.'}</div>
       <div class="section" style="display:flex;flex-direction:column;gap:9px">
-        <button class="btn btn-p" data-addtodo style="width:100%">${esc(dateLabel(date))}에 할 일 담기</button>
-        <button class="btn btn-o" data-preset style="width:100%">보기에서 골라 담기</button>
-        <button class="btn btn-o" data-new style="width:100%">루틴 직접 만들기</button>
+        <button class="btn btn-todo" data-addtodo style="width:100%">${esc(dateLabel(date))}에 할 일 담기</button>
+        <button class="btn btn-line" data-preset style="width:100%">보기에서 골라 담기</button>
+        <button class="btn btn-line" data-new style="width:100%">루틴 직접 만들기</button>
       </div>`;
     bindWeekBar(host);
     host.querySelector('[data-addtodo]').onclick = () => openTodoAdder(date);
@@ -1867,13 +2047,10 @@ function renderRoutine() {
 
   const L = lightOf(p.rate);
   const pctTxt = p.rate < 0 ? '—' : Math.round(p.rate * 100);
-  /* 아직 오지 않은 날은 달성률이 0으로 찍혀 빨간불이 되니, 신호등을 접어 둔다 */
-  let html = weekBar + (future ? `
-    <div class="light">
-      <div class="lh"><span class="lab">미리 보기</span></div>
-      <div class="msg" style="margin-top:8px">${dateLabel(date)} · 아직 오지 않은 날이에요.
-        ${p.total ? `예정된 루틴과 할 일 ${p.target}개` : '예정된 것이 없어요'}${p.todos.length ? ` (할 일 ${p.todos.length})` : ''}</div>
-    </div>` : `
+  /* 아직 오지 않은 날에는 신호등을 아예 두지 않는다. 달성률이 0 으로 찍혀
+     빨간불이 될 자리이기도 하고, 어느 날을 보고 있는지는 위의 날짜 바와
+     아래 목록 머리글이 이미 말해 준다. */
+  let html = weekBar + (future ? '' : `
     <div class="light">
       <div class="lh">
         <span class="lamp">${[0, 1, 2].map(i => {
@@ -1928,7 +2105,7 @@ function renderRoutine() {
     </div>
     <div class="section" style="margin-top:22px;display:flex;flex-direction:column;gap:9px">
       <button class="btn btn-o" data-manage style="width:100%">루틴 관리</button>
-      <button class="btn btn-g" data-preset2 style="width:100%">보기에서 더 담기</button>
+      <button class="btn btn-line" data-preset2 style="width:100%">보기에서 더 담기</button>
     </div>`;
 
   host.innerHTML = html;
@@ -3106,16 +3283,24 @@ async function openEditor(id, opts = {}) {
     const files = [...e.target.files].slice(0, 10); e.target.value = '';
     if (!files.length) return;
     toast('사진을 정리하는 중…');
+    let cut = 0, failed = 0;
     for (const f of files) {
       try {
-        const data = await shrink(f, 1440, .72);
-        const thumb = await shrink(f, 360, .6);
+        /* 큰 사진과 목록용 작은 사진을 한 번에 받는다 — 따로 읽으면 둘이 어긋난다 */
+        const { urls: [data, thumb], cut: wasCut } = await shrink(f, [{ max: 1440, q: .72 }, { max: 360, q: .6 }]);
+        if (wasCut) cut++;
         const p = { id: uid(), data, thumb };
         entry.photos.push(p);
         if (!entry.cover) entry.cover = p.id;
-      } catch (err) { toast('불러오지 못한 사진이 있어요'); }
+      } catch (err) { failed++; }
     }
     paintPhotos();
+    /* 끝까지 읽히지 않은 사진은 아래쪽이 잘린 채로 들어간다. 조용히 두면
+       나중에 잘린 사진을 보고서야 알게 되므로, 그 자리에서 알려 준다.
+       한 번에 여러 장을 넣다가 둘 다 생길 수 있으니 한쪽만 말하지 않는다. */
+    if (failed && cut) toast('일부는 못 불러왔고, 일부는 끝까지 읽히지 않았어요');
+    else if (failed) toast('불러오지 못한 사진이 있어요');
+    else if (cut) toast('사진이 끝까지 읽히지 않았어요. 다시 넣어 보세요');
   };
   paintPhotos();
 
@@ -4122,6 +4307,7 @@ $('#btnClearQ').onclick = () => { $('#q').value = ''; S.query = ''; S.tag = ''; 
   }
   try { localStorage.removeItem('md:backlog'); } catch (e) { }   /* 예전 진단 기록 정리 */
   applyTheme(S.settings.theme);
+  watchHeaderHeight();
   const start = () => { renderHome(); updateTabBadge(); maybeRemind(); };
   if (S.settings.pin) lockScreen(start); else start();
   /* 뒤로 가기 보호는 화면을 처음 만졌을 때 걸린다 (pushGuard 참고) */
