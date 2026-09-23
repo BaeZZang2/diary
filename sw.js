@@ -1,5 +1,5 @@
 /* 마음결 서비스 워커 — 오프라인 실행용 */
-const CACHE = 'maeumgyeol-v75';
+const CACHE = 'maeumgyeol-v76';
 /* 앱 화면은 반드시 제대로 받아야 하는 것. 아이콘·설치 정보는 없어도 앱은 돈다. */
 const MUST = ['./', './index.html'];
 const NICE = ['./manifest.webmanifest', './icon-192.png', './icon-512.png'];

@@ -202,8 +202,17 @@ main{padding:0 0 172px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
 .tile{position:relative;aspect-ratio:1;overflow:hidden;background:var(--surface);display:block}
 .tile img{width:100%;height:100%;object-fit:cover;display:block}
-.tile .txt{padding:9px;font-size:11px;line-height:1.5;color:var(--dim);height:100%;overflow:hidden;
-  display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
+/* 사진이 없는 기록의 대표 그림 — 그 달의 날들을 점으로 깔고 그날만 불을 켠다.
+   글이 있으면 그 위에 얹히므로, 점은 글을 방해하지 않을 만큼만 옅게 둔다. */
+.tile .cal{position:absolute;inset:0;width:100%;height:100%;display:block;
+  background:color-mix(in srgb, var(--ivory) 7%, var(--surface))}
+.tile .cal path{fill:color-mix(in srgb, var(--ivory) 20%, transparent)}
+.tile .cal circle.on{fill:var(--ivory)}
+/* 글이 있으면 달력 위에 얹힌다. 그대로 두면 점과 글자가 서로 갉아먹으므로
+   옅은 막을 한 겹 깔아 글을 앞세운다 — 점은 뒤에서 비치는 정도로 남는다. */
+.tile .txt{position:relative;padding:9px;font-size:11px;line-height:1.5;color:var(--dim);height:100%;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;
+  background:color-mix(in srgb, var(--surface) 74%, transparent)}
 .tile .d{position:absolute;left:6px;top:6px;font-size:10px;padding:2px 5px;border-radius:5px;
   background:rgba(0,0,0,.5);backdrop-filter:blur(4px);color:#fff;font-family:var(--mo)}
 .tile .multi{position:absolute;right:6px;top:6px;width:15px;height:15px;opacity:.9}
@@ -1441,7 +1450,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v75 · 2026-09-18';
+const APP_VERSION = 'v76 · 2026-09-23';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1845,6 +1854,32 @@ function filtered() {
   });
 }
 
+/* 사진이 없는 기록의 대표 그림.
+   그 달의 날들을 달력 모양 그대로 점으로 놓고, 그날 하나만 불을 켠다.
+   1일이 무슨 요일이냐에 따라 첫 줄이 들쑥날쑥해져서 달마다 생김새가 다르고,
+   목록에서 '이 달 어디쯤이었지' 가 눈에 들어온다.
+   날짜만 있으면 늘 같은 그림이 나오므로 따로 만들어 저장해 둘 것이 없다. */
+function calCoverHTML(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const days = new Date(y, m, 0).getDate();        /* 그 달의 마지막 날 */
+  const first = new Date(y, m - 1, 1).getDay();    /* 1일의 요일 (0=일) */
+  const rows = Math.ceil((first + days) / 7);
+  const cw = 15, ch = Math.min(15, 92 / rows);
+  const x0 = 64 - cw * 3, y0 = 64 - ch * (rows - 1) / 2;
+  /* 점 서른 개를 각각 동그라미로 두면 기록이 쌓였을 때 화면에 조각이 만 개씩
+     생긴다. 한 붓으로 이어 그린 길(path) 하나에 모두 담고, 불 켜진 날만 따로 둔다. */
+  let path = '', on = '';
+  for (let n = 1; n <= days; n++) {
+    const i = first + n - 1;
+    const cx = +(x0 + (i % 7) * cw).toFixed(1);
+    const cy = +(y0 + Math.floor(i / 7) * ch).toFixed(1);
+    if (n === d) { on = `<circle class="on" cx="${cx}" cy="${cy}" r="3.6"/>`; continue; }
+    const r = 1.9;
+    path += `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0`;
+  }
+  return `<svg class="cal" viewBox="0 0 128 128" aria-hidden="true"><path d="${path}"/>${on}</svg>`;
+}
+
 function renderFeed() {
   const list = filtered(); const feed = $('#feed');
   if (!list.length) {
@@ -1865,7 +1900,7 @@ function renderFeed() {
     const bar = (m.fams || []).map(f => `<i style="background:${famColor(f)}"></i>`).join('');
     html += `<button class="tile" data-id="${m.id}">
       ${th ? `<img loading="lazy" src="${th}" alt="">`
-        : `<div class="txt" style="background:${gradOf(m.fams)}">${esc(m.preview) || '<span style="opacity:.5">기록</span>'}</div>`}
+        : calCoverHTML(m.date) + (m.preview ? `<div class="txt">${esc(m.preview)}</div>` : '')}
       <span class="d">${+m.date.slice(5, 7)}.${m.date.slice(8)}</span>
       ${m.photos > 1 ? `<svg class="multi" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="8" y="3" width="13" height="13" rx="2"/><path d="M4 8v11a2 2 0 002 2h11"/></svg>` : ''}
       ${bar ? `<span class="bar">${bar}</span>` : ''}
