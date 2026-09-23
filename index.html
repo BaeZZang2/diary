@@ -203,16 +203,12 @@ main{padding:0 0 172px}
 .tile{position:relative;aspect-ratio:1;overflow:hidden;background:var(--surface);display:block}
 .tile img{width:100%;height:100%;object-fit:cover;display:block}
 /* 사진이 없는 기록의 대표 그림 — 그 달의 날들을 점으로 깔고 그날만 불을 켠다.
-   글이 있으면 그 위에 얹히므로, 점은 글을 방해하지 않을 만큼만 옅게 둔다. */
+   글 앞부분을 얹어 보기도 했는데, 긴 글이 칸을 가득 메워 목록이 시끄러워졌다.
+   그림만 두고 글은 열어서 읽는다. */
 .tile .cal{position:absolute;inset:0;width:100%;height:100%;display:block;
   background:color-mix(in srgb, var(--ivory) 7%, var(--surface))}
 .tile .cal path{fill:color-mix(in srgb, var(--ivory) 20%, transparent)}
 .tile .cal circle.on{fill:var(--ivory)}
-/* 글이 있으면 달력 위에 얹힌다. 그대로 두면 점과 글자가 서로 갉아먹으므로
-   옅은 막을 한 겹 깔아 글을 앞세운다 — 점은 뒤에서 비치는 정도로 남는다. */
-.tile .txt{position:relative;padding:9px;font-size:11px;line-height:1.5;color:var(--dim);height:100%;
-  overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;
-  background:color-mix(in srgb, var(--surface) 74%, transparent)}
 .tile .d{position:absolute;left:6px;top:6px;font-size:10px;padding:2px 5px;border-radius:5px;
   background:rgba(0,0,0,.5);backdrop-filter:blur(4px);color:#fff;font-family:var(--mo)}
 .tile .multi{position:absolute;right:6px;top:6px;width:15px;height:15px;opacity:.9}
@@ -1450,7 +1446,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v76 · 2026-09-23';
+const APP_VERSION = 'v77 · 2026-09-23';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1899,8 +1895,7 @@ function renderFeed() {
     const th = (S.thumbs[ym] || {})[m.id];
     const bar = (m.fams || []).map(f => `<i style="background:${famColor(f)}"></i>`).join('');
     html += `<button class="tile" data-id="${m.id}">
-      ${th ? `<img loading="lazy" src="${th}" alt="">`
-        : calCoverHTML(m.date) + (m.preview ? `<div class="txt">${esc(m.preview)}</div>` : '')}
+      ${th ? `<img loading="lazy" src="${th}" alt="">` : calCoverHTML(m.date)}
       <span class="d">${+m.date.slice(5, 7)}.${m.date.slice(8)}</span>
       ${m.photos > 1 ? `<svg class="multi" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="8" y="3" width="13" height="13" rx="2"/><path d="M4 8v11a2 2 0 002 2h11"/></svg>` : ''}
       ${bar ? `<span class="bar">${bar}</span>` : ''}
