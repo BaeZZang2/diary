@@ -509,10 +509,18 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 스크롤을 내려도 어느 날을 보고 있는지 늘 보이도록 머리글 바로 아래에 붙여 둔다.
    머리글 높이(--topH)는 검색창을 열고 닫으면 달라지므로 자바스크립트가 재어 넣는다.
    좌우 여백 대신 안쪽 여백을 써야 붙었을 때 뒤 내용이 옆으로 비쳐 보이지 않는다. */
-.wkbar{position:sticky;top:var(--topH);z-index:30;
-  display:flex;align-items:center;gap:4px;padding:10px var(--sp);
+/* 날짜 바와 신호등을 한 덩어리로 묶어 머리글 바로 아래에 붙박는다.
+   스크롤을 내려도 '어느 날을 보고 있고 얼마나 했는지' 가 늘 보인다.
+   따로따로 붙이면 둘 사이가 벌어졌다 붙었다 해서 어지러우므로 한 덩어리로 둔다. */
+.rtop{position:sticky;top:var(--topH);z-index:30;
   background:var(--topbg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--line)}
+  border-bottom:1px solid var(--line);padding-bottom:11px}
+/* 붙박이 안에서는 조금 눕혀 둔다 — 늘 자리를 차지하므로 목록 몫을 남겨야 한다 */
+.rtop .light{margin:0 var(--sp);padding:12px 15px}
+.rtop .light .pct{font-size:21px}
+.rtop .light .tr{margin-top:10px}
+.rtop .light .msg{margin-top:8px}
+.wkbar{display:flex;align-items:center;gap:4px;padding:10px var(--sp)}
 .wkbar .nav{flex:none;width:26px;height:46px;border-radius:9px;display:grid;place-items:center;color:var(--faint)}
 .wkbar .nav svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
 .wkdays{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
@@ -1446,7 +1454,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v77 · 2026-09-23';
+const APP_VERSION = 'v78 · 2026-09-24';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -2059,7 +2067,7 @@ function renderRoutine() {
   const weekBar = weekBarHTML(date, today);
 
   if (!S.routines.filter(r => r.active !== false).length && !p.todos.length) {
-    host.innerHTML = weekBar + `
+    host.innerHTML = `<div class="rtop">${weekBar}</div>` + `
       <div class="empty"><b>${isToday ? '아직 루틴이 없어요' : '이 날은 아직 비어 있어요'}</b>
         ${isToday ? '매일 지키고 싶은 것 하나부터 적어보세요.' : '할 일을 미리 담아둘 수 있어요.'}</div>
       <div class="section" style="display:flex;flex-direction:column;gap:9px">
@@ -2080,7 +2088,7 @@ function renderRoutine() {
   /* 아직 오지 않은 날에는 신호등을 아예 두지 않는다. 달성률이 0 으로 찍혀
      빨간불이 될 자리이기도 하고, 어느 날을 보고 있는지는 위의 날짜 바와
      아래 목록 머리글이 이미 말해 준다. */
-  let html = weekBar + (future ? '' : `
+  let html = `<div class="rtop">` + weekBar + (future ? '' : `
     <div class="light">
       <div class="lh">
         <span class="lamp">${[0, 1, 2].map(i => {
@@ -2092,7 +2100,7 @@ function renderRoutine() {
       </div>
       <div class="tr"><span class="fl" style="width:${p.rate < 0 ? 0 : p.rate * 100}%;background:${L.color}"></span></div>
       <div class="msg">${dateLabel(date)} · ${L.msg}${p.total ? ` (${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''})` : ''}</div>
-    </div>`);
+    </div>`) + `</div>`;
 
   if (p.total) {
     const sort = SORTS.find(s => s.id === (S.settings.rsort || 'slot')) || SORTS[0];
