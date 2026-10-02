@@ -203,12 +203,14 @@ main{padding:0 0 172px}
 .tile{position:relative;aspect-ratio:1;overflow:hidden;background:var(--surface);display:block}
 .tile img{width:100%;height:100%;object-fit:cover;display:block}
 /* 사진이 없는 기록의 대표 그림 — 그 달의 날들을 점으로 깔고 그날만 불을 켠다.
+   클래스를 .cal 로 두면 돌아보기 화면의 달력(.cal, margin-top:12px)이 같이 걸려
+   그림이 12px 아래로 밀리고 밑이 잘린다. 겹치지 않는 이름을 쓴다.
    글 앞부분을 얹어 보기도 했는데, 긴 글이 칸을 가득 메워 목록이 시끄러워졌다.
    그림만 두고 글은 열어서 읽는다. */
-.tile .cal{position:absolute;inset:0;width:100%;height:100%;display:block;
+.tile .calcover{position:absolute;inset:0;width:100%;height:100%;display:block;
   background:color-mix(in srgb, var(--ivory) 7%, var(--surface))}
-.tile .cal path{fill:color-mix(in srgb, var(--ivory) 20%, transparent)}
-.tile .cal circle.on{fill:var(--ivory)}
+.tile .calcover path{fill:color-mix(in srgb, var(--ivory) 20%, transparent)}
+.tile .calcover circle.on{fill:var(--ivory)}
 .tile .d{position:absolute;left:6px;top:6px;font-size:10px;padding:2px 5px;border-radius:5px;
   background:rgba(0,0,0,.5);backdrop-filter:blur(4px);color:#fff;font-family:var(--mo)}
 .tile .multi{position:absolute;right:6px;top:6px;width:15px;height:15px;opacity:.9}
@@ -1483,7 +1485,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v80 · 2026-10-02';
+const APP_VERSION = 'v81 · 2026-10-02';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -1913,7 +1915,7 @@ function calCoverHTML(dateStr) {
     const r = 1.9;
     path += `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0`;
   }
-  return `<svg class="cal" viewBox="0 0 128 128" aria-hidden="true"><path d="${path}"/>${on}</svg>`;
+  return `<svg class="calcover" viewBox="0 0 128 128" aria-hidden="true"><path d="${path}"/>${on}</svg>`;
 }
 
 function renderFeed() {
