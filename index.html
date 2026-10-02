@@ -22,8 +22,8 @@
 <style>
 :root{
   --r:14px; --sp:16px;
-  /* 위에 붙박인 머리글의 높이. 자바스크립트가 실제로 재어 채워 넣는다 */
-  --topH:0px;
+  /* 위에 붙박인 머리글과 루틴 탭 날짜 바의 높이. 자바스크립트가 실제로 재어 채워 넣는다 */
+  --topH:0px; --rtopH:68px;
   --ui:'NanumSquareAc',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   /* 힘을 주는 자리. 서체를 바꾸지 않고 굵기로만 힘을 준다. */
   --se:'NanumSquareAc',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
@@ -509,17 +509,38 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 /* 스크롤을 내려도 어느 날을 보고 있는지 늘 보이도록 머리글 바로 아래에 붙여 둔다.
    머리글 높이(--topH)는 검색창을 열고 닫으면 달라지므로 자바스크립트가 재어 넣는다.
    좌우 여백 대신 안쪽 여백을 써야 붙었을 때 뒤 내용이 옆으로 비쳐 보이지 않는다. */
-/* 날짜 바와 신호등을 한 덩어리로 묶어 머리글 바로 아래에 붙박는다.
-   스크롤을 내려도 '어느 날을 보고 있고 얼마나 했는지' 가 늘 보인다.
-   따로따로 붙이면 둘 사이가 벌어졌다 붙었다 해서 어지러우므로 한 덩어리로 둔다. */
+/* 날짜 바는 머리글 바로 아래에 붙박는다. 어느 날을 보고 있는지가 Yearly·Monthly·Daily
+   셋 모두의 기준이라서다 — 그 날의 해와 달이 Yearly·Monthly 에 나온다. */
 .rtop{position:sticky;top:var(--topH);z-index:30;
   background:var(--topbg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--line);padding-bottom:11px}
-/* 붙박이 안에서는 조금 눕혀 둔다 — 늘 자리를 차지하므로 목록 몫을 남겨야 한다 */
-.rtop .light{margin:0 var(--sp);padding:12px 15px}
-.rtop .light .pct{font-size:21px}
-.rtop .light .tr{margin-top:10px}
-.rtop .light .msg{margin-top:8px}
+  border-bottom:1px solid var(--line)}
+.rtop .daynote{margin:0 0 10px}
+
+/* ── 루틴 탭의 세 칸: Yearly · Monthly · Daily ─────────────
+   머리를 누르면 접히고 펴진다. 접어 두어도 머리에 몇 개 중 몇 개 했는지가 남는다. */
+.psec{border-bottom:1px solid var(--line)}
+.psh{width:100%;display:flex;align-items:center;gap:9px;padding:15px var(--sp);text-align:left}
+.psh .ar{flex:none;width:17px;height:17px;stroke:var(--ivory);fill:none;stroke-width:2.4;
+  transition:transform .18s}
+.psh .ar.closed{transform:rotate(-90deg)}
+.psh b{font-size:15.5px;font-weight:800;color:var(--ivory);letter-spacing:.01em}
+.psh .ps{font-size:12px;color:var(--faint)}
+.psh .pc{margin-left:auto;font-family:var(--mo);font-variant-numeric:tabular-nums;font-size:12px;color:var(--dim)}
+.psb{padding-bottom:18px}
+.psb.fold{display:none}
+.pempty{margin:0 var(--sp) 12px;font-size:13px;color:var(--faint)}
+.psec .empty{padding:34px 30px 26px}
+
+/* 신호등은 하루의 것이라 Daily 안에 둔다. 목록을 내리면 날짜 바 바로 밑에 붙는다 —
+   Daily 칸 안에서만 붙으므로 Daily 를 지나면 함께 올라간다.
+   늘 자리를 차지하게 되므로 조금 눕혀 둔다. */
+.dlight{position:sticky;top:calc(var(--topH) + var(--rtopH));z-index:25;
+  padding:2px var(--sp) 11px;
+  background:var(--topbg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.dlight .light{margin:0;padding:12px 15px}
+.dlight .light .pct{font-size:21px}
+.dlight .light .tr{margin-top:10px}
+.dlight .light .msg{margin-top:8px}
 .wkbar{display:flex;align-items:center;gap:4px;padding:10px var(--sp)}
 .wkbar .nav{flex:none;width:26px;height:46px;border-radius:9px;display:grid;place-items:center;color:var(--faint)}
 .wkbar .nav svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
@@ -539,6 +560,8 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 
 /* 목록 머리: 왼쪽 이름표 + 오른쪽 정렬 단추 */
 .rbar{display:flex;align-items:center;gap:8px;margin:22px var(--sp) 10px}
+.psb > .rbar:first-child{margin-top:4px}
+.dlight + .rbar{margin-top:8px}
 .rbar .lb{font-size:10.5px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
 .rbar .sortbtn{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;
   color:color-mix(in srgb, var(--ivory) 90%, var(--tx));
@@ -1456,20 +1479,22 @@ const K = {
   todo: ym => 'md:todo:' + ym,            /* 그날 하루짜리 할 일 */
   slot: 'md:slots',                       /* 직접 만든 시간대 */
   grp: 'md:groups',                       /* 루틴 묶음 — 결이 같은 루틴을 한 칸에 모은다 */
+  plan: 'md:plans',                       /* 1년·한 달 계획. { 'Y2026': [...], 'M2026-10': [...] } */
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v79 · 2026-09-29';
+const APP_VERSION = 'v80 · 2026-10-02';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
 const LIGHT_DEFAULT = { yellow: 40, green: 80 };
 
 const S = {
-  index: [], thumbs: {}, routines: [], checks: {}, todos: {}, slots: [], groups: [],
+  index: [], thumbs: {}, routines: [], checks: {}, todos: {}, slots: [], groups: [], plans: {},
   settings: {
     pin: '', promptLog: {}, theme: 'sagegarden', remind: true, remindLog: '',
-    memoOnCheck: true, rsort: 'slot', light: Object.assign({}, LIGHT_DEFAULT)
+    memoOnCheck: true, rsort: 'slot', light: Object.assign({}, LIGHT_DEFAULT),
+    rfold: { y: true, m: true, d: false }   /* 루틴 탭 세 칸의 접힘. 1년·한 달은 접고 하루는 편다 */
   },
   query: '', tag: '', tab: 'diary', rday: '', ready: false
 };
@@ -1690,6 +1715,7 @@ async function loadAll() {
     { pin: '', promptLog: {}, theme: 'sagegarden', remind: true, remindLog: '', memoOnCheck: true, rsort: 'slot' },
     (await KV.get(K.set)) || {});
   S.settings.light = Object.assign({}, LIGHT_DEFAULT, S.settings.light || {});
+  S.settings.rfold = Object.assign({ y: true, m: true, d: false }, S.settings.rfold || {});
   if (!THEMES.some(t => t.id === S.settings.theme)) {
     S.settings.theme = THEME_MOVED[S.settings.theme] || THEMES[0].id;
     await KV.set(K.set, S.settings);
@@ -1699,6 +1725,7 @@ async function loadAll() {
   S.routines = (await KV.get(K.rt)) || [];
   S.slots = (await KV.get(K.slot)) || [];
   S.groups = (await KV.get(K.grp)) || [];
+  S.plans = (await KV.get(K.plan)) || {};
   const cks = await KV.keys('md:check:');
   for (const k of cks) { const v = await KV.get(k); if (v) S.checks[k.replace('md:check:', '')] = v; }
   const tds = await KV.keys('md:todo:');
@@ -2063,16 +2090,108 @@ function renderRoutineRibbon() {
   $('#ribbonNote').textContent = counted ? `${kept}일 지킴` : '기록 없음';
 }
 
+/* ---------- 1년 · 한 달 계획 ----------
+   해 계획은 'Y2026', 달 계획은 'M2026-10' 칸에 담는다. 한 덩어리로 저장한다 —
+   하루 할 일과 달리 몇 개 안 되므로 달마다 쪼갤 까닭이 없다. */
+const savePlans = () => KV.set(K.plan, S.plans);
+const planKeyY = date => 'Y' + date.slice(0, 4);
+const planKeyM = date => 'M' + date.slice(0, 7);
+
+function planStore(key) {
+  const y = key.slice(1, 5), m = key[0] === 'M' ? +key.slice(6, 8) : 0;
+  return {
+    list: () => S.plans[key] || [],
+    save: async l => { if (l.length) S.plans[key] = l; else delete S.plans[key]; await savePlans(); },
+    icon: '🎯', noun: '계획', max: 60, ask: '무엇을 이루고 싶나요?',
+    addTitle: m ? `${m}월 계획` : `${y}년 계획`,
+    example: m ? '예: 책 두 권 읽기' : '예: 하프 마라톤 완주하기'
+  };
+}
+
+/* 계획도 할 일처럼 체크하면 창 없이 바로 완료/되돌리기 */
+async function togglePlan(key, id) {
+  const st = planStore(key);
+  await st.save(st.list().map(t => t.id === id
+    ? Object.assign({}, t, { s: t.s === 'done' ? '' : 'done', at: Date.now() }) : t));
+  renderRoutine();
+}
+
+function planRowHTML(t, key) {
+  const st = t.s || '';
+  const mark = st === 'doing'
+    ? `<circle cx="12" cy="12" r="4.5"/>`              /* 진행 중은 가운데 점 */
+    : `<path d="M20 6L9 17l-5-5"/>`;
+  return `<div class="ritem plan ${st}" data-p="${t.id}" data-pkey="${key}">
+    <button class="ck" data-pck aria-label="체크"><svg viewBox="0 0 24 24">${mark}</svg></button>
+    <button class="nm" data-pck><span class="t">${esc(t.name)}</span>${st === 'doing' ? `<span class="memo">진행 중</span>` : ''}</button>
+    <button class="opt" data-popt aria-label="더 보기"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+  </div>`;
+}
+
+/* ---------- 루틴 탭의 세 칸 — Yearly · Monthly · Daily ----------
+   머리를 누르면 접히고 펴진다. 접힘은 설정에 남겨 다음에 열어도 그대로다.
+   처음에는 1년·한 달은 접혀 있고 하루만 펴져 있다. */
+async function toggleSecFold(k) {
+  S.settings.rfold[k] = !S.settings.rfold[k];
+  await KV.set(K.set, S.settings);
+  renderRoutine();
+}
+
+function secHeadHTML(k, title, sub, count) {
+  const folded = S.settings.rfold[k];
+  return `<section class="psec" data-sec="${k}">
+    <button class="psh" data-secfold="${k}" aria-expanded="${folded ? 'false' : 'true'}">
+      <svg class="ar${folded ? ' closed' : ''}" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+      <b>${title}</b><span class="ps">${esc(sub)}</span>
+      ${count ? `<span class="pc">${count}</span>` : ''}
+    </button>
+    <div class="psb${folded ? ' fold' : ''}">`;
+}
+const SEC_END = `</div></section>`;
+
+function planSecHTML(k, key, title, sub, addLabel) {
+  const list = S.plans[key] || [];
+  const done = list.filter(t => t.s === 'done').length;
+  return secHeadHTML(k, title, sub, list.length ? `${done}/${list.length}` : '')
+    + (list.length
+      ? `<div class="rlist">${list.map(t => planRowHTML(t, key)).join('')}</div>`
+      : `<div class="pempty">아직 적어 둔 계획이 없어요.</div>`)
+    + `<div class="section" style="margin-top:4px">
+        <button class="btn btn-line" data-addplan="${key}" style="width:100%">${addLabel}</button></div>`
+    + SEC_END;
+}
+
+/* 날짜 바의 높이를 재어 --rtopH 에 넣는다. 신호등이 그만큼 내려와 붙는다.
+   '보는 중' 안내가 붙었다 떨어졌다 하면 높이가 바뀌므로 그때마다 다시 잰다.
+   날짜 바는 그릴 때마다 새로 만들어지므로 매번 새 것을 지켜본다. */
+const rtopRO = window.ResizeObserver ? new ResizeObserver(es => {
+  for (const e of es) if (e.target.isConnected && e.target.offsetHeight)
+    document.documentElement.style.setProperty('--rtopH', e.target.offsetHeight + 'px');
+}) : null;
+function watchRtop(host) {
+  const el = host.querySelector('.rtop'); if (!el) return;
+  if (el.offsetHeight) document.documentElement.style.setProperty('--rtopH', el.offsetHeight + 'px');
+  if (rtopRO) { rtopRO.disconnect(); rtopRO.observe(el); }
+}
+
 function renderRoutine() {
   const host = $('#viewRoutine');
   const today = ymd(new Date());
   const date = S.rday || today;                 /* 보고 있는 날 (오늘이 아닐 수 있다) */
   const isToday = date === today, future = date > today;
   const p = dayProgress(date);
-  const weekBar = weekBarHTML(date, today);
+  const yy = date.slice(0, 4), mm = +date.slice(5, 7);
+
+  /* 날짜 바 → Yearly → Monthly → Daily.
+     해와 달은 날짜 바에서 고른 날을 따른다 — 다음 달로 넘어가면 다음 달 계획이 보인다. */
+  let html = `<div class="rtop">${weekBarHTML(date, today)}</div>`
+    + planSecHTML('y', planKeyY(date), 'Yearly', `${yy}년`, `${yy}년 계획 더하기`)
+    + planSecHTML('m', planKeyM(date), 'Monthly', `${mm}월`, `${mm}월 계획 더하기`)
+    + secHeadHTML('d', 'Daily', `${isToday ? '오늘 · ' : ''}${dateShort(date)}`,
+      p.target ? `${p.done + p.tdone}/${p.target}` : '');
 
   if (!S.routines.filter(r => r.active !== false).length && !p.todos.length) {
-    host.innerHTML = `<div class="rtop">${weekBar}</div>` + `
+    html += `
       <div class="empty"><b>${isToday ? '아직 루틴이 없어요' : '이 날은 아직 비어 있어요'}</b>
         ${isToday ? '매일 지키고 싶은 것 하나부터 적어보세요.' : '할 일을 미리 담아둘 수 있어요.'}</div>
       <div class="section" style="display:flex;flex-direction:column;gap:9px">
@@ -2080,21 +2199,14 @@ function renderRoutine() {
         <button class="btn btn-line" data-preset style="width:100%">보기에서 골라 담기</button>
         <button class="btn btn-line" data-new style="width:100%">루틴 직접 만들기</button>
       </div>`;
-    bindWeekBar(host);
-    host.querySelector('[data-addtodo]').onclick = () => openTodoAdder(date);
-    host.querySelector('[data-preset]').onclick = openPresetPicker;
-    host.querySelector('[data-new]').onclick = () => openRoutineEdit(null);
-    renderRoutineRibbon(); updateTabBadge();
-    return;
-  }
-
-  const L = lightOf(p.rate);
-  const pctTxt = p.rate < 0 ? '—' : Math.round(p.rate * 100);
-  /* 아직 오지 않은 날에는 신호등을 아예 두지 않는다. 달성률이 0 으로 찍혀
-     빨간불이 될 자리이기도 하고, 어느 날을 보고 있는지는 위의 날짜 바와
-     아래 목록 머리글이 이미 말해 준다. */
-  let html = `<div class="rtop">` + weekBar + (future ? '' : `
-    <div class="light">
+  } else {
+    const L = lightOf(p.rate);
+    const pctTxt = p.rate < 0 ? '—' : Math.round(p.rate * 100);
+    /* 아직 오지 않은 날에는 신호등을 아예 두지 않는다. 달성률이 0 으로 찍혀
+       빨간불이 될 자리이기도 하고, 어느 날을 보고 있는지는 위의 날짜 바와
+       아래 목록 머리글이 이미 말해 준다. */
+    if (!future) html += `
+    <div class="dlight"><div class="light">
       <div class="lh">
         <span class="lamp">${[0, 1, 2].map(i => {
           const c = [famColor('mad'), famColor('joy'), famColor('calm')][i];
@@ -2105,56 +2217,60 @@ function renderRoutine() {
       </div>
       <div class="tr"><span class="fl" style="width:${p.rate < 0 ? 0 : p.rate * 100}%;background:${L.color}"></span></div>
       <div class="msg">${dateLabel(date)} · ${L.msg}${p.total ? ` (${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''})` : ''}</div>
-    </div>`) + `</div>`;
+    </div></div>`;
 
-  if (p.total) {
-    const sort = SORTS.find(s => s.id === (S.settings.rsort || 'slot')) || SORTS[0];
-    html += `<div class="rbar"><span class="lb">${isToday ? '오늘' : dateShort(date)} ${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''}</span>
-      <button class="sortbtn" data-sort>
-        <svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M17 20V4M17 4l3 3"/></svg>
-        ${esc(sort.name)}</button></div>
-      <div class="rlist">`;
-    for (const { group, items } of groupRoutines(p.list)) {
-      if (!group) {
-        /* 묶음이 없거나 어디에도 안 든 루틴 — 머리글 없이 그냥 늘어놓는다 */
-        if (S.groups.length && items.length) {
-          html += `<div class="ghead plain"><span class="gn">묶지 않음</span>
-            <span class="gc">${items.length}</span></div>`;
+    if (p.total) {
+      const sort = SORTS.find(s => s.id === (S.settings.rsort || 'slot')) || SORTS[0];
+      html += `<div class="rbar"><span class="lb">${isToday ? '오늘' : dateShort(date)} ${p.done + p.tdone}/${p.target}${p.rest ? ` · 쉼 ${p.rest}` : ''}${p.doing ? ` · 진행 중 ${p.doing}` : ''}</span>
+        <button class="sortbtn" data-sort>
+          <svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M17 20V4M17 4l3 3"/></svg>
+          ${esc(sort.name)}</button></div>
+        <div class="rlist">`;
+      for (const { group, items } of groupRoutines(p.list)) {
+        if (!group) {
+          /* 묶음이 없거나 어디에도 안 든 루틴 — 머리글 없이 그냥 늘어놓는다 */
+          if (S.groups.length && items.length) {
+            html += `<div class="ghead plain"><span class="gn">묶지 않음</span>
+              <span class="gc">${items.length}</span></div>`;
+          }
+          for (const r of items) html += routineRowHTML(r, p.ck[r.id] || {});
+          continue;
         }
+        const done = items.filter(r => (p.ck[r.id] || {}).s === 'done').length;
+        const c = groupColor(group.color);
+        html += `<div class="gwrap" style="--gc:${c}">
+          <button class="ghead" data-fold="${group.id}" aria-expanded="${group.fold ? 'false' : 'true'}">
+            <svg class="ar ${group.fold ? 'closed' : ''}" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            <span class="gn">${esc(group.name)}</span>
+            <span class="gc">${done}/${items.length}</span></button>
+          <div class="gbody${group.fold ? ' fold' : ''}">`;
         for (const r of items) html += routineRowHTML(r, p.ck[r.id] || {});
-        continue;
+        html += `</div></div>`;
       }
-      const done = items.filter(r => (p.ck[r.id] || {}).s === 'done').length;
-      const c = groupColor(group.color);
-      html += `<div class="gwrap" style="--gc:${c}">
-        <button class="ghead" data-fold="${group.id}" aria-expanded="${group.fold ? 'false' : 'true'}">
-          <svg class="ar ${group.fold ? 'closed' : ''}" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-          <span class="gn">${esc(group.name)}</span>
-          <span class="gc">${done}/${items.length}</span></button>
-        <div class="gbody${group.fold ? ' fold' : ''}">`;
-      for (const r of items) html += routineRowHTML(r, p.ck[r.id] || {});
-      html += `</div></div>`;
+      /* 할 일은 하루짜리라 늘 목록 끝에 모아 둔다 */
+      for (const t of p.todos) html += todoRowHTML(t);
+      html += `</div>`;
+    } else {
+      html += `<div class="empty"><b>${isToday ? '오늘은' : '이 날은'} 예정된 루틴이 없어요</b>반복 요일에 없는 날이에요. 할 일만 담아둘 수도 있어요.</div>`;
     }
-    /* 할 일은 하루짜리라 늘 목록 끝에 모아 둔다 */
-    for (const t of p.todos) html += todoRowHTML(t);
-    html += `</div>`;
-  } else {
-    html += `<div class="empty"><b>${isToday ? '오늘은' : '이 날은'} 예정된 루틴이 없어요</b>반복 요일에 없는 날이에요. 할 일만 담아둘 수도 있어요.</div>`;
-  }
 
-  html += `<div class="section" style="margin-top:${p.total ? 14 : 0}px">
-      <button class="addtodo" data-addtodo>
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>${isToday ? '오늘' : dateShort(date)} 할 일 더하기</button>
-    </div>
-    <div class="section" style="margin-top:22px;display:flex;flex-direction:column;gap:9px">
-      <button class="btn btn-o" data-manage style="width:100%">루틴 관리</button>
-      <button class="btn btn-line" data-preset2 style="width:100%">보기에서 더 담기</button>
-    </div>`;
+    html += `<div class="section" style="margin-top:${p.total ? 14 : 0}px">
+        <button class="addtodo" data-addtodo>
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>${isToday ? '오늘' : dateShort(date)} 할 일 더하기</button>
+      </div>
+      <div class="section" style="margin-top:22px;display:flex;flex-direction:column;gap:9px">
+        <button class="btn btn-o" data-manage style="width:100%">루틴 관리</button>
+        <button class="btn btn-line" data-preset2 style="width:100%">보기에서 더 담기</button>
+      </div>`;
+  }
+  html += SEC_END;
 
   host.innerHTML = html;
   bindWeekBar(host);
+  $$('[data-secfold]', host).forEach(b => b.onclick = () => toggleSecFold(b.dataset.secfold));
   $$('[data-fold]', host).forEach(b => b.onclick = () => toggleGroupFold(b.dataset.fold));
-  $$('.ritem', host).forEach(row => {
+  /* 하루 목록 — 루틴(data-r)과 할 일(data-t). 계획 줄(data-p)은 아래에서 따로 */
+  $$('.ritem[data-r], .ritem[data-t]', host).forEach(row => {
     const rid = row.dataset.r, tid = row.dataset.t;
     if (rid) {
       $$('[data-ck]', row).forEach(b => b.onclick = () => toggleCheck(rid, date));
@@ -2164,11 +2280,20 @@ function renderRoutine() {
       row.querySelector('[data-opt]').onclick = () => openTodoOptions(tid, date);
     }
   });
-  host.querySelector('[data-addtodo]').onclick = () => openTodoAdder(date);
-  host.querySelector('[data-manage]').onclick = openRoutineManage;
-  host.querySelector('[data-preset2]').onclick = openPresetPicker;
-  const sb = host.querySelector('[data-sort]');
-  if (sb) sb.onclick = openSortPicker;
+  $$('.ritem[data-p]', host).forEach(row => {
+    const id = row.dataset.p, key = row.dataset.pkey;
+    $$('[data-pck]', row).forEach(b => b.onclick = () => togglePlan(key, id));
+    row.querySelector('[data-popt]').onclick = () => openItemOptions(planStore(key), id);
+  });
+  $$('[data-addplan]', host).forEach(b => b.onclick = () => openItemAdder(planStore(b.dataset.addplan)));
+  const on = (sel, fn) => { const el = host.querySelector(sel); if (el) el.onclick = fn; };
+  on('[data-addtodo]', () => openTodoAdder(date));
+  on('[data-preset]', openPresetPicker);
+  on('[data-new]', () => openRoutineEdit(null));
+  on('[data-manage]', openRoutineManage);
+  on('[data-preset2]', openPresetPicker);
+  on('[data-sort]', openSortPicker);
+  watchRtop(host);
   renderRoutineRibbon(); updateTabBadge();
 }
 
@@ -2254,12 +2379,27 @@ async function toggleTodo(tid, date) {
   renderRoutine();
 }
 
-function openTodoOptions(tid, date, opts = {}) {
-  const t0 = dayTodos(date).find(x => x.id === tid); if (!t0) return;
-  sheet('📌 할 일', `
+/* ---------- 할 일 · 계획을 함께 다루는 창 ----------
+   하루짜리 할 일과 1년·한 달 계획은 담기는 자리만 다르고 다루는 법은 같다.
+   store 는 그 목록을 읽고(list) 쓰는(save) 길과, 창에 쓸 낱말을 들고 온다.
+   같은 창을 두 벌 두면 한쪽만 고쳐지고 다른 쪽은 남는 일이 생겨서 하나로 둔다. */
+function todoStore(date) {
+  return {
+    list: () => dayTodos(date), save: l => saveTodos(date, l),
+    icon: '📌', noun: '할 일', max: 40, ask: '무엇을 할까요?',
+    addTitle: `${date === ymd(new Date()) ? '오늘' : dateShort(date)} 할 일`,
+    example: '예: 은행 다녀오기'
+  };
+}
+
+function openItemOptions(store, id, opts = {}) {
+  const t0 = store.list().find(x => x.id === id); if (!t0) return;
+  const N = store.noun;
+  const patch = p => store.save(store.list().map(t => t.id === id ? Object.assign({}, t, p) : t));
+  sheet(`${store.icon} ${N}`, `
     <div class="field" style="margin-top:0">
-      <div class="label">할 일 내용</div>
-      <div class="box"><textarea id="tdName" class="oneline" rows="1" maxlength="40" placeholder="무엇을 할까요?" autocomplete="off">${esc(t0.name)}</textarea></div>
+      <div class="label">${N} 내용</div>
+      <div class="box"><textarea id="tdName" class="oneline" rows="1" maxlength="${store.max}" placeholder="${store.ask}" autocomplete="off">${esc(t0.name)}</textarea></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn btn-g" data-s="done" style="flex:1">완료</button>
@@ -2267,7 +2407,7 @@ function openTodoOptions(tid, date, opts = {}) {
       <button class="btn btn-o" data-s="" style="flex:1">지우기</button>
     </div>
     <button class="btn btn-p" id="tdSave" style="width:100%;margin-top:14px">저장</button>
-    <button class="btn btn-o" id="tdDel" style="width:100%;margin-top:8px;color:var(--mad);border-color:#DB4F6544">이 할 일 지우기</button>`,
+    <button class="btn btn-o" id="tdDel" style="width:100%;margin-top:8px;color:var(--mad);border-color:#DB4F6544">이 ${N} 지우기</button>`,
     (root, close) => {
       const cur = { s: t0.s || '', name: t0.name };
       const read = () => {
@@ -2282,58 +2422,59 @@ function openTodoOptions(tid, date, opts = {}) {
       /* 상태를 골라도 적다 만 내용이 함께 저장돼 날아가지 않는다 */
       $$('[data-s]', root).forEach(b => b.onclick = async () => {
         cur.s = b.dataset.s; read();
-        await setTodo(date, tid, { s: cur.s, name: cur.name, at: Date.now() });
+        await patch({ s: cur.s, name: cur.name, at: Date.now() });
         paintState(); renderRoutine(); opts.after && opts.after();
       });
       $('#tdSave', root).onclick = async () => {
         read();
-        if (!$('#tdName', root).value.trim()) { toast('할 일 내용을 적어주세요'); return; }
-        await setTodo(date, tid, { s: cur.s, name: cur.name, at: Date.now() });
+        if (!$('#tdName', root).value.trim()) { toast(`${N} 내용을 적어주세요`); return; }
+        await patch({ s: cur.s, name: cur.name, at: Date.now() });
         close(); renderRoutine(); opts.after && opts.after();
-        toast(cur.name !== t0.name ? '할 일을 고쳤어요' : '저장했어요');
+        toast(cur.name !== t0.name ? `${N}을 고쳤어요` : '저장했어요');
       };
       $('#tdName', root).onkeydown = e => {
         if (e.key === 'Enter') { e.preventDefault(); $('#tdSave', root).click(); }
       };
       $('#tdDel', root).onclick = async () => {
-        await saveTodos(date, dayTodos(date).filter(x => x.id !== tid));
-        close(); renderRoutine(); opts.after && opts.after(); toast('할 일을 지웠어요');
+        await store.save(store.list().filter(x => x.id !== id));
+        close(); renderRoutine(); opts.after && opts.after(); toast(`${N}을 지웠어요`);
       };
     });
 }
 
 /* 여러 개를 잇달아 적을 수 있게 창을 열어 둔 채로 담는다 */
-function openTodoAdder(date, onChange) {
-  sheet(`${date === ymd(new Date()) ? '오늘' : dateShort(date)} 할 일`, `
-    <div class="box"><textarea id="tdName" class="oneline" rows="1" maxlength="40" placeholder="예: 은행 다녀오기" autocomplete="off"></textarea></div>
+function openItemAdder(store, onChange) {
+  const N = store.noun;
+  sheet(store.addTitle, `
+    <div class="box"><textarea id="tdName" class="oneline" rows="1" maxlength="${store.max}" placeholder="${store.example}" autocomplete="off"></textarea></div>
     <button class="btn btn-p" id="tdAdd" style="width:100%;margin-top:11px">더하기</button>
     <div id="tdList" style="margin-top:18px"></div>`,
     (root, close) => {
       const paint = () => {
         const host = $('#tdList', root);
-        const list = dayTodos(date);
+        const list = store.list();
         host.innerHTML = list.length
           ? `<div class="label">담아 둔 것 ${list.length}개 · 눌러서 고칠 수 있어요</div>` + list.map(t => `
               <div class="tdrow" data-row="${t.id}">
-                <button class="tn" data-edit="${t.id}">📌 ${esc(t.name)}</button>
+                <button class="tn" data-edit="${t.id}">${store.icon} ${esc(t.name)}</button>
                 <button class="tx" data-del="${t.id}" aria-label="지우기">
                   <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>`).join('')
           : '';
         $$('[data-del]', host).forEach(b => b.onclick = async () => {
-          await saveTodos(date, dayTodos(date).filter(x => x.id !== b.dataset.del));
+          await store.save(store.list().filter(x => x.id !== b.dataset.del));
           paint(); renderRoutine(); onChange && onChange();
         });
         $$('[data-edit]', host).forEach(b => b.onclick = () => startEdit(b.dataset.edit));
       };
 
-      /* 방금 담은 할 일을 그 자리에서 고친다. 글자를 잘못 적었을 때
+      /* 방금 담은 것을 그 자리에서 고친다. 글자를 잘못 적었을 때
          지웠다 다시 적지 않아도 되도록. 엔터를 치거나 다른 데를 누르면 저장된다. */
       const startEdit = id => {
         const row = $(`[data-row="${id}"]`, root);
-        const t = dayTodos(date).find(x => x.id === id);
+        const t = store.list().find(x => x.id === id);
         if (!row || !t) return;
         const box = document.createElement('textarea');
-        box.className = 'oneline tn'; box.rows = 1; box.maxLength = 40; box.value = t.name;
+        box.className = 'oneline tn'; box.rows = 1; box.maxLength = store.max; box.value = t.name;
         row.querySelector('.tn').replaceWith(box);
         box.focus(); box.setSelectionRange(box.value.length, box.value.length);
         let closed = false;                       /* 엔터와 blur 가 겹쳐 두 번 돌지 않게 */
@@ -2341,10 +2482,10 @@ function openTodoAdder(date, onChange) {
           if (closed) return; closed = true;
           const nm = box.value.trim();
           if (nm && nm !== t.name) {
-            await saveTodos(date, dayTodos(date).map(x =>
+            await store.save(store.list().map(x =>
               x.id === id ? Object.assign({}, x, { name: nm }) : x));
             renderRoutine(); onChange && onChange();
-            toast('할 일을 고쳤어요');
+            toast(`${N}을 고쳤어요`);
           }
           paint();                                /* 비워 두면 쓰던 이름 그대로 돌아온다 */
         };
@@ -2358,8 +2499,8 @@ function openTodoAdder(date, onChange) {
       const add = async () => {
         const box = $('#tdName', root);
         const name = box.value.trim();
-        if (!name) { toast('할 일을 적어주세요'); return; }
-        await saveTodos(date, [...dayTodos(date), { id: uid(), name, s: '', at: Date.now() }]);
+        if (!name) { toast(`${N}을 적어주세요`); return; }
+        await store.save([...store.list(), { id: uid(), name, s: '', at: Date.now() }]);
         box.value = ''; box.focus();
         paint(); renderRoutine(); onChange && onChange();
       };
@@ -2368,6 +2509,10 @@ function openTodoAdder(date, onChange) {
       $('#tdName', root).focus();
     });
 }
+
+/* 하루 할 일 — 위의 창을 하루 목록에 물려 쓴다 (하루 돌아보기 화면도 이 이름으로 부른다) */
+function openTodoOptions(tid, date, opts = {}) { return openItemOptions(todoStore(date), tid, opts); }
+function openTodoAdder(date, onChange) { return openItemAdder(todoStore(date), onChange); }
 
 /* 목록을 늘어놓는 차례.
    시간대가 지워졌거나 알 수 없는 루틴은 맨 뒤로 보내되 목록에서 빠지지는 않는다. */
@@ -4035,7 +4180,7 @@ async function exportAll() {
   const out = {
     app: 'maeumgyeol', version: 2, exportedAt: new Date().toISOString(),
     entries: [], routines: S.routines, checks: S.checks, slots: S.slots, todos: S.todos,
-    groups: S.groups
+    groups: S.groups, plans: S.plans
   };
   for (const m of S.index) { const e = await getEntry(m.id); if (e) out.entries.push(e); }
   const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
@@ -4133,10 +4278,27 @@ async function importAll(file) {
     }
   }
 
+  /* 1년·한 달 계획 — 같은 id 는 건너뛰고 그 해·그 달 목록 뒤에 이어 붙인다 */
+  let pn = 0;
+  if (data.plans && typeof data.plans === 'object') {
+    for (const [key, list] of Object.entries(data.plans)) {
+      if (!/^(Y\d{4}|M\d{4}-\d{2})$/.test(key) || !Array.isArray(list)) continue;
+      const mine = S.plans[key] || (S.plans[key] = []);
+      for (const t of list) {
+        if (!t || !t.id || mine.some(x => x.id === t.id)) continue;
+        mine.push({ id: t.id, name: String(t.name || '').slice(0, 60),
+          s: t.s === 'done' || t.s === 'doing' ? t.s : '', at: t.at || Date.now() });
+        pn++;
+      }
+      if (!mine.length) delete S.plans[key];
+    }
+    if (pn) await savePlans();
+  }
+
   renderHome();
   if (S.tab === 'routine') renderRoutine(); else updateTabBadge();
   const parts = [n ? `기록 ${n}개` : '', rn ? `루틴 ${rn}개` : '', gn ? `묶음 ${gn}개` : '',
-    cn ? `체크 ${cn}개` : '', tn ? `할 일 ${tn}개` : ''].filter(Boolean);
+    cn ? `체크 ${cn}개` : '', tn ? `할 일 ${tn}개` : '', pn ? `계획 ${pn}개` : ''].filter(Boolean);
   toast(parts.length ? `${parts.join(' · ')}를 불러왔어요` : '새로 불러올 것이 없었어요');
 }
 
