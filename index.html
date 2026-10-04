@@ -530,6 +530,11 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .psh .pc{margin-left:auto;font-family:var(--mo);font-variant-numeric:tabular-nums;font-size:12px;color:var(--dim)}
 .psb{padding-bottom:18px}
 .psb.fold{display:none}
+.carry{width:100%;margin-bottom:8px;border:1px dashed color-mix(in srgb, var(--ivory) 45%, var(--line));
+  border-radius:12px;padding:11px 12px;font-size:13px;color:var(--dim);
+  background:color-mix(in srgb, var(--ivory) 6%, transparent)}
+.carry b{font-weight:700;color:var(--ivory)}
+.carry:active{background:color-mix(in srgb, var(--ivory) 12%, transparent)}
 .pempty{margin:0 var(--sp) 12px;font-size:13px;color:var(--faint)}
 .psec .empty{padding:34px 30px 26px}
 
@@ -1485,7 +1490,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v81 · 2026-10-02';
+const APP_VERSION = 'v82 · 2026-10-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -2099,6 +2104,31 @@ const savePlans = () => KV.set(K.plan, S.plans);
 const planKeyY = date => 'Y' + date.slice(0, 4);
 const planKeyM = date => 'M' + date.slice(0, 7);
 
+/* 바로 앞 해·달의 칸 이름. 1월의 앞은 지난해 12월이다 */
+function prevPlanKey(key) {
+  if (key[0] === 'Y') return 'Y' + (+key.slice(1) - 1);
+  let y = +key.slice(1, 5), m = +key.slice(6, 8) - 1;
+  if (m < 1) { y--; m = 12; }
+  return 'M' + y + '-' + String(m).padStart(2, '0');
+}
+
+/* 앞 칸에서 못 끝낸 계획 중, 아직 이 칸으로 가져오지 않은 것.
+   가져온 것에는 원래 id 를 from 으로 적어 둬서 두 번 눌러도 겹치지 않는다.
+   가져온 뒤 그것을 지우면 from 도 함께 사라져 다시 제안된다 — 일부러 지운 것까지
+   기억해 두려면 따로 적어 둘 곳이 필요한데, 제안은 작은 한 줄이라 그냥 둔다. */
+function carryCandidates(key) {
+  const here = S.plans[key] || [], carried = new Set(here.map(t => t.from).filter(Boolean));
+  return (S.plans[prevPlanKey(key)] || []).filter(t => t.s !== 'done' && !carried.has(t.id));
+}
+
+async function carryPlans(key) {
+  const c = carryCandidates(key); if (!c.length) return;
+  const st = planStore(key);
+  await st.save([...st.list(), ...c.map(t => ({ id: uid(), name: t.name, s: '', at: Date.now(), from: t.id }))]);
+  renderRoutine();
+  toast(`${c.length}개를 가져왔어요`);
+}
+
 function planStore(key) {
   const y = key.slice(1, 5), m = key[0] === 'M' ? +key.slice(6, 8) : 0;
   return {
@@ -2153,11 +2183,17 @@ const SEC_END = `</div></section>`;
 
 function planSecHTML(k, key, title, sub, addLabel) {
   const list = S.plans[key] || [];
+  /* 지난 칸을 보고 있을 때는 제안하지 않는다 — 과거로 가져올 까닭이 없다 */
+  const nowKey = k === 'y' ? planKeyY(ymd(new Date())) : planKeyM(ymd(new Date()));
+  const carry = key >= nowKey ? carryCandidates(key) : [];
+  const noun = k === 'y' ? '지난해' : '지난달';
   const done = list.filter(t => t.s === 'done').length;
   return secHeadHTML(k, title, sub, list.length ? `${done}/${list.length}` : '')
     + (list.length
       ? `<div class="rlist">${list.map(t => planRowHTML(t, key)).join('')}</div>`
       : `<div class="pempty">아직 적어 둔 계획이 없어요.</div>`)
+    + (carry.length ? `<div class="section"><button class="carry" data-carry="${key}">
+        <b>${noun}에 못 끝낸 계획 ${carry.length}개</b> 가져오기</button></div>` : '')
     + `<div class="section" style="margin-top:4px">
         <button class="btn btn-line" data-addplan="${key}" style="width:100%">${addLabel}</button></div>`
     + SEC_END;
@@ -2287,6 +2323,7 @@ function renderRoutine() {
     $$('[data-pck]', row).forEach(b => b.onclick = () => togglePlan(key, id));
     row.querySelector('[data-popt]').onclick = () => openItemOptions(planStore(key), id);
   });
+  $$('[data-carry]', host).forEach(b => b.onclick = () => carryPlans(b.dataset.carry));
   $$('[data-addplan]', host).forEach(b => b.onclick = () => openItemAdder(planStore(b.dataset.addplan)));
   const on = (sel, fn) => { const el = host.querySelector(sel); if (el) el.onclick = fn; };
   on('[data-addtodo]', () => openTodoAdder(date));
@@ -4289,7 +4326,8 @@ async function importAll(file) {
       for (const t of list) {
         if (!t || !t.id || mine.some(x => x.id === t.id)) continue;
         mine.push({ id: t.id, name: String(t.name || '').slice(0, 60),
-          s: t.s === 'done' || t.s === 'doing' ? t.s : '', at: t.at || Date.now() });
+          s: t.s === 'done' || t.s === 'doing' ? t.s : '', at: t.at || Date.now(),
+          ...(t.from ? { from: String(t.from) } : {}) });
         pn++;
       }
       if (!mine.length) delete S.plans[key];
