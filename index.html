@@ -516,7 +516,55 @@ textarea.body{min-height:260px;resize:vertical;font-size:15.5px;line-height:1.75
 .rtop{position:sticky;top:var(--topH);z-index:30;
   background:var(--topbg);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   border-bottom:1px solid var(--line)}
-.rtop .daynote{margin:0 0 10px}
+.mrow{display:flex;align-items:center;gap:8px;padding:9px var(--sp) 0}
+.mlab{display:flex;align-items:center;gap:5px;font-weight:800;font-size:15px;color:var(--ivory);
+  padding:5px 10px 5px 4px;border-radius:10px}
+.mlab .y{font-weight:500;color:var(--faint);font-size:12.5px;margin-left:2px}
+.mlab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.4}
+.mlab:active{background:color-mix(in srgb, var(--ivory) 10%, transparent)}
+.todaybtn{margin-left:auto;display:flex;align-items:center;gap:5px;background:var(--ivory);color:var(--ink);
+  font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:999px}
+.todaybtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.4}
+.mrow + .wkbar{padding-top:6px}
+.plcard{display:block;width:100%;text-align:left;margin:10px 0 0;padding:13px 14px;border:1px solid var(--line);
+  border-radius:12px;background:var(--surface)}
+.plh{display:flex;align-items:baseline;gap:8px}
+.plh b{font-size:14px;font-weight:800;color:var(--ivory)}
+.plh span{margin-left:auto;font-size:12px;color:var(--faint)}
+.plbar{height:6px;border-radius:3px;background:var(--raised);margin:9px 0 8px;overflow:hidden}
+.plbar i{display:block;height:100%;background:var(--calm);border-radius:3px}
+.pll{list-style:none;margin:0;padding:0;font-size:13px;color:var(--dim)}
+.pll li{display:flex;gap:8px;padding:3px 0}
+.pll li.done{color:var(--faint);text-decoration:line-through}
+.pll .pk{flex:none;width:14px;text-align:center;color:var(--calm);text-decoration:none}
+.dpHead{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.dpHead .nav{flex:none;width:34px;height:34px;display:grid;place-items:center;color:var(--faint)}
+.dpHead .nav svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.dpT{flex:1;text-align:center;font-weight:800;font-size:16px}
+.dpT small{font-weight:500;color:var(--faint);font-size:12px;margin-left:4px}
+.dpDow,.dpGrid{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}
+.dpDow span{font-size:10.5px;color:var(--faint);padding:6px 0}
+.dpGrid{row-gap:2px}
+.dpC{height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border-radius:11px;font-size:14px;color:var(--dim)}
+.dpC .p{width:28px;height:28px;border-radius:50%;display:grid;place-items:center}
+.dpC.later{opacity:.55}
+.dpC.sel .p{outline:2px solid var(--ivory);outline-offset:1px;font-weight:800;color:var(--ivory)}
+.dpC.today .p{font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.dpC .dots{display:flex;gap:2px;height:5px}
+.dpC .dots i{width:5px;height:5px;border-radius:50%}
+.dots .j{background:var(--ivory)}.dots .t{background:var(--calm)}
+.dpLegend{display:flex;gap:14px;font-size:11.5px;color:var(--faint);margin:8px 2px 12px;align-items:center}
+.dpLegend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.dpLegend .r{margin-left:auto}
+.dpBtns{display:flex;gap:8px}
+.dpBtns button{flex:1;padding:12px;border-radius:12px;font-weight:700;font-size:13.5px}
+.dpBtns .b1{background:var(--ivory);color:var(--ink)}
+.dpBtns .b2{border:1px solid var(--line);color:var(--dim)}
+.dpMonths{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 6px}
+.dpM{padding:16px 0;border-radius:12px;border:1px solid var(--line);font-weight:600;color:var(--dim)}
+.dpM.now{border-color:color-mix(in srgb, var(--ivory) 55%, var(--line));color:var(--ivory)}
+.dpM.sel{background:var(--ivory);border-color:var(--ivory);color:var(--ink)}
 
 /* ── 루틴 탭의 세 칸: Yearly · Monthly · Daily ─────────────
    머리를 누르면 접히고 펴진다. 접어 두어도 머리에 몇 개 중 몇 개 했는지가 남는다. */
@@ -1490,7 +1538,7 @@ const K = {
 };
 
 /* 설정 화면 맨 아래에 보이는 판 번호 — 새 버전이 실제로 깔렸는지 확인용 */
-const APP_VERSION = 'v82 · 2026-10-04';
+const APP_VERSION = 'v83 · 2026-10-04';
 
 /* ---------- 상태 ---------- */
 /* 신호등이 노란불·초록불로 바뀌는 달성률(%) — 설정에서 사용자가 바꾼다 */
@@ -2353,13 +2401,18 @@ function weekBarHTML(date, today) {
     cells += `<button class="${cls}" data-wd="${key}">
       ${DOW[i]}<b>${d.getDate()}</b><i class="pip" style="${pip}"></i></button>`;
   }
-  const note = date === today ? '' :
-    `<button class="daynote" data-wtoday><b>${dateLabel(date)}</b> 보는 중 · 오늘로 돌아가기</button>`;
-  return `<div class="wkbar">
+  /* 월 이름은 달력을 여는 버튼이다. 오늘이 아닌 날을 보고 있을 때만 '오늘' 이 따로 뜬다 */
+  const mrow = `<div class="mrow">
+      <button class="mlab" data-wcal aria-label="달력 열기">${+date.slice(5, 7)}월<span class="y">${date.slice(0, 4)}</span>
+        <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+      ${date === today ? '' : `<button class="todaybtn" data-wtoday>
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>오늘</button>`}
+    </div>`;
+  return `${mrow}<div class="wkbar">
       <button class="nav" data-wprev aria-label="지난 주"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
       <div class="wkdays">${cells}</div>
       <button class="nav" data-wnext aria-label="다음 주"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
-    </div>${note ? `<div class="section">${note}</div>` : ''}`;
+    </div>`;
 }
 
 function bindWeekBar(host) {
@@ -2373,7 +2426,69 @@ function bindWeekBar(host) {
   host.querySelector('[data-wnext]').onclick = () => shift(7);
   const back = host.querySelector('[data-wtoday]');
   if (back) back.onclick = () => go(ymd(new Date()));
+  host.querySelector('[data-wcal]').onclick = () =>
+    openDatePicker(S.rday || ymd(new Date()), key => go(key));
 }
+
+/* ---------- 날짜 고르는 달력 창 ----------
+   월 이름을 누르면 올라온다. 날짜 밑의 점이 '그날 뭐가 있었나' 를 알려 줘서
+   빈 날을 눌러 헤매지 않는다: 보라 = 일기가 있는 날, 초록 = 루틴이나 할 일을 한 날.
+   배경 초록은 그날 얼마나 지켰는지(돌아보기 달력의 색칠과 같은 뜻).
+   위의 '2026년 8월' 을 누르면 열두 달을 한 장에 펼쳐 멀리 건너뛴다. */
+function openDatePicker(cur, onPick) {
+  const today = ymd(new Date());
+  let view = cur.slice(0, 7), mode = 'day';
+  sheet('날짜 고르기', `<div id="dpBody"></div>`, (root, close) => {
+    const body = $('#dpBody', root);
+    const paint = () => {
+      const Y = +view.slice(0, 4), M = +view.slice(5, 7);
+      if (mode === 'month') {
+        body.innerHTML = `<div class="dpHead"><button class="nav" data-yp aria-label="이전 해">${ARROW_L}</button>
+            <div class="dpT">${Y}년</div><button class="nav" data-yn aria-label="다음 해">${ARROW_R}</button></div>
+          <div class="dpMonths">${Array.from({ length: 12 }, (_, i) => {
+            const k = `${Y}-${pad(i + 1)}`;
+            return `<button class="dpM${k === view ? ' sel' : ''}${k === today.slice(0, 7) ? ' now' : ''}" data-m="${k}">${i + 1}월</button>`;
+          }).join('')}</div>`;
+        $('[data-yp]', body).onclick = () => { view = shiftMonth(view, -12); paint(); };
+        $('[data-yn]', body).onclick = () => { view = shiftMonth(view, 12); paint(); };
+        $$('[data-m]', body).forEach(b => b.onclick = () => { view = b.dataset.m; mode = 'day'; paint(); });
+        return;
+      }
+      const lead = new Date(Y, M - 1, 1).getDay(), last = new Date(Y, M, 0).getDate();
+      const wrote = new Set(S.index.map(m => m.date));
+      let cells = '<i></i>'.repeat(lead);
+      for (let d = 1; d <= last; d++) {
+        const key = `${view}-${pad(d)}`, later = key > today;
+        const q = dayProgress(key);
+        const did = q.todos.length > 0 || (!later && (q.done + q.rest) > 0);
+        let bg = '';
+        if (!later && q.rate > 0) bg = `background:color-mix(in srgb, var(--calm) ${Math.round(q.rate * 38)}%, transparent)`;
+        cells += `<button class="dpC${key === cur ? ' sel' : ''}${key === today ? ' today' : ''}${later ? ' later' : ''}" data-d="${key}">
+          <span class="p" style="${bg}">${d}</span>
+          <span class="dots">${wrote.has(key) ? '<i class="j"></i>' : ''}${did ? '<i class="t"></i>' : ''}</span></button>`;
+      }
+      body.innerHTML = `<div class="dpHead"><button class="nav" data-p aria-label="이전 달">${ARROW_L}</button>
+          <button class="dpT" data-pickm>${Y}년 ${M}월 <small>▾ 해·월 고르기</small></button>
+          <button class="nav" data-n aria-label="다음 달">${ARROW_R}</button></div>
+        <div class="dpDow">${DOW.map(x => `<span>${x}</span>`).join('')}</div>
+        <div class="dpGrid">${cells}</div>
+        <div class="dpLegend"><span><i style="background:var(--ivory)"></i>일기</span>
+          <span><i style="background:var(--calm)"></i>루틴·할 일</span>
+          <span class="r">배경이 진할수록 많이 지킨 날</span></div>
+        <div class="dpBtns"><button class="b2" data-thism>이번 달로</button>
+          <button class="b1" data-gotoday>오늘로 돌아가기</button></div>`;
+      $('[data-p]', body).onclick = () => { view = shiftMonth(view, -1); paint(); };
+      $('[data-n]', body).onclick = () => { view = shiftMonth(view, 1); paint(); };
+      $('[data-pickm]', body).onclick = () => { mode = 'month'; paint(); };
+      $('[data-thism]', body).onclick = () => { view = today.slice(0, 7); paint(); };
+      $('[data-gotoday]', body).onclick = () => { close(); onPick(today); };
+      $$('[data-d]', body).forEach(b => b.onclick = () => { close(); onPick(b.dataset.d); });
+    };
+    paint();
+  });
+}
+const ARROW_L = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
+const ARROW_R = '<svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>';
 
 /* ---------- 목록 한 줄 그리기 (루틴 탭과 하루 돌아보기가 함께 쓴다) ---------- */
 function routineRowHTML(r, c) {
@@ -3871,6 +3986,7 @@ function openStats() {
       <button class="iconbtn" data-x><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
       <div class="ttl">돌아보기</div></div>
     <div id="stCal"></div>
+    <div id="stPlan"></div>
 
     <div class="eyebrow" style="padding:0">전체</div>
     <div class="statgrid">
@@ -3927,6 +4043,34 @@ function openStats() {
     nx.onclick = () => { view = shiftMonth(view, 1); paintCal(); };
     host.querySelector('[data-today]').onclick = () => { view = ymd(new Date()).slice(0, 7); paintCal(); };
     $$('[data-day]', host).forEach(b => b.onclick = () => openDayReview(b.dataset.day, paintCal));
+    paintPlans();
+  };
+
+  /* 달력에서 보고 있는 달·해의 계획. 카드를 누르면 루틴 탭의 그 칸으로 간다 */
+  const paintPlans = () => {
+    const host = $('#stPlan', scr);
+    const keyM = 'M' + view, keyY = 'Y' + view.slice(0, 4);
+    const card = (key, title) => {
+      const list = S.plans[key] || [];
+      const done = list.filter(t => t.s === 'done').length;
+      return `<button class="plcard" data-go="${key}">
+        <div class="plh"><b>${title}</b><span>${list.length ? `${done}/${list.length} 달성` : '적어 둔 계획 없음'}</span></div>
+        ${list.length ? `<div class="plbar"><i style="width:${Math.round(done / list.length * 100)}%"></i></div>
+          <ul class="pll">${list.map(t => `<li class="${t.s || ''}"><span class="pk">${t.s === 'done' ? '✓' : t.s === 'doing' ? '●' : ''}</span>${esc(t.name)}</li>`).join('')}</ul>` : ''}
+      </button>`;
+    };
+    host.innerHTML = `<div class="eyebrow" style="padding:0">계획</div>`
+      + card(keyM, `${+view.slice(5, 7)}월 계획`) + card(keyY, `${view.slice(0, 4)}년 계획`);
+    $$('[data-go]', host).forEach(b => b.onclick = () => {
+      const key = b.dataset.go, isY = key[0] === 'Y';
+      const now = ymd(new Date());
+      /* 오늘이 그 달·해 안이면 오늘로, 아니면 그 달의 1일로 간다 */
+      const inside = isY ? now.slice(0, 4) === key.slice(1) : now.slice(0, 7) === key.slice(1);
+      const day = inside ? now : (isY ? key.slice(1) + '-01-01' : key.slice(1) + '-01');
+      scr.remove(); setTab('routine');
+      S.rday = day; S.settings.rfold[isY ? 'y' : 'm'] = false;
+      KV.set(K.set, S.settings); renderRoutine(); window.scrollTo({ top: 0 });
+    });
   };
   paintCal();
 }
